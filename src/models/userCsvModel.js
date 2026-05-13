@@ -4,14 +4,48 @@ const { readCsv, writeCsv } = require("../utils/csvStore");
 
 const USER_FILE = process.env.CSV_USER_FILE || "./data/users.secure.csv";
 
+const USER_HEADERS = [
+  "id",
+  "name",
+  "email",
+  "passwordHash",
+  "role",
+  "createdAt",
+  "lastLoginAt",
+  "isActive"
+];
+
+function readUsers() {
+  return readCsv(USER_FILE, USER_HEADERS);
+}
+
+function writeUsers(users) {
+  writeCsv(USER_FILE, users, USER_HEADERS);
+}
+
 async function findByEmail(email) {
-  const users = readCsv(USER_FILE);
-  return users.find(user => user.email.toLowerCase() === String(email).toLowerCase());
+  const users = readUsers();
+  return users.find(
+    user => user.email.toLowerCase() === String(email).toLowerCase()
+  );
+}
+
+async function findById(id) {
+  const users = readUsers();
+  const user = users.find(item => item.id === id);
+  return user ? sanitizeUser(user) : null;
+}
+
+async function listUsers() {
+  return readUsers().map(sanitizeUser);
 }
 
 async function createUser({ name, email, password, role = "user" }) {
-  const users = readCsv(USER_FILE);
-  const existingUser = users.find(user => user.email.toLowerCase() === String(email).toLowerCase());
+  const users = readUsers();
+
+  const existingUser = users.find(
+    user => user.email.toLowerCase() === String(email).toLowerCase()
+  );
 
   if (existingUser) {
     throw new Error("This email is already registered.");
@@ -31,26 +65,30 @@ async function createUser({ name, email, password, role = "user" }) {
   };
 
   users.push(newUser);
-  writeCsv(USER_FILE, users);
+  writeUsers(users);
 
   return sanitizeUser(newUser);
 }
 
 async function verifyUser(email, password) {
-  const users = readCsv(USER_FILE);
-  const user = users.find(item => item.email.toLowerCase() === String(email).toLowerCase());
+  const users = readUsers();
+
+  const user = users.find(
+    item => item.email.toLowerCase() === String(email).toLowerCase()
+  );
 
   if (!user || user.isActive !== "true") {
     return null;
   }
 
   const isValid = await bcrypt.compare(password, user.passwordHash);
+
   if (!isValid) {
     return null;
   }
 
   user.lastLoginAt = new Date().toISOString();
-  writeCsv(USER_FILE, users);
+  writeUsers(users);
 
   return sanitizeUser(user);
 }
@@ -67,4 +105,14 @@ function sanitizeUser(user) {
   };
 }
 
-module.exports = { findByEmail, createUser, verifyUser, sanitizeUser };
+module.exports = {
+  USER_HEADERS,
+  findByEmail,
+  findById,
+  listUsers,
+  createUser,
+  verifyUser,
+  sanitizeUser,
+  readUsers,
+  writeUsers
+};

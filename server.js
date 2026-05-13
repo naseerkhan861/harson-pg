@@ -8,6 +8,7 @@ const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 
 const authRoutes = require("./src/routes/authRoutes");
+const aigcAccountRoutes = require("./src/routes/aigcAccountRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -53,6 +54,16 @@ app.use(
   authRoutes
 );
 
+app.use(
+  "/api/aigc",
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 120,
+    message: { success: false, message: "Too many requests. Please try again later." }
+  }),
+  aigcAccountRoutes
+);
+
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
@@ -61,6 +72,10 @@ app.get("/", (req, res) => {
 
 app.get("/login", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+
+app.get("/account-management", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "account-management.html"));
 });
 
 app.use((req, res) => {

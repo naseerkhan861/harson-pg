@@ -3,18 +3,7 @@ const path = require("path");
 const { parse } = require("csv-parse/sync");
 const { stringify } = require("csv-stringify/sync");
 
-const CSV_HEADERS = [
-  "id",
-  "name",
-  "email",
-  "passwordHash",
-  "role",
-  "createdAt",
-  "lastLoginAt",
-  "isActive"
-];
-
-function ensureCsvFile(filePath) {
+function ensureCsvFile(filePath, headers) {
   const absolutePath = path.resolve(filePath);
   const dir = path.dirname(absolutePath);
 
@@ -23,14 +12,22 @@ function ensureCsvFile(filePath) {
   }
 
   if (!fs.existsSync(absolutePath)) {
-    const csv = stringify([CSV_HEADERS]);
-    fs.writeFileSync(absolutePath, csv, { encoding: "utf8", mode: 0o600 });
+    const csv = stringify([], {
+      header: true,
+      columns: headers
+    });
+
+    fs.writeFileSync(absolutePath, csv, {
+      encoding: "utf8",
+      mode: 0o600
+    });
   }
 }
 
-function readCsv(filePath) {
-  ensureCsvFile(filePath);
+function readCsv(filePath, headers) {
+  ensureCsvFile(filePath, headers);
   const content = fs.readFileSync(path.resolve(filePath), "utf8");
+
   return parse(content, {
     columns: true,
     skip_empty_lines: true,
@@ -38,11 +35,12 @@ function readCsv(filePath) {
   });
 }
 
-function writeCsv(filePath, rows) {
-  ensureCsvFile(filePath);
+function writeCsv(filePath, rows, headers) {
+  ensureCsvFile(filePath, headers);
+
   const csv = stringify(rows, {
     header: true,
-    columns: CSV_HEADERS
+    columns: headers
   });
 
   fs.writeFileSync(path.resolve(filePath), csv, {
@@ -51,4 +49,8 @@ function writeCsv(filePath, rows) {
   });
 }
 
-module.exports = { readCsv, writeCsv };
+module.exports = {
+  readCsv,
+  writeCsv,
+  ensureCsvFile
+};
