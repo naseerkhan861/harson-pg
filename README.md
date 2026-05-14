@@ -76,3 +76,44 @@ data/creative_works.secure.csv
 ```
 
 These files are ignored by Git and should not be placed inside `public/`.
+
+
+
+
+
+
+
+## Setup
+
+```bash
+git clone https://github.com/your-username/harson-pg.git
+cd harson-pg
+npm install
+cp .env.example .env       # then fill in values (ask team lead)
+npm run setup              # creates local data/users.csv from seed
+npm start
+```
+
+Open http://localhost:3000
+
+## Test login
+
+Email: `test@example.com`
+Password: `password123`
+
+## Workflow
+
+1. `git checkout main && git pull` — sync first, always
+2. `git checkout -b feature/your-task` — branch before coding
+3. Code, commit often with clear messages
+4. `git push -u origin feature/your-task`
+5. Open a Pull Request on GitHub
+6. Wait for review and approval before merging
+
+## Never commit
+
+- `.env` (use `.env.example` as a template)
+- `data/users.csv` or any real CSV
+- `node_modules/`
+
+If unsure, check `.gitignore` or ask in #dev chat.
