@@ -6,12 +6,14 @@ const helmet = require("helmet");
 const compression = require("compression");
 const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
-
 const authRoutes = require("./src/routes/authRoutes");
 const aigcAccountRoutes = require("./src/routes/aigcAccountRoutes");
 
+const connectDB = require("./src/db");
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+
 
 app.use(
   helmet({
@@ -81,6 +83,8 @@ app.get("/account-management", (req, res) => {
 app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, "public", "index.html"));
 });
+
+connectDB();
 
 app.listen(PORT, () => {
   console.log(`HARSON app running at http://localhost:${PORT}`);
