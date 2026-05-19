@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const userCsvModel = require("../models/userCsvModel");
+const userModel = require("../models/userMongoModel");
 
 function createToken(user) {
   return jwt.sign(
@@ -21,7 +21,7 @@ async function register(req, res) {
       return res.status(400).json({ success: false, message: "Password must be at least 8 characters." });
     }
 
-    const user = await userCsvModel.createUser({ name, email, password });
+    const user = await userModel.createUser({ name, email, password });
     const token = createToken(user);
 
     res.cookie("harson_token", token, {
@@ -40,7 +40,7 @@ async function register(req, res) {
 async function login(req, res) {
   try {
     const { email, password } = req.body;
-    const user = await userCsvModel.verifyUser(email, password);
+    const user = await userModel.verifyUser(email, password);
 
     if (!user) {
       return res.status(401).json({ success: false, message: "Invalid email or password." });
