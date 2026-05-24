@@ -33,7 +33,8 @@ app.use(
         ],
         "img-src": ["'self'", "data:", "https://www.zhihuiyunji.com"],
         "connect-src": ["'self'"],
-        "frame-ancestors": ["'self'"]
+        "frame-ancestors": ["'self'"],
+        "upgrade-insecure-requests": null,
       }
     }
   })
@@ -76,6 +77,10 @@ app.get("/login", (req, res) => {
 
 app.get("/account-management", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "account-management.html"));
+});
+
+app.get("/dashboard", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "dashboard.html"));
 });
 
 app.use((req, res) => {
