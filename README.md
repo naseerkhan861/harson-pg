@@ -14,6 +14,7 @@ This project converts the original static HARSON HTML page into a modular Node.j
 - Shared enterprise credit pool.
 - One-to-one CL-Base account to AIGC sub-account mapping.
 - User creative-work isolation by mapped AIGC sub-account.
+- Static dashboard UI for the HARSON AI Platform.
 
 ## Run
 
@@ -61,6 +62,7 @@ ADMIN_PASSWORD=your-strong-password
 /                   Homepage
 /login              Login and register
 /account-management AIGC account center
+/dashboard          Static dashboard UI
 ```
 
 ## CSV files
