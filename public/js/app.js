@@ -30,6 +30,8 @@ document.addEventListener("DOMContentLoaded", () => {
     initBossAnalytics();
   }
 
+  initAccountAvatar();
+
   console.log("HARSON MVVM application loaded.");
 });
 
@@ -414,6 +416,93 @@ function initBossAnalytics() {
       updateLocal(localUserSelect.value, localPeriodSelect.value);
     });
   }
+}
+
+async function initAccountAvatar() {
+  const avatarButton = document.getElementById("accountAvatar");
+  const avatarText = document.getElementById("accountAvatarText");
+
+  if (!avatarButton || !avatarText) {
+    return;
+  }
+
+  let currentUser = null;
+
+  try {
+    const response = await fetch("/api/auth/me", {
+      method: "GET",
+      credentials: "include"
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+
+      if (result.success) {
+        currentUser = result.user || result.data || null;
+      }
+    }
+  } catch (error) {
+    currentUser = null;
+  }
+
+  if (!currentUser) {
+    avatarButton.classList.remove("logged-in");
+    avatarButton.title = "用户登录";
+    avatarText.innerHTML = `<i class="fas fa-user-circle"></i>`;
+
+    avatarButton.addEventListener("click", () => {
+      window.location.href = "/login";
+    });
+
+    return;
+  }
+
+  const role = currentUser.role || "";
+  const displayName = currentUser.name || currentUser.username || currentUser.email || "";
+  const avatarValue = role === "admin" ? "A" : getUserInitial(displayName);
+
+  avatarButton.classList.add("logged-in");
+  avatarButton.title = role === "admin" ? "管理员账号，点击退出登录" : "用户账号，点击退出登录";
+  avatarText.textContent = avatarValue;
+
+  avatarButton.addEventListener("click", async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include"
+      });
+    } finally {
+      window.location.href = "/";
+    }
+  });
+}
+
+function getUserInitial(value) {
+  if (!value) {
+    return "U";
+  }
+
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return "U";
+  }
+
+  const beforeAt = trimmed.includes("@") ? trimmed.split("@")[0] : trimmed;
+
+  const chineseMatch = beforeAt.match(/[\u4e00-\u9fa5]/);
+
+  if (chineseMatch) {
+    return chineseMatch[0];
+  }
+
+  const letterMatch = beforeAt.match(/[a-zA-Z]/);
+
+  if (letterMatch) {
+    return letterMatch[0].toUpperCase();
+  }
+
+  return "U";
 }
 
 function showToast(message) {

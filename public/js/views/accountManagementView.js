@@ -160,7 +160,7 @@ export class AccountManagementView {
     document.addEventListener("click", async event => {
       if (event.target && event.target.id === "logoutBtn") {
         await this.vm.logout();
-        window.location.href = "/login";
+        window.location.href = "/";
       }
     });
   }

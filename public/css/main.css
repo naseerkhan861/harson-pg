@@ -249,3 +249,40 @@ body { font-family: 'Inter', sans-serif; background-color: #ffffff; color: #1a1a
     padding: 24px;
   }
 }
+.account-avatar {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.account-avatar-text {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: transparent;
+  color: #607482;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.account-avatar.logged-in .account-avatar-text {
+  width: 20px;
+  height: 20px;
+  background: #009c9c;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
