@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const path = require("path");
 const express = require("express");
+const { requireAuth } = require("./src/middleware/authMiddleware");
 const helmet = require("helmet");
 const compression = require("compression");
 const cookieParser = require("cookie-parser");
@@ -79,8 +80,12 @@ app.get("/account-management", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "account-management.html"));
 });
 
-app.get("/dashboard", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "dashboard.html"));
+app.get("/dashboard", requireAuth, (req, res) => {
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(200).send("");
+  }
+
+  return res.sendFile(path.join(__dirname, "public", "dashboard.html"));
 });
 
 app.use((req, res) => {
