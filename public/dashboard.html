@@ -3,112 +3,353 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HARSON Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+  <title>HARSON AI Platform</title>
   <link rel="stylesheet" href="/css/dashboard.css" />
 </head>
-<body>
-  <div class="dashboard-shell">
 
-    <header class="topbar">
-      <div class="top-logo">
-        <span>HARSON</span>
-        <small>AI Platform</small>
-      </div>
-      <nav class="top-nav">
-        <a class="active" href="#">AIGC</a>
-        <a href="#">SCM</a>
-        <a href="#">PLM</a>
-        <a href="#">iShop</a>
-        <a href="#">iRobot</a>
-      </nav>
-    </header>
+<body data-page="dashboard">
+  <div class="stitch-decoration"></div>
 
-    <div class="dashboard-body">
-      <aside class="sidebar">
-
-        <nav class="side-nav">
-          <a class="active" href="/dashboard">AIGC 设计生成</a>
-          <a href="#">款式推荐</a>
-          <a href="#">供应商管理</a>
-          <a href="#">产品开发</a>
-          <a href="#">门店总览</a>
-          <a href="#">机器人调度</a>
-        </nav>
-      </aside>
-
-      <main class="main">
-        <section class="content">
-          <div class="page-title">
-            <h1>AIGC 设计生成</h1>
-            <p>AI驱动鞋类设计生成系统</p>
-          </div>
-
-          <section class="stats-grid">
-            <article class="stat-card">
-              <span>今日生成款式</span>
-              <strong>123</strong>
-            </article>
-
-            <article class="stat-card">
-              <span>AI采纳率</span>
-              <strong>85%</strong>
-            </article>
-
-            <article class="stat-card">
-              <span>机器人在线</span>
-              <strong>12</strong>
-            </article>
-
-            <article class="stat-card">
-              <span>门店营业额</span>
-              <strong>123,456</strong>
-            </article>
-          </section>
-
-          <section class="panel-grid">
-            <article class="panel orders-panel">
-              <h2>供应链订单</h2>
-              <table>
-                <thead>
-                  <tr>
-                    <th>订单号</th>
-                    <th>供应商</th>
-                    <th>品类</th>
-                    <th>数量</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>ORD001</td>
-                    <td>供应商A</td>
-                    <td>跑鞋</td>
-                      <td>100</td>
-                    </tr>
-                  <tr>
-                    <td>ORD002</td>
-                    <td>供应商B</td>
-                    <td>休闲鞋</td>
-                    <td>150</td>
-                  </tr>
-                </tbody>
-              </table>
-            </article>
-
-            <article class="panel robot-panel">
-              <h2>机器人状态</h2>
-              <ul>
-                <li><strong>机器人1</strong><span>工作中</span></li>
-                <li><strong>机器人2</strong><span>取货中</span></li>
-                <li><strong>机器人3</strong><span>待机</span></li>
-                <li><strong>机器人4</strong><span>工作中的</span></li>
-              </ul>
-            </article>
-          </section>
-        </section>
-      </main>
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">H</div>
+      <div class="logo-text">HARSON</div>
     </div>
 
-  </div>
+    <ul class="menu">
+      <li class="menu-item active" data-page="home">
+        <span class="menu-icon">🏠</span>
+        <span>首页</span>
+      </li>
+      <li class="menu-item" data-page="market">
+        <span class="menu-icon">🛒</span>
+        <span>应用市场</span>
+      </li>
+      <li class="menu-item" data-page="myapps">
+        <span class="menu-icon">📦</span>
+        <span>我的应用</span>
+      </li>
+      <li class="menu-item" data-page="analytics">
+        <span class="menu-icon">📊</span>
+        <span>经营分析</span>
+      </li>
+      <li class="menu-item" data-page="messages">
+        <span class="menu-icon">💬</span>
+        <span>消息中心</span>
+      </li>
+      <li class="menu-item" data-page="settings">
+        <span class="menu-icon">⚙️</span>
+        <span>设置</span>
+      </li>
+    </ul>
+  </aside>
+
+  <main class="main">
+    <header class="header">
+      <h1>HARSON AI Platform</h1>
+      <p>智能应用超市</p>
+    </header>
+
+    <section class="stats" aria-label="平台概览">
+      <article class="stat-card">
+        <div class="stat-label">应用总数</div>
+        <div class="stat-value">4 <span>个核心模块</span></div>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-label">运行中</div>
+        <div class="stat-value">3 <span>个应用</span></div>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-label">今日访问</div>
+        <div class="stat-value">1,234 <span>次</span></div>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-label">系统状态</div>
+        <div class="stat-value status-value">● 正常运行</div>
+      </article>
+    </section>
+
+    <section class="apps-section">
+      <div class="section-title">核心应用模块</div>
+
+      <div class="apps-grid">
+        <article class="app-card">
+          <div class="app-header">
+            <div class="app-icon aigc">AI</div>
+            <div class="app-info">
+              <div class="app-name">CL-AIGC</div>
+              <div class="app-desc">时尚生成式AI · 品牌视觉引擎，支持图像、文案、视频与鞋款概念生成。</div>
+            </div>
+          </div>
+
+          <div class="app-status running">运行中</div>
+
+          <div class="app-actions">
+            <button class="btn btn-primary app-action-btn" data-action="start" data-app="CL-AIGC">启动</button>
+            <button class="btn btn-secondary app-action-btn" data-action="stop" data-app="CL-AIGC">停止</button>
+          </div>
+        </article>
+
+        <article class="app-card">
+          <div class="app-header">
+            <div class="app-icon scm">SC</div>
+            <div class="app-info">
+              <div class="app-name">CL-SCM</div>
+              <div class="app-desc">端到端智能供应链，覆盖供应商、订单、库存、物流与风险预警。</div>
+            </div>
+          </div>
+
+          <div class="app-status running">运行中</div>
+
+          <div class="app-actions">
+            <button class="btn btn-primary app-action-btn" data-action="start" data-app="CL-SCM">启动</button>
+            <button class="btn btn-secondary app-action-btn" data-action="stop" data-app="CL-SCM">停止</button>
+          </div>
+        </article>
+
+        <article class="app-card">
+          <div class="app-header">
+            <div class="app-icon istore">iS</div>
+            <div class="app-info">
+              <div class="app-name">CL-iShop</div>
+              <div class="app-desc">数智化零售与体验，支持门店经营、会员运营、销售分析与客户洞察。</div>
+            </div>
+          </div>
+
+          <div class="app-status running">运行中</div>
+
+          <div class="app-actions">
+            <button class="btn btn-primary app-action-btn" data-action="start" data-app="CL-iShop">启动</button>
+            <button class="btn btn-secondary app-action-btn" data-action="stop" data-app="CL-iShop">停止</button>
+          </div>
+        </article>
+
+        <article class="app-card">
+          <div class="app-header">
+            <div class="app-icon irobot">IR</div>
+            <div class="app-info">
+              <div class="app-name">CL-iRobot</div>
+              <div class="app-desc">自主移动与协作机器人，支持任务调度、路径规划与无人值守运行。</div>
+            </div>
+          </div>
+
+          <div class="app-status stopped">已停止</div>
+
+          <div class="app-actions">
+            <button class="btn btn-primary app-action-btn" data-action="start" data-app="CL-iRobot">启动</button>
+            <button class="btn btn-secondary app-action-btn" data-action="stop" data-app="CL-iRobot">停止</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="analytics-section">
+      <div class="section-title">管理经营分析</div>
+
+      <div class="analytics-toolbar">
+        <div>
+          <h3>平台整体层级 · token 分析</h3>
+          <p>按时间维度查看整个平台的购买 token、消耗 token、剩余 token、消费金额和应用使用数量。</p>
+        </div>
+
+        <select id="globalPeriodSelect" class="user-select">
+          <option value="daily">今日</option>
+          <option value="weekly">本周</option>
+          <option value="monthly">本月</option>
+          <option value="threeMonths">近三个月</option>
+          <option value="sixMonths">近六个月</option>
+        </select>
+      </div>
+
+      <div class="analytics-summary-grid five-col">
+        <article class="analytics-card">
+          <div class="stat-label">购买 token</div>
+          <div class="stat-value" id="globalPurchased">120,000 <span>tokens</span></div>
+        </article>
+
+        <article class="analytics-card">
+          <div class="stat-label">消耗 token</div>
+          <div class="stat-value" id="globalConsumed">82,000 <span>tokens</span></div>
+        </article>
+
+        <article class="analytics-card">
+          <div class="stat-label">剩余 token</div>
+          <div class="stat-value" id="globalRemaining">38,000 <span>tokens</span></div>
+        </article>
+
+        <article class="analytics-card">
+          <div class="stat-label">消费金额</div>
+          <div class="stat-value" id="globalMoney">¥26,800</div>
+        </article>
+
+        <article class="analytics-card">
+          <div class="stat-label">使用应用数</div>
+          <div class="stat-value" id="globalAppsUsed">4 <span>个应用</span></div>
+        </article>
+      </div>
+
+      <div class="chart-grid">
+        <article class="chart-card">
+          <div class="chart-header">
+            <div>
+              <h3>各应用 token 使用量</h3>
+              <p>用于判断哪个应用使用最多，哪个应用使用较少。</p>
+            </div>
+          </div>
+
+          <div class="bar-chart">
+            <div class="bar-row">
+              <span>CL-AIGC</span>
+              <div class="bar-track"><div class="bar-fill aigc-bar width-92"></div></div>
+              <strong>520K</strong>
+            </div>
+
+            <div class="bar-row">
+              <span>CL-iShop</span>
+              <div class="bar-track"><div class="bar-fill shop-bar width-58"></div></div>
+              <strong>330K</strong>
+            </div>
+
+            <div class="bar-row">
+              <span>CL-SCM</span>
+              <div class="bar-track"><div class="bar-fill scm-bar width-37"></div></div>
+              <strong>210K</strong>
+            </div>
+
+            <div class="bar-row">
+              <span>CL-iRobot</span>
+              <div class="bar-track"><div class="bar-fill robot-bar width-21"></div></div>
+              <strong>120K</strong>
+            </div>
+          </div>
+        </article>
+
+        <article class="chart-card">
+          <div class="chart-header">
+            <div>
+              <h3>年龄组 token 购买分布</h3>
+              <p>用于判断哪些年龄组购买 token 较多。</p>
+            </div>
+          </div>
+
+          <div class="pie-layout">
+            <div class="css-pie age-pie" aria-label="年龄组 token 购买分布"></div>
+
+            <div class="legend-list">
+              <div><span class="dot age-1"></span>18-24 岁：18%</div>
+              <div><span class="dot age-2"></span>25-34 岁：42%</div>
+              <div><span class="dot age-3"></span>35-44 岁：25%</div>
+              <div><span class="dot age-4"></span>45 岁以上：15%</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="chart-card wide-chart-card">
+          <div class="chart-header">
+            <div>
+              <h3>本周 token 购买趋势</h3>
+              <p>用于查看本周每天购买了多少 token。</p>
+            </div>
+          </div>
+
+          <div class="weekly-chart">
+            <div class="week-bar h-44"><span>周一</span><strong>45K</strong></div>
+            <div class="week-bar h-61"><span>周二</span><strong>62K</strong></div>
+            <div class="week-bar h-38"><span>周三</span><strong>39K</strong></div>
+            <div class="week-bar h-70"><span>周四</span><strong>71K</strong></div>
+            <div class="week-bar h-82"><span>周五</span><strong>82K</strong></div>
+            <div class="week-bar h-54"><span>周六</span><strong>54K</strong></div>
+            <div class="week-bar h-68"><span>周日</span><strong>68K</strong></div>
+          </div>
+        </article>
+      </div>
+
+      <div class="local-analytics-section">
+        <div class="analytics-toolbar">
+          <div>
+            <h3>用户个体层级 · token 分析</h3>
+            <p>选择具体用户和时间维度，查看个人购买 token、消耗 token、剩余 token、消费金额和应用使用数量。</p>
+          </div>
+
+          <div class="local-filters">
+            <select id="localUserSelect" class="user-select">
+              <option value="zhangchen">张晨</option>
+              <option value="liwen">李雯</option>
+              <option value="wanglei">王磊</option>
+              <option value="chenyu">陈雨</option>
+            </select>
+
+            <select id="localPeriodSelect" class="user-select">
+              <option value="daily">今日</option>
+              <option value="weekly">本周</option>
+              <option value="monthly">本月</option>
+              <option value="threeMonths">近三个月</option>
+              <option value="sixMonths">近六个月</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="analytics-summary-grid five-col">
+          <article class="analytics-card">
+            <div class="stat-label">购买 token</div>
+            <div class="stat-value" id="localPurchased">18,000 <span>tokens</span></div>
+          </article>
+
+          <article class="analytics-card">
+            <div class="stat-label">消耗 token</div>
+            <div class="stat-value" id="localConsumed">12,600 <span>tokens</span></div>
+          </article>
+
+          <article class="analytics-card">
+            <div class="stat-label">剩余 token</div>
+            <div class="stat-value" id="localRemaining">5,400 <span>tokens</span></div>
+          </article>
+
+          <article class="analytics-card">
+            <div class="stat-label">消费金额</div>
+            <div class="stat-value" id="localMoney">¥3,600</div>
+          </article>
+
+          <article class="analytics-card">
+            <div class="stat-label">使用应用数</div>
+            <div class="stat-value" id="localAppsUsed">3 <span>个应用</span></div>
+          </article>
+        </div>
+
+        <div class="chart-grid local-chart-grid">
+          <article class="chart-card">
+            <div class="chart-header">
+              <div>
+                <h3>用户 token 消耗比例</h3>
+                <p>展示所选用户在当前时间维度下，已消耗 token 与剩余 token 的比例。</p>
+              </div>
+            </div>
+
+            <div class="user-consumption-layout">
+              <div class="css-pie user-pie" id="localConsumptionPie" aria-label="用户 token 消耗比例"></div>
+
+              <div class="user-metrics">
+                <div>
+                  <span>主要使用应用</span>
+                  <strong id="localTopApp">CL-AIGC</strong>
+                </div>
+                <div>
+                  <span>当前分析维度</span>
+                  <strong id="localPeriodLabel">今日</strong>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script type="module" src="/js/app.js"></script>
 </body>
 </html>
