@@ -2,7 +2,7 @@ require("dotenv").config();
 
 const path = require("path");
 const express = require("express");
-const { requireAuth } = require("./src/middleware/authMiddleware");
+const jwt = require("jsonwebtoken");
 const helmet = require("helmet");
 const compression = require("compression");
 const cookieParser = require("cookie-parser");
@@ -35,7 +35,7 @@ app.use(
         "img-src": ["'self'", "data:", "https://www.zhihuiyunji.com"],
         "connect-src": ["'self'"],
         "frame-ancestors": ["'self'"],
-        "upgrade-insecure-requests": null,
+        "upgrade-insecure-requests": null
       }
     }
   })
@@ -51,7 +51,10 @@ app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 60,
-    message: { success: false, message: "Too many requests. Please try again later." }
+    message: {
+      success: false,
+      message: "Too many requests. Please try again later."
+    }
   }),
   authRoutes
 );
@@ -61,7 +64,10 @@ app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 120,
-    message: { success: false, message: "Too many requests. Please try again later." }
+    message: {
+      success: false,
+      message: "Too many requests. Please try again later."
+    }
   }),
   aigcAccountRoutes
 );
@@ -80,12 +86,24 @@ app.get("/account-management", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "account-management.html"));
 });
 
-app.get("/dashboard", requireAuth, (req, res) => {
-  if (!req.user || req.user.role !== "admin") {
+app.get("/dashboard", (req, res) => {
+  const token = req.cookies?.harson_token;
+
+  if (!token) {
     return res.status(200).send("");
   }
 
-  return res.sendFile(path.join(__dirname, "public", "dashboard.html"));
+  try {
+    const user = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (!user || user.role !== "admin") {
+      return res.status(200).send("");
+    }
+
+    return res.sendFile(path.join(__dirname, "public", "dashboard.html"));
+  } catch {
+    return res.status(200).send("");
+  }
 });
 
 app.use((req, res) => {

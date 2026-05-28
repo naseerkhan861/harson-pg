@@ -861,4 +861,18 @@ body::before {
   .local-filters .user-select {
     width: 100%;
   }
+  
+}
+.dashboard-logo-link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.dashboard-logo-link:hover .logo-text {
+  color: var(--primary);
+}
+
+.dashboard-logo-link:hover .logo-icon {
+  transform: translateY(-1px);
 }

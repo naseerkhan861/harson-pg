@@ -8,30 +8,92 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <link rel="stylesheet" href="/css/main.css" />
 </head>
+
 <body data-page="auth">
   <main class="auth-page">
     <div class="auth-card">
-      <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> 返回首页</a>
+      <a href="/" class="back-link">
+        <i class="fas fa-arrow-left"></i> 返回首页
+      </a>
+
       <h1>HARSON 用户中心</h1>
       <p>使用 CSV 安全账户文件维护用户、密码哈希和登录信息。</p>
+
       <div id="authMessage" class="auth-message"></div>
+
       <div class="auth-grid">
         <form id="loginForm" class="auth-form">
           <h2>登录</h2>
-          <label>邮箱<input type="email" name="email" required /></label>
-          <label>密码<input type="password" name="password" required /></label>
+
+          <label>
+            邮箱
+            <input type="email" name="email" required />
+          </label>
+
+          <label>
+            密码
+            <input type="password" name="password" required />
+          </label>
+
           <button type="submit">登录</button>
         </form>
+
         <form id="registerForm" class="auth-form">
           <h2>注册</h2>
-          <label>姓名<input type="text" name="name" required /></label>
-          <label>邮箱<input type="email" name="email" required /></label>
-          <label>密码<input type="password" name="password" minlength="8" required /></label>
+
+          <label>
+            姓名
+            <input type="text" name="name" required />
+          </label>
+
+          <label>
+            邮箱
+            <input type="email" name="email" required />
+          </label>
+
+          <label>
+            密码
+            <input type="password" name="password" minlength="8" required />
+          </label>
+
+          <div class="auth-inline-fields">
+            <label class="inline-field">
+              <span>性别</span>
+              <div class="select-wrap">
+                <select name="gender" required>
+                  <option value="">请选择性别</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </label>
+
+            <label class="inline-field">
+              <span>年龄组</span>
+              <div class="select-wrap">
+                <select name="ageGroup" required>
+                  <option value="">请选择年龄组</option>
+                  <option value="0-10">0 to 10</option>
+                  <option value="11-20">11 to 20</option>
+                  <option value="21-30">21 to 30</option>
+                  <option value="31-40">31 to 40</option>
+                  <option value="41-50">41 to 50</option>
+                  <option value="51-60">51 to 60</option>
+                  <option value="61-70">61 to 70</option>
+                  <option value="71-80">71 to 80</option>
+                  <option value="81-90">81 to 90</option>
+                </select>
+              </div>
+            </label>
+          </div>
+
           <button type="submit">创建账户</button>
         </form>
       </div>
     </div>
   </main>
+
   <script type="module" src="/js/app.js"></script>
 </body>
 </html>

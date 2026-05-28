@@ -1,6 +1,19 @@
 const jwt = require("jsonwebtoken");
 const userCsvModel = require("../models/userCsvModel");
 
+const VALID_GENDERS = ["Male", "Female", "Other"];
+const VALID_AGE_GROUPS = [
+  "0-10",
+  "11-20",
+  "21-30",
+  "31-40",
+  "41-50",
+  "51-60",
+  "61-70",
+  "71-80",
+  "81-90"
+];
+
 function createToken(user) {
   return jwt.sign(
     { id: user.id, email: user.email, role: user.role },
@@ -11,17 +24,44 @@ function createToken(user) {
 
 async function register(req, res) {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, gender, ageGroup } = req.body;
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ success: false, message: "Name, email and password are required." });
+    if (!name || !email || !password || !gender || !ageGroup) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, email, password, gender and age group are required."
+      });
+    }
+
+    if (!VALID_GENDERS.includes(gender)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid gender selected."
+      });
+    }
+
+    if (!VALID_AGE_GROUPS.includes(ageGroup)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid age group selected."
+      });
     }
 
     if (password.length < 8) {
-      return res.status(400).json({ success: false, message: "Password must be at least 8 characters." });
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 8 characters."
+      });
     }
 
-    const user = await userCsvModel.createUser({ name, email, password });
+    const user = await userCsvModel.createUser({
+      name,
+      email,
+      password,
+      gender,
+      ageGroup
+    });
+
     const token = createToken(user);
 
     res.cookie("harson_token", token, {
@@ -31,9 +71,16 @@ async function register(req, res) {
       maxAge: 2 * 60 * 60 * 1000
     });
 
-    return res.status(201).json({ success: true, message: "Account created successfully.", user });
+    return res.status(201).json({
+      success: true,
+      message: "Account created successfully.",
+      user
+    });
   } catch (error) {
-    return res.status(400).json({ success: false, message: error.message || "Registration failed." });
+    return res.status(400).json({
+      success: false,
+      message: error.message || "Registration failed."
+    });
   }
 }
 
@@ -43,10 +90,14 @@ async function login(req, res) {
     const user = await userCsvModel.verifyUser(email, password);
 
     if (!user) {
-      return res.status(401).json({ success: false, message: "Invalid email or password." });
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password."
+      });
     }
 
     const token = createToken(user);
+
     res.cookie("harson_token", token, {
       httpOnly: true,
       sameSite: "strict",
@@ -54,19 +105,33 @@ async function login(req, res) {
       maxAge: 2 * 60 * 60 * 1000
     });
 
-    return res.json({ success: true, message: "Login successful.", user });
+    return res.json({
+      success: true,
+      message: "Login successful.",
+      user
+    });
   } catch {
-    return res.status(500).json({ success: false, message: "Login failed." });
+    return res.status(500).json({
+      success: false,
+      message: "Login failed."
+    });
   }
 }
 
 function logout(req, res) {
   res.clearCookie("harson_token");
-  return res.json({ success: true, message: "Logged out successfully." });
+
+  return res.json({
+    success: true,
+    message: "Logged out successfully."
+  });
 }
 
 function me(req, res) {
-  return res.json({ success: true, user: req.user || null });
+  return res.json({
+    success: true,
+    user: req.user || null
+  });
 }
 
 module.exports = { register, login, logout, me };

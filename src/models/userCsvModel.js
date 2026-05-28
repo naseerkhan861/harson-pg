@@ -10,6 +10,8 @@ const USER_HEADERS = [
   "email",
   "passwordHash",
   "role",
+  "gender",
+  "ageGroup",
   "createdAt",
   "lastLoginAt",
   "isActive"
@@ -25,6 +27,7 @@ function writeUsers(users) {
 
 async function findByEmail(email) {
   const users = readUsers();
+
   return users.find(
     user => user.email.toLowerCase() === String(email).toLowerCase()
   );
@@ -33,6 +36,7 @@ async function findByEmail(email) {
 async function findById(id) {
   const users = readUsers();
   const user = users.find(item => item.id === id);
+
   return user ? sanitizeUser(user) : null;
 }
 
@@ -40,7 +44,14 @@ async function listUsers() {
   return readUsers().map(sanitizeUser);
 }
 
-async function createUser({ name, email, password, role = "user" }) {
+async function createUser({
+  name,
+  email,
+  password,
+  role = "user",
+  gender = "",
+  ageGroup = ""
+}) {
   const users = readUsers();
 
   const existingUser = users.find(
@@ -59,6 +70,8 @@ async function createUser({ name, email, password, role = "user" }) {
     email: String(email).toLowerCase(),
     passwordHash,
     role,
+    gender,
+    ageGroup,
     createdAt: new Date().toISOString(),
     lastLoginAt: "",
     isActive: "true"
@@ -99,6 +112,8 @@ function sanitizeUser(user) {
     name: user.name,
     email: user.email,
     role: user.role,
+    gender: user.gender || "",
+    ageGroup: user.ageGroup || "",
     createdAt: user.createdAt,
     lastLoginAt: user.lastLoginAt,
     isActive: user.isActive === "true"
