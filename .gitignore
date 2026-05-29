@@ -40,3 +40,21 @@ Thumbs.db
 release/
 dist/
 
+
+# Build and release outputs
+release/
+dist/
+out/
+*.exe
+*.msi
+*.zip
+*.7z
+
+# Build and release outputs
+release/
+dist/
+out/
+*.exe
+*.msi
+*.zip
+*.7z

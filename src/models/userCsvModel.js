@@ -1,8 +1,28 @@
+const path = require("path");
 const bcrypt = require("bcryptjs");
 const { nanoid } = require("nanoid");
 const { readCsv, writeCsv } = require("../utils/csvStore");
 
-const USER_FILE = process.env.CSV_USER_FILE || "./data/users.secure.csv";
+/**
+ * Runtime data directory
+ *
+ * Development:
+ *   D:\\harson-platform\\harson-pg\\data
+ *
+ * Installed Electron app:
+ *   C:\\Users\\<user>\\AppData\\Roaming\\HARSON CL_Base Platform\\data
+ *
+ * IMPORTANT:
+ * Do not allow CSV_USER_FILE from .env to override this path in the packaged app.
+ * The installed app must read/write user data from a writable AppData folder.
+ */
+const DATA_DIR =
+  process.env.HARSON_DATA_DIR ||
+  path.join(__dirname, "../../data");
+
+const USER_FILE = path.join(DATA_DIR, "users.secure.csv");
+
+console.log("[HARSON] USER_FILE =", USER_FILE);
 
 const USER_HEADERS = [
   "id",
@@ -10,6 +30,8 @@ const USER_HEADERS = [
   "email",
   "passwordHash",
   "role",
+  "gender",
+  "ageGroup",
   "createdAt",
   "lastLoginAt",
   "isActive"
@@ -25,6 +47,7 @@ function writeUsers(users) {
 
 async function findByEmail(email) {
   const users = readUsers();
+
   return users.find(
     user => user.email.toLowerCase() === String(email).toLowerCase()
   );
@@ -33,6 +56,7 @@ async function findByEmail(email) {
 async function findById(id) {
   const users = readUsers();
   const user = users.find(item => item.id === id);
+
   return user ? sanitizeUser(user) : null;
 }
 
@@ -40,7 +64,14 @@ async function listUsers() {
   return readUsers().map(sanitizeUser);
 }
 
-async function createUser({ name, email, password, role = "user" }) {
+async function createUser({
+  name,
+  email,
+  password,
+  role = "user",
+  gender = "",
+  ageGroup = ""
+}) {
   const users = readUsers();
 
   const existingUser = users.find(
@@ -59,6 +90,8 @@ async function createUser({ name, email, password, role = "user" }) {
     email: String(email).toLowerCase(),
     passwordHash,
     role,
+    gender,
+    ageGroup,
     createdAt: new Date().toISOString(),
     lastLoginAt: "",
     isActive: "true"
@@ -99,6 +132,8 @@ function sanitizeUser(user) {
     name: user.name,
     email: user.email,
     role: user.role,
+    gender: user.gender || "",
+    ageGroup: user.ageGroup || "",
     createdAt: user.createdAt,
     lastLoginAt: user.lastLoginAt,
     isActive: user.isActive === "true"
