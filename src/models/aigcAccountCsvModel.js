@@ -1,11 +1,35 @@
+const path = require("path");
 const bcrypt = require("bcryptjs");
 const { nanoid } = require("nanoid");
 const { readCsv, writeCsv } = require("../utils/csvStore");
 
-const MASTER_FILE = process.env.CSV_AIGC_MASTER_FILE || "./data/aigc_master_accounts.secure.csv";
-const SUB_FILE = process.env.CSV_AIGC_SUB_FILE || "./data/aigc_sub_accounts.secure.csv";
-const MAPPING_FILE = process.env.CSV_ACCOUNT_MAPPING_FILE || "./data/account_mappings.secure.csv";
-const WORK_FILE = process.env.CSV_CREATIVE_WORK_FILE || "./data/creative_works.secure.csv";
+/**
+ * Runtime data directory
+ *
+ * Development:
+ *   D:\\harson-platform\\harson-pg\\data
+ *
+ * Installed Electron app:
+ *   C:\\Users\\<user>\\AppData\\Roaming\\HARSON CL_Base Platform\\data
+ *
+ * IMPORTANT:
+ * Do not allow CSV_* variables from .env to override these paths in the packaged app.
+ * These CSV files are live runtime data and must be readable/writable.
+ */
+const DATA_DIR =
+  process.env.HARSON_DATA_DIR ||
+  path.join(__dirname, "../../data");
+
+const MASTER_FILE = path.join(DATA_DIR, "aigc_master_accounts.secure.csv");
+const SUB_FILE = path.join(DATA_DIR, "aigc_sub_accounts.secure.csv");
+const MAPPING_FILE = path.join(DATA_DIR, "account_mappings.secure.csv");
+const WORK_FILE = path.join(DATA_DIR, "creative_works.secure.csv");
+
+console.log("[HARSON] DATA_DIR =", DATA_DIR);
+console.log("[HARSON] MASTER_FILE =", MASTER_FILE);
+console.log("[HARSON] SUB_FILE =", SUB_FILE);
+console.log("[HARSON] MAPPING_FILE =", MAPPING_FILE);
+console.log("[HARSON] WORK_FILE =", WORK_FILE);
 
 const MASTER_HEADERS = [
   "id",

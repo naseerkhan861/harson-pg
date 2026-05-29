@@ -8,7 +8,7 @@ This project converts the original static HARSON HTML page into a modular Node.j
 - CL-Base user registration and login.
 - Passwords stored as bcrypt hashes, not plain text.
 - HTTP-only JWT login cookie.
-- Secure CSV files stored outside the public folder.
+- User authentication data stored in MongoDB Atlas.
 - AIGC enterprise master account management.
 - AIGC sub-account management.
 - Shared enterprise credit pool.
@@ -16,18 +16,90 @@ This project converts the original static HARSON HTML page into a modular Node.j
 - User creative-work isolation by mapped AIGC sub-account.
 - Static dashboard UI for the HARSON AI Platform.
 
-## Run
+## Run locally
+
+### 1. Install dependencies
 
 ```bash
 npm install
-npm start
 ```
 
-On Windows PowerShell, if npm.ps1 is blocked, use:
+On Windows PowerShell, if `npm.ps1` is blocked, use:
 
 ```powershell
 npm.cmd install
-npm.cmd start
+```
+
+### 2. Create local environment file
+
+Copy `.env.example` to `.env`:
+
+```bash
+cp .env.example .env
+```
+
+On Windows PowerShell:
+
+```powershell
+copy .env.example .env
+```
+
+Then open `.env` and fill in the required values:
+
+```env
+PORT=3000
+JWT_SECRET=change-this-to-a-long-random-secret-key
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster-url>/<database-name>?appName=<app-name>
+```
+
+The real `.env` file is ignored by Git and should not be committed.
+
+### 3. Configure MongoDB Atlas
+
+This project uses MongoDB Atlas as the cloud database for user authentication. A local MongoDB installation is not required.
+
+The MongoDB connection string must be configured in the local `.env` file as `MONGODB_URI`.
+
+For team development, ask the team lead for the shared MongoDB Atlas development connection string.
+
+For independent setup, create a MongoDB Atlas database, then get the connection string from:
+
+```text
+MongoDB Atlas → Database → Connect → Drivers → Node.js
+```
+
+Replace the placeholders in `MONGODB_URI`:
+
+```text
+<username>       MongoDB database username
+<password>       MongoDB database password
+<cluster-url>    MongoDB Atlas cluster URL
+<database-name>  MongoDB database name, for example intern_login_demo
+<app-name>       Optional Atlas app name
+```
+
+For local development, make sure your current IP address is allowed in MongoDB Atlas:
+
+```text
+MongoDB Atlas → Security → Network Access → Add IP Address
+```
+
+### 4. Start the app
+
+```bash
+npm run dev
+```
+
+Or:
+
+```bash
+npm start
+```
+
+If MongoDB is configured correctly, the terminal should show:
+
+```text
+MongoDB connected successfully
 ```
 
 Open:
@@ -65,17 +137,20 @@ ADMIN_PASSWORD=your-strong-password
 /dashboard          Static dashboard UI
 ```
 
-## CSV files
+## Data storage
 
-The secure CSV files are created automatically in `data/`:
+User authentication data is stored in MongoDB Atlas.
+
+Some legacy or non-authentication project features may still use secure CSV files stored in `data/`, such as AIGC account management data.
+
+Example CSV files:
 
 ```text
-data/users.secure.csv
 data/aigc_master_accounts.secure.csv
 data/aigc_sub_accounts.secure.csv
 data/account_mappings.secure.csv
 data/creative_works.secure.csv
-```
+
 
 These files are ignored by Git and should not be placed inside `public/`.
 
@@ -85,23 +160,34 @@ These files are ignored by Git and should not be placed inside `public/`.
 
 
 
-## Setup
+## Test authentication
+
+Register a dummy user:
 
 ```bash
-git clone https://github.com/your-username/harson-pg.git
-cd harson-pg
-npm install
-cp .env.example .env       # then fill in values (ask team lead)
-npm run setup              # creates local data/users.csv from seed
-npm start
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Dummy User","email":"dummy@example.com","password":"password123"}'
 ```
 
-Open http://localhost:3000
+Login with the dummy user:
 
-## Test login
+```bash
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"dummy@example.com","password":"password123"}'
+```
 
-Email: `test@example.com`
-Password: `password123`
+Test failed login with a wrong password:
+
+```bash
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"dummy@example.com","password":"wrongpassword"}'
+```
+
+Passwords are hashed with `bcryptjs` before being stored in MongoDB. The plain text password is never saved.
+
 
 ## Workflow
 
@@ -115,7 +201,7 @@ Password: `password123`
 ## Never commit
 
 - `.env` (use `.env.example` as a template)
-- `data/users.csv` or any real CSV
+- `Any real CSV data files in `data/`
 - `node_modules/`
 
 If unsure, check `.gitignore` or ask in #dev chat.

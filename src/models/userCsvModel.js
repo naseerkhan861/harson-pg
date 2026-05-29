@@ -1,8 +1,28 @@
+const path = require("path");
 const bcrypt = require("bcryptjs");
 const { nanoid } = require("nanoid");
 const { readCsv, writeCsv } = require("../utils/csvStore");
 
-const USER_FILE = process.env.CSV_USER_FILE || "./data/users.secure.csv";
+/**
+ * Runtime data directory
+ *
+ * Development:
+ *   D:\\harson-platform\\harson-pg\\data
+ *
+ * Installed Electron app:
+ *   C:\\Users\\<user>\\AppData\\Roaming\\HARSON CL_Base Platform\\data
+ *
+ * IMPORTANT:
+ * Do not allow CSV_USER_FILE from .env to override this path in the packaged app.
+ * The installed app must read/write user data from a writable AppData folder.
+ */
+const DATA_DIR =
+  process.env.HARSON_DATA_DIR ||
+  path.join(__dirname, "../../data");
+
+const USER_FILE = path.join(DATA_DIR, "users.secure.csv");
+
+console.log("[HARSON] USER_FILE =", USER_FILE);
 
 const USER_HEADERS = [
   "id",
