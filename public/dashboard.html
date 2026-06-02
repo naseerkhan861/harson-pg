@@ -8,12 +8,14 @@
 </head>
 
 <body data-page="dashboard">
-  <div class="stitch-decoration"></div>
-
   <aside class="sidebar">
     <a href="/" class="logo dashboard-logo-link" title="返回首页">
       <div class="logo-icon">H</div>
-      <div class="logo-text">HARSON</div>
+      <div class="dashboard-logo-text">
+        <span class="dashboard-logo-main">HARSON</span>
+        <span class="dashboard-logo-divider">|</span>
+        <span class="dashboard-logo-sub">数智化平台</span>
+      </div>
     </a>
 
     <ul class="menu">
@@ -47,7 +49,7 @@
   <main class="main">
     <header class="header">
       <h1>HARSON AI Platform</h1>
-      <p>智能应用超市</p>
+      <p>智能应用超市 · CL-AIGC token 经营分析中心</p>
     </header>
 
     <section class="stats" aria-label="平台概览">
@@ -76,12 +78,12 @@
       <div class="section-title">核心应用模块</div>
 
       <div class="apps-grid">
-        <article class="app-card">
+        <article class="app-card aigc-launch-card" data-open-url="/aigc" title="点击进入 CL-AIGC token 采购页面">
           <div class="app-header">
             <div class="app-icon aigc">AI</div>
             <div class="app-info">
               <div class="app-name">CL-AIGC</div>
-              <div class="app-desc">时尚生成式AI · 品牌视觉引擎，支持图像、文案、视频与鞋款概念生成。</div>
+              <div class="app-desc">时尚生成式AI · 品牌视觉引擎，支持图像、文案、视频与鞋款概念生成。该模块使用 token。</div>
             </div>
           </div>
 
@@ -98,7 +100,7 @@
             <div class="app-icon scm">SC</div>
             <div class="app-info">
               <div class="app-name">CL-SCM</div>
-              <div class="app-desc">端到端智能供应链，覆盖供应商、订单、库存、物流与风险预警。</div>
+              <div class="app-desc">端到端智能供应链，覆盖供应商、订单、库存、物流与风险预警。该模块统计使用次数，不消耗 token。</div>
             </div>
           </div>
 
@@ -114,16 +116,16 @@
           <div class="app-header">
             <div class="app-icon istore">iS</div>
             <div class="app-info">
-              <div class="app-name">CL-iShop</div>
-              <div class="app-desc">数智化零售与体验，支持门店经营、会员运营、销售分析与客户洞察。</div>
+              <div class="app-name">CL-iStore</div>
+              <div class="app-desc">数智化零售与体验，支持门店经营、会员运营、销售分析与客户洞察。该模块统计使用次数，不消耗 token。</div>
             </div>
           </div>
 
           <div class="app-status running">运行中</div>
 
           <div class="app-actions">
-            <button class="btn btn-primary app-action-btn" data-action="start" data-app="CL-iShop">启动</button>
-            <button class="btn btn-secondary app-action-btn" data-action="stop" data-app="CL-iShop">停止</button>
+            <button class="btn btn-primary app-action-btn" data-action="start" data-app="CL-iStore">启动</button>
+            <button class="btn btn-secondary app-action-btn" data-action="stop" data-app="CL-iStore">停止</button>
           </div>
         </article>
 
@@ -132,7 +134,7 @@
             <div class="app-icon irobot">IR</div>
             <div class="app-info">
               <div class="app-name">CL-iRobot</div>
-              <div class="app-desc">自主移动与协作机器人，支持任务调度、路径规划与无人值守运行。</div>
+              <div class="app-desc">自主移动与协作机器人，支持任务调度、路径规划与无人值守运行。该模块统计使用次数，不消耗 token。</div>
             </div>
           </div>
 
@@ -151,8 +153,8 @@
 
       <div class="analytics-toolbar">
         <div>
-          <h3>平台整体层级 · token 分析</h3>
-          <p>按时间维度查看整个平台的购买 token、消耗 token、剩余 token、消费金额和应用使用数量。</p>
+          <h3>平台整体层级 · AIGC token 分析</h3>
+          <p>按时间维度查看 CL-AIGC 的 token 购买、消耗、剩余和消费金额，同时查看平台整体应用使用情况。</p>
         </div>
 
         <select id="globalPeriodSelect" class="user-select">
@@ -166,27 +168,27 @@
 
       <div class="analytics-summary-grid five-col">
         <article class="analytics-card">
-          <div class="stat-label">购买 token</div>
+          <div class="stat-label">AIGC token 总购买量</div>
           <div class="stat-value" id="globalPurchased">120,000 <span>tokens</span></div>
         </article>
 
         <article class="analytics-card">
-          <div class="stat-label">消耗 token</div>
+          <div class="stat-label">AIGC token 总消耗量</div>
           <div class="stat-value" id="globalConsumed">82,000 <span>tokens</span></div>
         </article>
 
         <article class="analytics-card">
-          <div class="stat-label">剩余 token</div>
+          <div class="stat-label">AIGC token 总剩余量</div>
           <div class="stat-value" id="globalRemaining">38,000 <span>tokens</span></div>
         </article>
 
         <article class="analytics-card">
-          <div class="stat-label">消费金额</div>
+          <div class="stat-label">AIGC token 消费金额</div>
           <div class="stat-value" id="globalMoney">¥26,800</div>
         </article>
 
         <article class="analytics-card">
-          <div class="stat-label">使用应用数</div>
+          <div class="stat-label">平台活跃应用数</div>
           <div class="stat-value" id="globalAppsUsed">4 <span>个应用</span></div>
         </article>
       </div>
@@ -195,8 +197,8 @@
         <article class="chart-card">
           <div class="chart-header">
             <div>
-              <h3>各应用 token 使用量</h3>
-              <p>用于判断哪个应用使用最多，哪个应用使用较少。</p>
+              <h3>各应用使用次数</h3>
+              <p>用于判断哪个应用使用最多、哪个应用使用较少；其中只有 CL-AIGC 会消耗 token。</p>
             </div>
           </div>
 
@@ -204,25 +206,25 @@
             <div class="bar-row">
               <span>CL-AIGC</span>
               <div class="bar-track"><div class="bar-fill aigc-bar width-92"></div></div>
-              <strong>520K</strong>
+              <strong>1,240次</strong>
             </div>
 
             <div class="bar-row">
-              <span>CL-iShop</span>
+              <span>CL-iStore</span>
               <div class="bar-track"><div class="bar-fill shop-bar width-58"></div></div>
-              <strong>330K</strong>
+              <strong>860次</strong>
             </div>
 
             <div class="bar-row">
               <span>CL-SCM</span>
               <div class="bar-track"><div class="bar-fill scm-bar width-37"></div></div>
-              <strong>210K</strong>
+              <strong>530次</strong>
             </div>
 
             <div class="bar-row">
               <span>CL-iRobot</span>
               <div class="bar-track"><div class="bar-fill robot-bar width-21"></div></div>
-              <strong>120K</strong>
+              <strong>320次</strong>
             </div>
           </div>
         </article>
@@ -230,13 +232,13 @@
         <article class="chart-card">
           <div class="chart-header">
             <div>
-              <h3>年龄组 token 购买分布</h3>
-              <p>用于判断哪些年龄组购买 token 较多。</p>
+              <h3>AIGC token 年龄组购买分布</h3>
+              <p>用于判断哪些年龄组购买 CL-AIGC token 较多。</p>
             </div>
           </div>
 
           <div class="pie-layout">
-            <div class="css-pie age-pie" aria-label="年龄组 token 购买分布"></div>
+            <div class="css-pie age-pie" aria-label="AIGC token 年龄组购买分布"></div>
 
             <div class="legend-list">
               <div><span class="dot age-1"></span>18-24 岁：18%</div>
@@ -250,8 +252,8 @@
         <article class="chart-card wide-chart-card">
           <div class="chart-header">
             <div>
-              <h3>本周 token 购买趋势</h3>
-              <p>用于查看本周每天购买了多少 token。</p>
+              <h3>本周 AIGC token 购买趋势</h3>
+              <p>用于查看本周每天购买的 CL-AIGC token 数量。</p>
             </div>
           </div>
 
@@ -270,8 +272,8 @@
       <div class="local-analytics-section">
         <div class="analytics-toolbar">
           <div>
-            <h3>用户个体层级 · token 分析</h3>
-            <p>选择具体用户和时间维度，查看个人购买 token、消耗 token、剩余 token、消费金额和应用使用数量。</p>
+            <h3>用户个体层级 · AIGC token 分析</h3>
+            <p>选择具体用户和时间维度，查看个人 CL-AIGC token 购买、消耗、剩余和消费金额，同时查看该用户的平台应用使用情况。</p>
           </div>
 
           <div class="local-filters">
@@ -294,27 +296,27 @@
 
         <div class="analytics-summary-grid five-col">
           <article class="analytics-card">
-            <div class="stat-label">购买 token</div>
+            <div class="stat-label">AIGC token 购买量</div>
             <div class="stat-value" id="localPurchased">18,000 <span>tokens</span></div>
           </article>
 
           <article class="analytics-card">
-            <div class="stat-label">消耗 token</div>
+            <div class="stat-label">AIGC token 消耗量</div>
             <div class="stat-value" id="localConsumed">12,600 <span>tokens</span></div>
           </article>
 
           <article class="analytics-card">
-            <div class="stat-label">剩余 token</div>
+            <div class="stat-label">AIGC token 剩余量</div>
             <div class="stat-value" id="localRemaining">5,400 <span>tokens</span></div>
           </article>
 
           <article class="analytics-card">
-            <div class="stat-label">消费金额</div>
+            <div class="stat-label">AIGC token 消费金额</div>
             <div class="stat-value" id="localMoney">¥3,600</div>
           </article>
 
           <article class="analytics-card">
-            <div class="stat-label">使用应用数</div>
+            <div class="stat-label">平台使用应用数</div>
             <div class="stat-value" id="localAppsUsed">3 <span>个应用</span></div>
           </article>
         </div>
@@ -323,17 +325,17 @@
           <article class="chart-card">
             <div class="chart-header">
               <div>
-                <h3>用户 token 消耗比例</h3>
-                <p>展示所选用户在当前时间维度下，已消耗 token 与剩余 token 的比例。</p>
+                <h3>用户 AIGC token 消耗比例</h3>
+                <p>展示所选用户在当前时间维度下，CL-AIGC token 已消耗与剩余的比例。</p>
               </div>
             </div>
 
             <div class="user-consumption-layout">
-              <div class="css-pie user-pie" id="localConsumptionPie" aria-label="用户 token 消耗比例"></div>
+              <div class="css-pie user-pie" id="localConsumptionPie" aria-label="用户 AIGC token 消耗比例"></div>
 
               <div class="user-metrics">
                 <div>
-                  <span>主要使用应用</span>
+                  <span>最常使用应用</span>
                   <strong id="localTopApp">CL-AIGC</strong>
                 </div>
                 <div>

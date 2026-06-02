@@ -7,7 +7,7 @@ export const platformModel = {
     { label: "CL-AIGC", href: "#cl-aigc" },
     { label: "CL-SCM", href: "#cl-scm" },
     { label: "CL-iRobot", href: "#cl-irobot" },
-    { label: "CL-iShop", href: "#cl-ishop" },
+    { label: "CL-iStore", href: "#cl-istore" },
     { label: "生态合作", href: "#ecosystem" }
   ],
   platforms: [
@@ -61,8 +61,8 @@ export const platformModel = {
       ]
     },
     {
-      id: "cl-ishop",
-      title: "CL-iShop",
+      id: "cl-istore",
+      title: "CL-iStore",
       subtitle: "数智化零售与体验",
       badge: "全渠道·精准营销",
       icon: "fas fa-store",
@@ -81,6 +81,6 @@ export const platformModel = {
     ["CL-AIGC 时尚行业", "国内知名运动品牌利用AI模特生成技术，广告素材制作成本降低70%，上新月均款式增加3倍。", "fas fa-tshirt"],
     ["CL-SCM 韧性实践", "国际快消品牌部署供应链控制塔，库存周转率提升22%，缺货风险下降34%。", "fas fa-chart-line"],
     ["CL-iRobot 柔性升级", "3C电子工厂引入AMR集群，物料配送效率提升45%，人力成本降低30%。", "fas fa-robot"],
-    ["CL-iShop 新零售标杆", "全国连锁便利店部署AI视觉盘点与会员中台，复购率提升18%。", "fas fa-store"]
+    ["CL-iStore 新零售标杆", "全国连锁便利店部署AI视觉盘点与会员中台，复购率提升18%。", "fas fa-store"]
   ]
 };
