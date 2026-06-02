@@ -27,7 +27,12 @@ document.addEventListener("DOMContentLoaded", () => {
   if (document.body.dataset.page === "dashboard") {
     initDashboardMenu();
     initAppActionButtons();
+    initAigcLaunchCard();
     initBossAnalytics();
+  }
+
+  if (document.body.dataset.page === "aigc") {
+    initAigcPurchasePage();
   }
 
   initAccountAvatar();
@@ -100,92 +105,113 @@ function initAppActionButtons() {
   });
 }
 
+function initAigcLaunchCard() {
+  const card = document.querySelector(".aigc-launch-card");
+
+  if (!card) {
+    return;
+  }
+
+  card.addEventListener("click", event => {
+    if (event.target.closest("button")) {
+      return;
+    }
+
+    window.location.href = card.dataset.openUrl || "/aigc";
+  });
+}
+
 function initBossAnalytics() {
   const globalPeriodSelect = document.getElementById("globalPeriodSelect");
   const localUserSelect = document.getElementById("localUserSelect");
   const localPeriodSelect = document.getElementById("localPeriodSelect");
 
+  /*
+   * Business rule:
+   * Only CL-AIGC consumes tokens.
+   * CL-SCM, CL-iStore and CL-iRobot are tracked by usage count / active usage only.
+   */
   const globalData = {
     daily: {
-      purchased: "120,000",
-      consumed: "82,000",
-      remaining: "38,000",
-      money: "¥26,800",
-      appsUsed: "4"
+      aigcTokenPurchased: "120,000",
+      aigcTokenConsumed: "82,000",
+      aigcTokenRemaining: "38,000",
+      aigcTokenMoney: "¥26,800",
+      activeAppsUsed: "4"
     },
     weekly: {
-      purchased: "420,000",
-      consumed: "286,000",
-      remaining: "134,000",
-      money: "¥92,500",
-      appsUsed: "4"
+      aigcTokenPurchased: "420,000",
+      aigcTokenConsumed: "286,000",
+      aigcTokenRemaining: "134,000",
+      aigcTokenMoney: "¥92,500",
+      activeAppsUsed: "4"
     },
     monthly: {
-      purchased: "1,250,000",
-      consumed: "860,000",
-      remaining: "390,000",
-      money: "¥268,000",
-      appsUsed: "4"
+      aigcTokenPurchased: "1,250,000",
+      aigcTokenConsumed: "860,000",
+      aigcTokenRemaining: "390,000",
+      aigcTokenMoney: "¥268,000",
+      activeAppsUsed: "4"
     },
     threeMonths: {
-      purchased: "3,820,000",
-      consumed: "2,610,000",
-      remaining: "1,210,000",
-      money: "¥806,000",
-      appsUsed: "4"
+      aigcTokenPurchased: "3,820,000",
+      aigcTokenConsumed: "2,610,000",
+      aigcTokenRemaining: "1,210,000",
+      aigcTokenMoney: "¥806,000",
+      activeAppsUsed: "4"
     },
     sixMonths: {
-      purchased: "7,460,000",
-      consumed: "5,080,000",
-      remaining: "2,380,000",
-      money: "¥1,586,000",
-      appsUsed: "4"
+      aigcTokenPurchased: "7,460,000",
+      aigcTokenConsumed: "5,080,000",
+      aigcTokenRemaining: "2,380,000",
+      aigcTokenMoney: "¥1,586,000",
+      activeAppsUsed: "4"
     }
   };
 
   const localData = {
     zhangchen: {
       daily: {
-        purchased: "18,000",
-        consumed: "12,600",
-        remaining: "5,400",
-        money: "¥3,600",
+        aigcTokenPurchased: "18,000",
+        aigcTokenConsumed: "12,600",
+        aigcTokenRemaining: "5,400",
+        aigcTokenMoney: "¥3,600",
         appsUsed: "3",
         topApp: "CL-AIGC",
         usedPercent: 70
       },
       weekly: {
-        purchased: "72,000",
-        consumed: "49,000",
-        remaining: "23,000",
-        money: "¥14,400",
+        aigcTokenPurchased: "72,000",
+        aigcTokenConsumed: "49,000",
+        aigcTokenRemaining: "23,000",
+        aigcTokenMoney: "¥14,400",
         appsUsed: "4",
         topApp: "CL-AIGC",
         usedPercent: 68
       },
       monthly: {
-        purchased: "180,000",
-        consumed: "126,000",
-        remaining: "54,000",
-        money: "¥36,000",
+        aigcTokenPurchased: "180,000",
+        aigcTokenConsumed: "126,000",
+        aigcTokenRemaining: "54,000",
+        aigcTokenMoney: "¥36,000",
         appsUsed: "4",
         topApp: "CL-AIGC",
         usedPercent: 70
       },
       threeMonths: {
-        purchased: "520,000",
-        consumed: "366,000",
-        remaining: "154,000",
-        money: "¥104,000",
+        aigcTokenPurchased: "520,000",
+        aigcTokenConsumed: "366,000",
+        aigcTokenRemaining: "154,000",
+        aigcTokenMoney: "¥104,000",
         appsUsed: "4",
         topApp: "CL-AIGC",
         usedPercent: 70
       },
       sixMonths: {
-        purchased: "980,000",
-        consumed: "705,000",
-        remaining: "275,000",
-        money: "¥196,000",
+        aigcTokenPurchased: "980,000",
+        aigcTokenConsumed: "705,000",
+        aigcTokenRemaining: "275,000",
+        aigcTokenMoney: "¥196,000",
         appsUsed: "4",
         topApp: "CL-AIGC",
         usedPercent: 72
@@ -194,94 +220,94 @@ function initBossAnalytics() {
 
     liwen: {
       daily: {
-        purchased: "22,000",
-        consumed: "16,000",
-        remaining: "6,000",
-        money: "¥4,400",
+        aigcTokenPurchased: "22,000",
+        aigcTokenConsumed: "16,000",
+        aigcTokenRemaining: "6,000",
+        aigcTokenMoney: "¥4,400",
         appsUsed: "3",
-        topApp: "CL-iShop",
+        topApp: "CL-iStore",
         usedPercent: 73
       },
       weekly: {
-        purchased: "88,000",
-        consumed: "62,000",
-        remaining: "26,000",
-        money: "¥17,600",
+        aigcTokenPurchased: "88,000",
+        aigcTokenConsumed: "62,000",
+        aigcTokenRemaining: "26,000",
+        aigcTokenMoney: "¥17,600",
         appsUsed: "4",
-        topApp: "CL-iShop",
+        topApp: "CL-iStore",
         usedPercent: 70
       },
       monthly: {
-        purchased: "220,000",
-        consumed: "160,000",
-        remaining: "60,000",
-        money: "¥44,000",
+        aigcTokenPurchased: "220,000",
+        aigcTokenConsumed: "160,000",
+        aigcTokenRemaining: "60,000",
+        aigcTokenMoney: "¥44,000",
         appsUsed: "4",
-        topApp: "CL-iShop",
+        topApp: "CL-iStore",
         usedPercent: 73
       },
       threeMonths: {
-        purchased: "640,000",
-        consumed: "458,000",
-        remaining: "182,000",
-        money: "¥128,000",
+        aigcTokenPurchased: "640,000",
+        aigcTokenConsumed: "458,000",
+        aigcTokenRemaining: "182,000",
+        aigcTokenMoney: "¥128,000",
         appsUsed: "4",
-        topApp: "CL-iShop",
+        topApp: "CL-iStore",
         usedPercent: 72
       },
       sixMonths: {
-        purchased: "1,180,000",
-        consumed: "860,000",
-        remaining: "320,000",
-        money: "¥236,000",
+        aigcTokenPurchased: "1,180,000",
+        aigcTokenConsumed: "860,000",
+        aigcTokenRemaining: "320,000",
+        aigcTokenMoney: "¥236,000",
         appsUsed: "4",
-        topApp: "CL-iShop",
+        topApp: "CL-iStore",
         usedPercent: 73
       }
     },
 
     wanglei: {
       daily: {
-        purchased: "14,500",
-        consumed: "9,100",
-        remaining: "5,400",
-        money: "¥2,900",
+        aigcTokenPurchased: "14,500",
+        aigcTokenConsumed: "9,100",
+        aigcTokenRemaining: "5,400",
+        aigcTokenMoney: "¥2,900",
         appsUsed: "2",
         topApp: "CL-SCM",
         usedPercent: 63
       },
       weekly: {
-        purchased: "58,000",
-        consumed: "36,500",
-        remaining: "21,500",
-        money: "¥11,600",
+        aigcTokenPurchased: "58,000",
+        aigcTokenConsumed: "36,500",
+        aigcTokenRemaining: "21,500",
+        aigcTokenMoney: "¥11,600",
         appsUsed: "3",
         topApp: "CL-SCM",
         usedPercent: 63
       },
       monthly: {
-        purchased: "145,000",
-        consumed: "91,000",
-        remaining: "54,000",
-        money: "¥29,000",
+        aigcTokenPurchased: "145,000",
+        aigcTokenConsumed: "91,000",
+        aigcTokenRemaining: "54,000",
+        aigcTokenMoney: "¥29,000",
         appsUsed: "4",
         topApp: "CL-SCM",
         usedPercent: 63
       },
       threeMonths: {
-        purchased: "390,000",
-        consumed: "254,000",
-        remaining: "136,000",
-        money: "¥78,000",
+        aigcTokenPurchased: "390,000",
+        aigcTokenConsumed: "254,000",
+        aigcTokenRemaining: "136,000",
+        aigcTokenMoney: "¥78,000",
         appsUsed: "4",
         topApp: "CL-SCM",
         usedPercent: 65
       },
       sixMonths: {
-        purchased: "720,000",
-        consumed: "482,000",
-        remaining: "238,000",
-        money: "¥144,000",
+        aigcTokenPurchased: "720,000",
+        aigcTokenConsumed: "482,000",
+        aigcTokenRemaining: "238,000",
+        aigcTokenMoney: "¥144,000",
         appsUsed: "4",
         topApp: "CL-SCM",
         usedPercent: 67
@@ -290,46 +316,46 @@ function initBossAnalytics() {
 
     chenyu: {
       daily: {
-        purchased: "9,600",
-        consumed: "7,200",
-        remaining: "2,400",
-        money: "¥1,920",
+        aigcTokenPurchased: "9,600",
+        aigcTokenConsumed: "7,200",
+        aigcTokenRemaining: "2,400",
+        aigcTokenMoney: "¥1,920",
         appsUsed: "2",
         topApp: "CL-iRobot",
         usedPercent: 75
       },
       weekly: {
-        purchased: "38,000",
-        consumed: "28,000",
-        remaining: "10,000",
-        money: "¥7,600",
+        aigcTokenPurchased: "38,000",
+        aigcTokenConsumed: "28,000",
+        aigcTokenRemaining: "10,000",
+        aigcTokenMoney: "¥7,600",
         appsUsed: "3",
         topApp: "CL-iRobot",
         usedPercent: 74
       },
       monthly: {
-        purchased: "96,000",
-        consumed: "72,000",
-        remaining: "24,000",
-        money: "¥19,200",
+        aigcTokenPurchased: "96,000",
+        aigcTokenConsumed: "72,000",
+        aigcTokenRemaining: "24,000",
+        aigcTokenMoney: "¥19,200",
         appsUsed: "3",
         topApp: "CL-iRobot",
         usedPercent: 75
       },
       threeMonths: {
-        purchased: "260,000",
-        consumed: "192,000",
-        remaining: "68,000",
-        money: "¥52,000",
+        aigcTokenPurchased: "260,000",
+        aigcTokenConsumed: "192,000",
+        aigcTokenRemaining: "68,000",
+        aigcTokenMoney: "¥52,000",
         appsUsed: "4",
         topApp: "CL-iRobot",
         usedPercent: 74
       },
       sixMonths: {
-        purchased: "510,000",
-        consumed: "382,000",
-        remaining: "128,000",
-        money: "¥102,000",
+        aigcTokenPurchased: "510,000",
+        aigcTokenConsumed: "382,000",
+        aigcTokenRemaining: "128,000",
+        aigcTokenMoney: "¥102,000",
         appsUsed: "4",
         topApp: "CL-iRobot",
         usedPercent: 75
@@ -358,11 +384,25 @@ function initBossAnalytics() {
     const moneyEl = document.getElementById("globalMoney");
     const appsUsedEl = document.getElementById("globalAppsUsed");
 
-    if (purchasedEl) purchasedEl.innerHTML = `${data.purchased} <span>tokens</span>`;
-    if (consumedEl) consumedEl.innerHTML = `${data.consumed} <span>tokens</span>`;
-    if (remainingEl) remainingEl.innerHTML = `${data.remaining} <span>tokens</span>`;
-    if (moneyEl) moneyEl.textContent = data.money;
-    if (appsUsedEl) appsUsedEl.innerHTML = `${data.appsUsed} <span>个应用</span>`;
+    if (purchasedEl) {
+      purchasedEl.innerHTML = `${data.aigcTokenPurchased} <span>tokens</span>`;
+    }
+
+    if (consumedEl) {
+      consumedEl.innerHTML = `${data.aigcTokenConsumed} <span>tokens</span>`;
+    }
+
+    if (remainingEl) {
+      remainingEl.innerHTML = `${data.aigcTokenRemaining} <span>tokens</span>`;
+    }
+
+    if (moneyEl) {
+      moneyEl.textContent = data.aigcTokenMoney;
+    }
+
+    if (appsUsedEl) {
+      appsUsedEl.innerHTML = `${data.activeAppsUsed} <span>个应用</span>`;
+    }
   }
 
   function updateLocal(userKey, period) {
@@ -381,13 +421,33 @@ function initBossAnalytics() {
     const periodLabelEl = document.getElementById("localPeriodLabel");
     const pieEl = document.getElementById("localConsumptionPie");
 
-    if (purchasedEl) purchasedEl.innerHTML = `${user.purchased} <span>tokens</span>`;
-    if (consumedEl) consumedEl.innerHTML = `${user.consumed} <span>tokens</span>`;
-    if (remainingEl) remainingEl.innerHTML = `${user.remaining} <span>tokens</span>`;
-    if (moneyEl) moneyEl.textContent = user.money;
-    if (appsUsedEl) appsUsedEl.innerHTML = `${user.appsUsed} <span>个应用</span>`;
-    if (topAppEl) topAppEl.textContent = user.topApp;
-    if (periodLabelEl) periodLabelEl.textContent = periodLabelMap[period] || "今日";
+    if (purchasedEl) {
+      purchasedEl.innerHTML = `${user.aigcTokenPurchased} <span>tokens</span>`;
+    }
+
+    if (consumedEl) {
+      consumedEl.innerHTML = `${user.aigcTokenConsumed} <span>tokens</span>`;
+    }
+
+    if (remainingEl) {
+      remainingEl.innerHTML = `${user.aigcTokenRemaining} <span>tokens</span>`;
+    }
+
+    if (moneyEl) {
+      moneyEl.textContent = user.aigcTokenMoney;
+    }
+
+    if (appsUsedEl) {
+      appsUsedEl.innerHTML = `${user.appsUsed} <span>个应用</span>`;
+    }
+
+    if (topAppEl) {
+      topAppEl.textContent = user.topApp;
+    }
+
+    if (periodLabelEl) {
+      periodLabelEl.textContent = periodLabelMap[period] || "今日";
+    }
 
     if (pieEl) {
       pieEl.style.background = `conic-gradient(
@@ -418,13 +478,232 @@ function initBossAnalytics() {
   }
 }
 
+async function initAigcPurchasePage() {
+  const app = document.getElementById("aigcApp");
+  const globalMessageBox = document.getElementById("aigcMessage");
+
+  if (!app) {
+    return;
+  }
+
+  const packages = [
+    { name: "基础套餐", tokens: 10000, amount: 99 },
+    { name: "标准套餐", tokens: 50000, amount: 399 },
+    { name: "企业套餐", tokens: 100000, amount: 699 }
+  ];
+
+  function showMessage(message, success, elementId = "purchaseMessage") {
+    const localBox = document.getElementById(elementId);
+    const box = localBox || globalMessageBox;
+
+    if (!box) return;
+
+    box.textContent = message || "操作失败，请稍后重试";
+    box.className = success ? "aigc-message success" : "aigc-message error";
+  }
+
+  function formatNumber(value) {
+    return Number(value || 0).toLocaleString();
+  }
+
+  async function getData() {
+    const response = await fetch("/api/aigc/admin/aigc-center", {
+      credentials: "include"
+    });
+
+    return response.json();
+  }
+
+  async function postPurchase(payload) {
+    const response = await fetch("/api/aigc/admin/token-purchases", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(payload)
+    });
+
+    return response.json();
+  }
+
+  function render(data) {
+    const masters = data.masters || [];
+    const subs = data.subs || [];
+    const purchases = data.purchases || [];
+    const summary = data.creditSummary || [];
+
+    const totalCredits = summary.reduce((sum, item) => sum + Number(item.totalCredits || 0), 0);
+    const usedCredits = summary.reduce((sum, item) => sum + Number(item.usedCredits || 0), 0);
+    const remainingCredits = summary.reduce((sum, item) => sum + Number(item.remainingCredits || 0), 0);
+    const totalPurchased = purchases.reduce((sum, item) => sum + Number(item.tokens || 0), 0);
+
+    app.innerHTML = `
+      <section class="summary-grid">
+        <article class="card">
+          <span>主账号总点数</span>
+          <strong>${formatNumber(totalCredits)}</strong>
+        </article>
+        <article class="card">
+          <span>已使用 token</span>
+          <strong>${formatNumber(usedCredits)}</strong>
+        </article>
+        <article class="card">
+          <span>剩余 token</span>
+          <strong>${formatNumber(remainingCredits)}</strong>
+        </article>
+        <article class="card">
+          <span>历史购买 token</span>
+          <strong>${formatNumber(totalPurchased)}</strong>
+        </article>
+      </section>
+
+      <section class="panel">
+        <h2>Token 套餐购买</h2>
+        <p>选择 AIGC 企业主账号和 token 套餐。当前版本为内部采购模拟，提交后会立即增加主账号总点数。</p>
+
+        <div id="purchaseMessage" class="aigc-message"></div>
+
+        <form id="purchaseForm" class="purchase-form">
+          <select name="masterAccountId" required>
+            <option value="">选择 AIGC 企业主账号</option>
+            ${masters.map(master => `
+              <option value="${master.id}">
+                ${master.enterpriseName} / ${master.platformLogin} / 当前 ${formatNumber(master.totalCredits)} tokens
+              </option>
+            `).join("")}
+          </select>
+
+          <select name="packageIndex" required>
+            <option value="">选择 token 套餐</option>
+            ${packages.map((pkg, index) => `
+              <option value="${index}">
+                ${pkg.name} / ${formatNumber(pkg.tokens)} tokens / ¥${pkg.amount}
+              </option>
+            `).join("")}
+          </select>
+
+          <button type="submit">购买 token</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>子账号 token 分配概览</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>子账号</th>
+                <th>登录名</th>
+                <th>Token 配额</th>
+                <th>已使用</th>
+                <th>剩余</th>
+                <th>使用率</th>
+                <th>状态</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${subs.map(sub => `
+                <tr>
+                  <td>${sub.subAccountName}</td>
+                  <td>${sub.platformLogin}</td>
+                  <td>${formatNumber(sub.tokenLimit)}</td>
+                  <td>${formatNumber(sub.usedTokens)}</td>
+                  <td>${formatNumber(sub.remainingTokens)}</td>
+                  <td>${sub.usageRate}%</td>
+                  <td>${sub.warningStatus === "warning" ? "低余额预警" : sub.warningStatus === "exceeded" ? "已达到上限" : "正常"}</td>
+                </tr>
+              `).join("") || `<tr><td colspan="7">暂无子账号数据</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>采购记录</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>套餐</th>
+                <th>tokens</th>
+                <th>金额</th>
+                <th>状态</th>
+                <th>时间</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${purchases.slice().reverse().map(item => `
+                <tr>
+                  <td>${item.packageName}</td>
+                  <td>${formatNumber(item.tokens)}</td>
+                  <td>¥${item.amount}</td>
+                  <td>${item.paymentStatus === "paid" ? "已完成" : item.paymentStatus}</td>
+                  <td>${item.createdAt}</td>
+                </tr>
+              `).join("") || `<tr><td colspan="5">暂无采购记录</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    `;
+
+    const form = document.getElementById("purchaseForm");
+
+    if (!form) {
+      return;
+    }
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+
+      const formData = new FormData(form);
+      const selectedPackage = packages[Number(formData.get("packageIndex"))];
+
+      if (!formData.get("masterAccountId")) {
+        showMessage("请选择 AIGC 企业主账号", false);
+        return;
+      }
+
+      if (!selectedPackage) {
+        showMessage("请选择 token 套餐", false);
+        return;
+      }
+
+      const result = await postPurchase({
+        masterAccountId: formData.get("masterAccountId"),
+        packageName: selectedPackage.name,
+        tokens: selectedPackage.tokens,
+        amount: selectedPackage.amount
+      });
+
+      showMessage(result.message, result.success);
+
+      if (result.success) {
+        setTimeout(async () => {
+          const refreshed = await getData();
+
+          if (refreshed.success) {
+            render(refreshed.data);
+          }
+        }, 2500);
+      }
+    });
+  }
+
+  const result = await getData();
+
+  if (!result.success) {
+    showMessage(result.message || "CL-AIGC 页面加载失败", false, "aigcMessage");
+    return;
+  }
+
+  render(result.data);
+}
+
 async function initAccountAvatar() {
   const avatarButton = document.getElementById("accountAvatar");
   const avatarText = document.getElementById("accountAvatarText");
 
-  if (!avatarButton || !avatarText) {
-    return;
-  }
+  setDashboardNavVisibility(false);
 
   let currentUser = null;
 
@@ -443,6 +722,13 @@ async function initAccountAvatar() {
     }
   } catch (error) {
     currentUser = null;
+  }
+
+  const isAdmin = currentUser && currentUser.role === "admin";
+  setDashboardNavVisibility(isAdmin);
+
+  if (!avatarButton || !avatarText) {
+    return;
   }
 
   if (!currentUser) {
@@ -474,6 +760,15 @@ async function initAccountAvatar() {
     } finally {
       window.location.href = "/";
     }
+  });
+}
+
+function setDashboardNavVisibility(visible) {
+  const dashboardLinks = document.querySelectorAll('a[href="/dashboard"]');
+
+  dashboardLinks.forEach((link) => {
+    const navItem = link.closest("li") || link;
+    navItem.style.display = visible ? "" : "none";
   });
 }
 

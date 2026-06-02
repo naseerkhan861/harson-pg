@@ -9,7 +9,8 @@
     "dev": "nodemon server.js",
     "electron": "electron .",
     "seed:admin": "node scripts/seedAdmin.js",
-    "dist": "electron-builder --win nsis"
+    "dist": "electron-builder --win nsis",
+    "dist:mac": "electron-builder --mac dmg"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -55,6 +56,10 @@
         "to": ".env"
       }
     ],
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.business"
+    },
     "win": {
       "target": "nsis",
       "icon": "build/icon.ico"

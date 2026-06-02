@@ -898,3 +898,60 @@ body {
   font-weight: 800;
   letter-spacing: 0;
 }
+
+/* Work form local message */
+#workMessage {
+  max-width: 1080px;
+  margin: 14px 0 20px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+#workMessage.auth-message.error {
+  display: block;
+  background: rgba(220, 53, 69, 0.1);
+  color: #b42318;
+}
+
+#workMessage.auth-message.success {
+  display: block;
+  background: rgba(0, 153, 153, 0.1);
+  color: var(--cl-green-dark);
+}
+
+#masterMessage,
+#subAccountMessage,
+#tokenSettingsMessage,
+#mappingMessage,
+#workMessage {
+  width: fit-content;
+  max-width: 100%;
+  margin: 14px 0 20px;
+  padding: 12px 18px;
+  border-radius: 16px;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+#masterMessage.auth-message.error,
+#subAccountMessage.auth-message.error,
+#tokenSettingsMessage.auth-message.error,
+#mappingMessage.auth-message.error,
+#workMessage.auth-message.error {
+  display: block;
+  background: rgba(220, 53, 69, 0.1);
+  color: #b42318;
+}
+
+#masterMessage.auth-message.success,
+#subAccountMessage.auth-message.success,
+#tokenSettingsMessage.auth-message.success,
+#mappingMessage.auth-message.success,
+#workMessage.auth-message.success {
+  display: block;
+  background: rgba(0, 153, 153, 0.1);
+  color: var(--cl-green-dark);
+}

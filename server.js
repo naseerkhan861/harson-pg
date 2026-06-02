@@ -15,7 +15,6 @@ const connectDB = require("./src/db");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -76,19 +75,7 @@ app.use(
 
 app.use(express.static(path.join(__dirname, "public")));
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-
-app.get("/login", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "login.html"));
-});
-
-app.get("/account-management", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "account-management.html"));
-});
-
-app.get("/dashboard", (req, res) => {
+function sendAdminOnlyPage(req, res, filename) {
   const token = req.cookies?.harson_token;
 
   if (!token) {
@@ -102,10 +89,30 @@ app.get("/dashboard", (req, res) => {
       return res.status(200).send("");
     }
 
-    return res.sendFile(path.join(__dirname, "public", "dashboard.html"));
+    return res.sendFile(path.join(__dirname, "public", filename));
   } catch {
     return res.status(200).send("");
   }
+}
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+
+app.get("/account-management", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "account-management.html"));
+});
+
+app.get("/dashboard", (req, res) => {
+  return sendAdminOnlyPage(req, res, "dashboard.html");
+});
+
+app.get("/aigc", (req, res) => {
+  return sendAdminOnlyPage(req, res, "aigc.html");
 });
 
 app.use((req, res) => {

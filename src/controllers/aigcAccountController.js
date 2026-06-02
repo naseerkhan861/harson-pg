@@ -12,6 +12,52 @@ async function dashboard(req, res) {
   }
 }
 
+function aigcCenter(req, res) {
+  try {
+    return res.json({
+      success: true,
+      data: aigcAccountModel.listAigcCenterData()
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+}
+
+function purchaseTokens(req, res) {
+  try {
+    const { masterAccountId, packageName, tokens, amount } = req.body;
+
+    if (!masterAccountId) {
+      return res.status(400).json({
+        success: false,
+        message: "请选择 AIGC 企业主账号"
+      });
+    }
+
+    if (!packageName || !tokens) {
+      return res.status(400).json({
+        success: false,
+        message: "请选择 token 套餐"
+      });
+    }
+
+    const result = aigcAccountModel.purchaseTokens({
+      masterAccountId,
+      packageName,
+      tokens,
+      amount
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "token 套餐购买成功，AIGC 主账号总点数已更新",
+      data: result
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+}
+
 async function createMaster(req, res) {
   try {
     const { enterpriseName, platformName, platformLogin, platformPassword, totalCredits } = req.body;
@@ -19,7 +65,7 @@ async function createMaster(req, res) {
     if (!enterpriseName || !platformName || !platformLogin || !platformPassword) {
       return res.status(400).json({
         success: false,
-        message: "Enterprise name, platform name, login and password are required."
+        message: "企业名称、AIGC 平台名称、登录邮箱和密码不能为空"
       });
     }
 
@@ -31,7 +77,11 @@ async function createMaster(req, res) {
       totalCredits
     });
 
-    return res.status(201).json({ success: true, message: "AIGC master account created.", data: master });
+    return res.status(201).json({
+      success: true,
+      message: "AIGC 企业主账号创建成功",
+      data: master
+    });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
   }
@@ -39,12 +89,19 @@ async function createMaster(req, res) {
 
 async function createSubAccount(req, res) {
   try {
-    const { masterAccountId, subAccountName, platformLogin, platformPassword } = req.body;
+    const {
+      masterAccountId,
+      subAccountName,
+      platformLogin,
+      platformPassword,
+      tokenLimit,
+      warningThreshold
+    } = req.body;
 
     if (!masterAccountId || !subAccountName || !platformLogin || !platformPassword) {
       return res.status(400).json({
         success: false,
-        message: "Master account, sub-account name, login and password are required."
+        message: "企业主账号、子账号名称、登录邮箱和密码不能为空"
       });
     }
 
@@ -52,10 +109,50 @@ async function createSubAccount(req, res) {
       masterAccountId,
       subAccountName,
       platformLogin,
-      platformPassword
+      platformPassword,
+      tokenLimit,
+      warningThreshold
     });
 
-    return res.status(201).json({ success: true, message: "AIGC sub-account created.", data: subAccount });
+    return res.status(201).json({
+      success: true,
+      message: "AIGC 子账号创建成功",
+      data: subAccount
+    });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+}
+
+function updateSubAccountTokenSettings(req, res) {
+  try {
+    const { subAccountId, tokenLimit, warningThreshold } = req.body;
+
+    if (!subAccountId) {
+      return res.status(400).json({
+        success: false,
+        message: "请选择需要调整的 AIGC 子账号"
+      });
+    }
+
+    if (tokenLimit === undefined || tokenLimit === null || tokenLimit === "") {
+      return res.status(400).json({
+        success: false,
+        message: "请输入新的 token 配额"
+      });
+    }
+
+    const subAccount = aigcAccountModel.updateSubAccountTokenSettings({
+      subAccountId,
+      tokenLimit,
+      warningThreshold
+    });
+
+    return res.json({
+      success: true,
+      message: "AIGC 子账号 token 配额设置已更新",
+      data: subAccount
+    });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
   }
@@ -68,7 +165,7 @@ async function createMapping(req, res) {
     if (!clBaseUserId || !aigcSubAccountId) {
       return res.status(400).json({
         success: false,
-        message: "CL-Base user and AIGC sub-account are required."
+        message: "请选择 CL-Base 用户和 AIGC 子账号"
       });
     }
 
@@ -76,7 +173,10 @@ async function createMapping(req, res) {
     const user = users.find(item => item.id === clBaseUserId);
 
     if (!user) {
-      return res.status(404).json({ success: false, message: "CL-Base user was not found." });
+      return res.status(404).json({
+        success: false,
+        message: "未找到对应的 CL-Base 用户"
+      });
     }
 
     const mapping = aigcAccountModel.createMapping({
@@ -85,7 +185,11 @@ async function createMapping(req, res) {
       aigcSubAccountId
     });
 
-    return res.status(201).json({ success: true, message: "One-to-one mapping created.", data: mapping });
+    return res.status(201).json({
+      success: true,
+      message: "CL-Base 与 AIGC 子账号一对一映射创建成功",
+      data: mapping
+    });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
   }
@@ -94,7 +198,9 @@ async function createMapping(req, res) {
 async function listClBaseUsers(req, res) {
   try {
     const users = await userCsvModel.listUsers();
-    return res.json({ success: true, data: users });
+    const normalUsers = users.filter(user => user.role !== "admin");
+
+    return res.json({ success: true, data: normalUsers });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -119,10 +225,13 @@ function addMyWork(req, res) {
     const { title, workType, promptSummary, creditCost } = req.body;
 
     if (!title || !workType) {
-      return res.status(400).json({ success: false, message: "Work title and type are required." });
+      return res.status(400).json({
+        success: false,
+        message: "作品标题和作品类型不能为空"
+      });
     }
 
-    const work = aigcAccountModel.addMyWork({
+    const result = aigcAccountModel.addMyWork({
       clBaseUserId: req.user.id,
       title,
       workType,
@@ -130,7 +239,22 @@ function addMyWork(req, res) {
       creditCost: Number(creditCost || 0)
     });
 
-    return res.status(201).json({ success: true, message: "Creative work saved in isolated workspace.", data: work });
+    let message = "创作记录保存成功";
+
+    if (result.tokenUsage.warningStatus === "warning") {
+      message = `创作记录保存成功，提醒：当前 AIGC 子账号 token 使用率已达到 ${result.tokenUsage.usageRate}%`;
+    }
+
+    if (result.tokenUsage.warningStatus === "exceeded") {
+      message = "创作记录保存成功，提醒：当前 AIGC 子账号已达到 token 上限";
+    }
+
+    return res.status(201).json({
+      success: true,
+      message,
+      data: result.work,
+      tokenUsage: result.tokenUsage
+    });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
   }
@@ -138,8 +262,11 @@ function addMyWork(req, res) {
 
 module.exports = {
   dashboard,
+  aigcCenter,
+  purchaseTokens,
   createMaster,
   createSubAccount,
+  updateSubAccountTokenSettings,
   createMapping,
   listClBaseUsers,
   myAigcWorkspace,
