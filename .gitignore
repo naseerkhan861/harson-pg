@@ -11,7 +11,8 @@ data/users.secure.csv
 data/*.csv
 !data/users.example.csv
 
-
+# Ignore this specific .docx file
+HARSON_CL_Base_*.docx
 
 
 
