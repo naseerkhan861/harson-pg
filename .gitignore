@@ -12,6 +12,11 @@ data/*.csv
 !data/users.example.csv
 
 
+# Ignore Word documents
+HARSON_CL_Base_*.docx
+*.docx
+
+
 
 
 
