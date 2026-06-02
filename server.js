@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const path = require("path");
 const express = require("express");
+const jwt = require("jsonwebtoken");
 const helmet = require("helmet");
 const compression = require("compression");
 const cookieParser = require("cookie-parser");
@@ -13,7 +14,6 @@ const connectDB = require("./src/db");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
 
 app.use(
   helmet({
@@ -36,7 +36,7 @@ app.use(
         "img-src": ["'self'", "data:", "https://www.zhihuiyunji.com"],
         "connect-src": ["'self'"],
         "frame-ancestors": ["'self'"],
-        "upgrade-insecure-requests": null,
+        "upgrade-insecure-requests": null
       }
     }
   })
@@ -52,7 +52,10 @@ app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 60,
-    message: { success: false, message: "Too many requests. Please try again later." }
+    message: {
+      success: false,
+      message: "Too many requests. Please try again later."
+    }
   }),
   authRoutes
 );
@@ -62,12 +65,35 @@ app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 120,
-    message: { success: false, message: "Too many requests. Please try again later." }
+    message: {
+      success: false,
+      message: "Too many requests. Please try again later."
+    }
   }),
   aigcAccountRoutes
 );
 
 app.use(express.static(path.join(__dirname, "public")));
+
+function sendAdminOnlyPage(req, res, filename) {
+  const token = req.cookies?.harson_token;
+
+  if (!token) {
+    return res.status(200).send("");
+  }
+
+  try {
+    const user = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (!user || user.role !== "admin") {
+      return res.status(200).send("");
+    }
+
+    return res.sendFile(path.join(__dirname, "public", filename));
+  } catch {
+    return res.status(200).send("");
+  }
+}
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
@@ -82,7 +108,11 @@ app.get("/account-management", (req, res) => {
 });
 
 app.get("/dashboard", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "dashboard.html"));
+  return sendAdminOnlyPage(req, res, "dashboard.html");
+});
+
+app.get("/aigc", (req, res) => {
+  return sendAdminOnlyPage(req, res, "aigc.html");
 });
 
 app.use((req, res) => {

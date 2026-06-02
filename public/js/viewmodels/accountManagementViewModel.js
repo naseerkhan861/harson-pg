@@ -19,6 +19,10 @@ export class AccountManagementViewModel {
     return this.postJson("/api/aigc/admin/sub-accounts", payload);
   }
 
+  async updateSubTokenSettings(payload) {
+    return this.postJson("/api/aigc/admin/sub-accounts/token-settings", payload);
+  }
+
   async createMapping(payload) {
     return this.postJson("/api/aigc/admin/mappings", payload);
   }
