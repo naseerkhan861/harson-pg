@@ -3,23 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>辰瓴智能平台 | CL-AIGC · CL-SCM · CL-iRobot · CL-iStore</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+  <title>辰瓴智能平台 | 四大智能应用平台</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <link rel="stylesheet" href="/css/main.css" />
 </head>
+
 <body data-page="home">
+  <div class="home-background-glow"></div>
+
   <div class="top-bar">
     <div class="container">
       <div class="navbar">
-        <div class="logo-area">
+        <a class="logo-area page-logo-link" href="/">
           <div class="logo-icon">H</div>
           <div class="logo-text">HARSON<span> | 数智化平台</span></div>
-        </div>
+        </a>
+
         <ul class="nav-links" data-nav></ul>
+
         <div class="header-icons">
-          <i class="fas fa-search"></i>
-          <i class="fas fa-globe"></i>
+          <i class="fas fa-search" title="搜索"></i>
+          <i class="fas fa-globe" title="语言"></i>
           <button id="accountAvatar" class="account-avatar" type="button" title="用户登录">
             <span id="accountAvatarText" class="account-avatar-text">
               <i class="fas fa-user-circle"></i>
@@ -30,42 +35,66 @@
     </div>
   </div>
 
-  <section class="hero">
-    <div class="container hero-grid">
-      <div class="hero-content">
-        <span class="hero-badge">智能引擎 · 平台矩阵</span>
-        <h1>定义数智化未来<br><span class="hero-highlight">CL-AIGC · CL-SCM · CL-iRobot · CL-iStore</span></h1>
-        <p>四大核心平台驱动企业智能化跃迁：从AI时尚生成、智慧供应链、自主机器人到全域数字零售，重塑全价值链竞争力。</p>
-        <div class="btn-group">
-          <div class="btn-primary" id="explorePlatformsBtn">探索四大平台 <i class="fas fa-arrow-right"></i></div>
-          <div class="btn-outline" id="contactExpertBtn">联系专家顾问</div>
+  <main>
+    <section class="hero">
+      <div class="hero-visual-layer"></div>
+      <div class="hero-orbit hero-orbit-one"></div>
+      <div class="hero-orbit hero-orbit-two"></div>
+
+      <div class="container hero-grid">
+        <div class="hero-content">
+          <span class="hero-badge">
+            <i class="fas fa-bolt"></i>
+            智能引擎 · 四大平台
+          </span>
+
+          <h1>
+            定义数智化未来<br />
+            <span class="hero-highlight">四大平台驱动企业智能化升级</span>
+          </h1>
+
+          <p>
+            辰瓴智能平台覆盖内容生成、供应链管理、机器人自动化与数字零售，帮助企业提升运营效率与业务增长能力。
+          </p>
+
+          <div class="btn-group">
+            <button class="btn-primary" id="explorePlatformsBtn" type="button">
+              探索核心平台 <i class="fas fa-arrow-right"></i>
+            </button>
+            <button class="btn-outline" id="contactExpertBtn" type="button">
+              联系专家顾问
+            </button>
+          </div>
         </div>
       </div>
-      <div class="hero-image">
-        <img src="https://www.zhihuiyunji.com/uploadfile/image/20220811/e43adabb2.png" alt="辰瓴科技视觉展示图" loading="lazy" />
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="platform-section" id="platforms">
-    <div class="container">
-      <div class="section-header">
-        <h2>辰瓴数智化平台矩阵</h2>
-        <p>深度融合行业AI、物联网与商业场景，提供企业级全栈智能解决方案</p>
-      </div>
-      <div class="platform-grid" data-platform-grid></div>
-    </div>
-  </section>
+    <section class="platform-section" id="platforms">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-kicker">Core Platforms</span>
+          <h2>辰瓴数智化平台矩阵</h2>
+          <p>围绕企业关键业务环节，提供独立可用、可扩展的智能平台能力。</p>
+        </div>
 
-  <section class="ecosystem" id="ecosystem">
-    <div class="container">
-      <div class="section-header">
-        <h2>平台生态 · 行业深度赋能</h2>
-        <p>辰瓴四大平台已广泛应用于鞋服时尚、汽车、电子、快消、零售等领域，携手伙伴共创价值</p>
+        <div class="platform-grid" data-platform-grid></div>
       </div>
-      <div class="insight-grid" data-insight-grid></div>
-    </div>
-  </section>
+    </section>
+
+    <section class="ecosystem" id="ecosystem">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-kicker">Industry Ecosystem</span>
+          <h2>平台生态 · 行业深度赋能</h2>
+          <p>
+            从内容生产、供应协同、自动化执行到消费者触达，帮助企业在不同业务场景中提升效率与增长能力。
+          </p>
+        </div>
+
+        <div class="insight-grid" data-insight-grid></div>
+      </div>
+    </section>
+  </main>
 
   <footer class="footer">
     <div class="container">
@@ -79,15 +108,17 @@
             <li>CL-iStore 智慧零售</li>
           </ul>
         </div>
+
         <div class="footer-col">
           <h4>解决方案</h4>
           <ul>
-            <li>鞋服品牌AI内容工厂</li>
-            <li>智能制造</li>
-            <li>数字孪生工厂</li>
-            <li>全渠道营销中台</li>
+            <li>AI 内容生产</li>
+            <li>供应链协同</li>
+            <li>自动化运营</li>
+            <li>数字零售增长</li>
           </ul>
         </div>
+
         <div class="footer-col">
           <h4>支持与资源</h4>
           <ul>
@@ -97,6 +128,7 @@
             <li>培训认证</li>
           </ul>
         </div>
+
         <div class="footer-col">
           <h4>关注辰瓴</h4>
           <ul class="social-list">
@@ -106,8 +138,9 @@
           </ul>
         </div>
       </div>
+
       <div class="footer-bottom">
-        <p>© 2026 辰瓴科技 | 工业智能引领者 — 本页面展示四大核心平台架构，CL-AIGC专注鞋服模特生成及品牌视觉内容。</p>
+        <p>© 2026 辰瓴科技 | 企业智能应用平台 — 面向内容、供应链、机器人与零售场景的数智化能力矩阵。</p>
       </div>
     </div>
   </footer>
