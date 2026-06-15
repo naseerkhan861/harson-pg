@@ -42,7 +42,7 @@ export class AccountManagementView {
     app.innerHTML = `
       <section class="account-hero-card">
         <div>
-          <span class="hero-badge">AIGC Enterprise Account Center</span>
+          <span class="hero-badge">AIGC企业客户中心</span>
           <h1>企业主账号、子账号与 CL-Base 映射管理</h1>
           <p>实现企业主账号统一点数池、AIGC 子账号独立创作空间，以及 CL-Base 与 AIGC 的一对一身份绑定</p>
         </div>
@@ -71,7 +71,7 @@ export class AccountManagementView {
 
       <section class="account-panel">
         <h2>2. 创建 AIGC 子账号</h2>
-        <p>每个子账号独立运行，创作数据互相隔离，管理员可为每个子账号设置独立 token 配额和预警阈值</p>
+        <p>每个子账号独立运行，创作数据互相隔离。管理员可为每个子账号设置独立 token 配额，并按剩余 token 百分比设置预警阈值</p>
         <div id="subAccountMessage" class="auth-message"></div>
         <form id="subAccountForm" class="management-form">
           <select name="masterAccountId" required>${this.masterOptions()}</select>
@@ -79,19 +79,19 @@ export class AccountManagementView {
           <input name="platformLogin" type="email" placeholder="AIGC 子账号登录邮箱" required />
           <input name="platformPassword" type="password" placeholder="AIGC 子账号独立密码" required />
           <input name="tokenLimit" type="number" min="0" placeholder="Token 配额，例如 5000" required />
-          <input name="warningThreshold" type="number" min="1" max="100" placeholder="预警阈值%，例如 80" />
+          <input name="warningThreshold" type="number" min="1" max="100" placeholder="剩余预警阈值%，例如 10" />
           <button type="submit">创建子账号</button>
         </form>
       </section>
 
       <section class="account-panel">
         <h2>3. 调整 AIGC 子账号 Token 配额</h2>
-        <p>管理员可以为已创建的子账号重新设置 token 配额和预警阈值，保存后立即生效</p>
+        <p>管理员可以为已创建的子账号重新设置 token 配额和剩余预警阈值。比如设置 10，表示剩余 token 低于或等于 10% 时预警</p>
         <div id="tokenSettingsMessage" class="auth-message"></div>
         <form id="tokenSettingsForm" class="management-form">
           <select name="subAccountId" required>${this.subOptions("选择需要调整的 AIGC 子账号")}</select>
           <input name="tokenLimit" type="number" min="0" placeholder="新的 Token 配额，例如 10000" required />
-          <input name="warningThreshold" type="number" min="1" max="100" placeholder="新的预警阈值%，例如 80" />
+          <input name="warningThreshold" type="number" min="1" max="100" placeholder="新的剩余预警阈值%，例如 10" />
           <button type="submit">保存配额设置</button>
         </form>
       </section>
@@ -123,7 +123,6 @@ export class AccountManagementView {
     app.innerHTML = `
       <section class="account-hero-card">
         <div>
-          <span class="hero-badge">My Isolated AIGC Workspace</span>
           <h1>我的 AIGC 独立创作空间</h1>
           <p>当前页面只显示与你的 CL-Base 账号绑定的 AIGC 子账号和作品，不会显示其他子账号的创作内容</p>
         </div>
@@ -150,12 +149,14 @@ export class AccountManagementView {
           <div class="table-wrap">
             <table>
               ${this.rows(
-                ["Token 配额", "已使用", "剩余", "使用率", "状态"],
+                ["Token 配额", "已使用", "剩余", "已使用率", "剩余率", "剩余预警阈值", "状态"],
                 [[
                   subAccount.tokenLimit,
                   subAccount.usedTokens,
                   subAccount.remainingTokens,
                   `${subAccount.usageRate}%`,
+                  `${subAccount.remainingRate ?? this.calculateRemainingRate(subAccount)}%`,
+                  `${subAccount.warningThreshold}%`,
                   this.tokenStatusLabel(subAccount.warningStatus)
                 ]]
               )}
@@ -318,17 +319,17 @@ export class AccountManagementView {
     const subs = this.state.dashboard.subs;
     return [
       `<option value="">${label}</option>`,
-      ...subs.map(item => `<option value="${item.id}">${item.subAccountName} / ${item.platformLogin} / 配额 ${item.tokenLimit} / 已用 ${item.usedTokens}</option>`)
+      ...subs.map(item => `<option value="${item.id}">${item.subAccountName} / ${item.platformLogin} / 配额 ${item.tokenLimit} / 剩余预警 ${item.warningThreshold}%</option>`)
     ].join("");
   }
 
   userOptions() {
     const normalUsers = this.state.users.filter(item => item.role !== "admin");
 
-      return [
-        `<option value="">选择 CL-Base 用户</option>`,
-        ...normalUsers.map(item => `<option value="${item.id}">${item.name} / ${item.email}</option>`)
-      ].join("");
+    return [
+      `<option value="">选择 CL-Base 用户</option>`,
+      ...normalUsers.map(item => `<option value="${item.id}">${item.name} / ${item.email}</option>`)
+    ].join("");
   }
 
   dashboardTables() {
@@ -348,7 +349,7 @@ export class AccountManagementView {
 
       <h3>子账号 Token 配额</h3>
       <table>${this.rows(
-        ["名称", "登录名", "Token 配额", "已使用", "剩余", "使用率", "预警阈值", "状态"],
+        ["名称", "登录名", "Token 配额", "已使用", "剩余", "已使用率", "剩余率", "剩余预警阈值", "状态"],
         data.subs.map(item => [
           item.subAccountName,
           item.platformLogin,
@@ -356,6 +357,7 @@ export class AccountManagementView {
           item.usedTokens,
           item.remainingTokens,
           `${item.usageRate}%`,
+          `${item.remainingRate ?? this.calculateRemainingRate(item)}%`,
           `${item.warningThreshold}%`,
           this.tokenStatusLabel(item.warningStatus)
         ])
@@ -386,6 +388,17 @@ export class AccountManagementView {
     )}</table>`;
   }
 
+  calculateRemainingRate(subAccount) {
+    const tokenLimit = Number(subAccount.tokenLimit || 0);
+    const remainingTokens = Number(subAccount.remainingTokens || 0);
+
+    if (tokenLimit <= 0) {
+      return 100;
+    }
+
+    return Math.round((remainingTokens / tokenLimit) * 100);
+  }
+
   tokenStatusLabel(status) {
     if (status === "exceeded") {
       return "已达到上限";
@@ -400,11 +413,13 @@ export class AccountManagementView {
 
   tokenWarningBox(subAccount) {
     if (subAccount.warningStatus === "exceeded") {
-      return `<div class="auth-message error">当前 AIGC 子账号已达到 token 上限，请联系管理员增加配额</div>`;
+      return `<div class="auth-message error">当前 AIGC 子账号已达到 token 上限,请联系管理员增加配额</div>`;
     }
 
     if (subAccount.warningStatus === "warning") {
-      return `<div class="auth-message error">当前 AIGC 子账号 token 使用率已达到 ${subAccount.usageRate}%，请注意剩余额度</div>`;
+      const remainingRate = subAccount.remainingRate ?? this.calculateRemainingRate(subAccount);
+
+      return `<div class="auth-message error">当前 AIGC 子账号剩余 token 为 ${remainingRate}%,请注意剩余额度</div>`;
     }
 
     return `<div class="auth-message success">当前 AIGC 子账号 token 使用状态正常</div>`;
@@ -416,7 +431,7 @@ export class AccountManagementView {
         <tr>${headers.map(item => `<th>${item}</th>`).join("")}</tr>
       </thead>
       <tbody>
-        ${rows.map(row => `<tr>${row.map(cell => `<td>${cell || ""}</td>`).join("")}</tr>`).join("")}
+        ${rows.map(row => `<tr>${row.map(cell => `<td>${cell ?? ""}</td>`).join("")}</tr>`).join("")}
       </tbody>
     `;
   }

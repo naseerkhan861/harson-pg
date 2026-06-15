@@ -135,7 +135,14 @@ function toNumber(value, fallback = 0) {
 
 function calculateSubTokenUsage(sub, works) {
   const tokenLimit = toNumber(sub.tokenLimit, 0);
-  const warningThreshold = toNumber(sub.warningThreshold, 80);
+
+  /*
+   * New business logic:
+   * warningThreshold now means remaining-token percentage threshold.
+   * Example:
+   * warningThreshold = 10 means warning when remaining token percentage <= 10%.
+   */
+  const warningThreshold = toNumber(sub.warningThreshold, 10);
 
   const usedTokens = works
     .filter(work => work.aigcSubAccountId === sub.id)
@@ -143,12 +150,13 @@ function calculateSubTokenUsage(sub, works) {
 
   const remainingTokens = Math.max(tokenLimit - usedTokens, 0);
   const usageRate = tokenLimit > 0 ? Math.round((usedTokens / tokenLimit) * 100) : 0;
+  const remainingRate = tokenLimit > 0 ? Math.round((remainingTokens / tokenLimit) * 100) : 100;
 
   let warningStatus = "normal";
 
   if (tokenLimit > 0 && usedTokens >= tokenLimit) {
     warningStatus = "exceeded";
-  } else if (tokenLimit > 0 && usageRate >= warningThreshold) {
+  } else if (tokenLimit > 0 && remainingRate <= warningThreshold) {
     warningStatus = "warning";
   }
 
@@ -158,6 +166,7 @@ function calculateSubTokenUsage(sub, works) {
     usedTokens,
     remainingTokens,
     usageRate,
+    remainingRate,
     warningStatus
   };
 }
@@ -239,14 +248,14 @@ async function createSubAccount({
   }
 
   const numericTokenLimit = toNumber(tokenLimit, 0);
-  const numericWarningThreshold = toNumber(warningThreshold, 80);
+  const numericWarningThreshold = toNumber(warningThreshold, 10);
 
   if (numericTokenLimit < 0) {
     throw new Error("token 配额不能为负数");
   }
 
   if (numericWarningThreshold <= 0 || numericWarningThreshold > 100) {
-    throw new Error("预警阈值必须在 1 到 100 之间");
+    throw new Error("剩余预警阈值必须在 1 到 100 之间");
   }
 
   const subs = readSubs();
@@ -299,14 +308,14 @@ function updateSubAccountTokenSettings({ subAccountId, tokenLimit, warningThresh
   const currentSubUsage = calculateSubTokenUsage(sub, works);
 
   const numericTokenLimit = toNumber(tokenLimit, 0);
-  const numericWarningThreshold = toNumber(warningThreshold, 80);
+  const numericWarningThreshold = toNumber(warningThreshold, 10);
 
   if (numericTokenLimit < 0) {
     throw new Error("token 配额不能为负数");
   }
 
   if (numericWarningThreshold <= 0 || numericWarningThreshold > 100) {
-    throw new Error("预警阈值必须在 1 到 100 之间");
+    throw new Error("剩余预警阈值必须在 1 到 100 之间");
   }
 
   if (numericTokenLimit < currentSubUsage.usedTokens) {
@@ -538,6 +547,7 @@ function addMyWork({ clBaseUserId, title, workType, promptSummary, creditCost })
       usedTokens: updatedSubAccount.usedTokens,
       remainingTokens: updatedSubAccount.remainingTokens,
       usageRate: updatedSubAccount.usageRate,
+      remainingRate: updatedSubAccount.remainingRate,
       warningThreshold: updatedSubAccount.warningThreshold,
       warningStatus: updatedSubAccount.warningStatus
     }
