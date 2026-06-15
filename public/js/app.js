@@ -5,11 +5,28 @@ import { AuthView } from "./views/authView.js";
 import { AccountManagementViewModel } from "./viewmodels/accountManagementViewModel.js";
 import { AccountManagementView } from "./views/accountManagementView.js";
 
+if ("scrollRestoration" in window.history) {
+  window.history.scrollRestoration = "manual";
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   if (document.body.dataset.page === "home") {
+    forceHomeTopOnRefresh();
+
     const vm = new HomeViewModel();
     const view = new HomeView(vm);
     view.render();
+
+    initHomeAnchorNavigation();
+
+    requestAnimationFrame(() => {
+      forceHomeTopOnRefresh();
+      initHomeScrollReveal();
+    });
+
+    setTimeout(() => {
+      forceHomeTopOnRefresh();
+    }, 80);
   }
 
   if (document.body.dataset.page === "auth") {
@@ -39,6 +56,239 @@ document.addEventListener("DOMContentLoaded", () => {
 
   console.log("HARSON MVVM application loaded.");
 });
+
+function forceHomeTopOnRefresh() {
+  if (document.body.dataset.page !== "home") {
+    return;
+  }
+
+  if (window.location.hash) {
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}${window.location.search}`
+    );
+  }
+
+  window.scrollTo({
+    top: 0,
+    left: 0,
+    behavior: "auto"
+  });
+}
+
+function initHomeAnchorNavigation() {
+  if (document.body.dataset.page !== "home") {
+    return;
+  }
+
+  function clearHashFromUrl() {
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}${window.location.search}`
+    );
+  }
+
+  function scrollToTarget(selector) {
+    if (!selector || selector === "#") {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+
+      clearHashFromUrl();
+      return;
+    }
+
+    const target = document.querySelector(selector);
+
+    if (!target) {
+      return;
+    }
+
+    target.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+
+    clearHashFromUrl();
+  }
+
+  const hashLinks = document.querySelectorAll('a[href^="#"]');
+
+  hashLinks.forEach((link) => {
+    link.addEventListener("click", (event) => {
+      const href = link.getAttribute("href");
+
+      if (!href) {
+        return;
+      }
+
+      event.preventDefault();
+      scrollToTarget(href);
+    });
+  });
+
+  const exploreButton = document.getElementById("explorePlatformsBtn");
+
+  if (exploreButton) {
+    exploreButton.addEventListener("click", () => {
+      scrollToTarget("#platforms");
+    });
+  }
+
+  const contactButton = document.getElementById("contactExpertBtn");
+
+  if (contactButton) {
+    contactButton.addEventListener("click", () => {
+      const footer = document.querySelector(".footer");
+
+      if (!footer) {
+        return;
+      }
+
+      footer.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+
+      clearHashFromUrl();
+    });
+  }
+}
+
+function initHomeScrollReveal() {
+  if (document.body.dataset.page !== "home") {
+    return;
+  }
+
+  injectScrollRevealStyles();
+
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const revealGroups = [
+    {
+      selector: ".hero-content",
+      effectClass: "reveal-left",
+      stagger: 0
+    },
+    {
+      selector: ".hero-access-card, .hero-summary-card, .hero-suite-card",
+      effectClass: "reveal-right",
+      stagger: 0
+    },
+    {
+      selector: ".section-header",
+      effectClass: "reveal-up",
+      stagger: 0
+    },
+    {
+      selector: ".platform-card",
+      effectClass: "reveal-up",
+      stagger: 110
+    },
+    {
+      selector: ".insight-card",
+      effectClass: "reveal-up",
+      stagger: 100
+    },
+    {
+      selector: ".footer-col",
+      effectClass: "reveal-up",
+      stagger: 70
+    }
+  ];
+
+  const revealElements = [];
+
+  revealGroups.forEach((group) => {
+    const elements = Array.from(document.querySelectorAll(group.selector));
+
+    elements.forEach((element, index) => {
+      element.classList.add("scroll-reveal", group.effectClass);
+      element.style.setProperty("--reveal-delay", `${index * group.stagger}ms`);
+      revealElements.push(element);
+    });
+  });
+
+  if (!revealElements.length) {
+    return;
+  }
+
+  if (prefersReducedMotion || !("IntersectionObserver" in window)) {
+    revealElements.forEach((element) => {
+      element.classList.add("is-visible");
+    });
+
+    return;
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("is-visible");
+      } else {
+        entry.target.classList.remove("is-visible");
+      }
+    });
+  }, {
+    threshold: 0.14,
+    rootMargin: "0px 0px -10% 0px"
+  });
+
+  revealElements.forEach((element) => observer.observe(element));
+}
+
+function injectScrollRevealStyles() {
+  if (document.getElementById("scrollRevealStyles")) {
+    return;
+  }
+
+  const style = document.createElement("style");
+  style.id = "scrollRevealStyles";
+  style.textContent = `
+    .scroll-reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition:
+        opacity 720ms cubic-bezier(0.22, 1, 0.36, 1),
+        transform 720ms cubic-bezier(0.22, 1, 0.36, 1),
+        border-color 240ms ease,
+        background 240ms ease,
+        box-shadow 280ms ease;
+      transition-delay: var(--reveal-delay, 0ms);
+      will-change: opacity, transform;
+    }
+
+    .scroll-reveal.reveal-left {
+      transform: translateX(-28px);
+    }
+
+    .scroll-reveal.reveal-right {
+      transform: translateX(28px);
+    }
+
+    .scroll-reveal.reveal-up {
+      transform: translateY(32px);
+    }
+
+    .scroll-reveal.is-visible {
+      opacity: 1;
+      transform: translateX(0) translateY(0);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .scroll-reveal {
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
+}
 
 function initDashboardMenu() {
   const menuItems = document.querySelectorAll(".menu-item");
@@ -126,11 +376,6 @@ function initBossAnalytics() {
   const localUserSelect = document.getElementById("localUserSelect");
   const localPeriodSelect = document.getElementById("localPeriodSelect");
 
-  /*
-   * Business rule:
-   * Only CL-AIGC consumes tokens.
-   * CL-SCM, CL-iStore and CL-iRobot are tracked by usage count / active usage only.
-   */
   const globalData = {
     daily: {
       aigcTokenPurchased: "120,000",
@@ -496,7 +741,9 @@ async function initAigcPurchasePage() {
     const localBox = document.getElementById(elementId);
     const box = localBox || globalMessageBox;
 
-    if (!box) return;
+    if (!box) {
+      return;
+    }
 
     box.textContent = message || "操作失败，请稍后重试";
     box.className = success ? "aigc-message success" : "aigc-message error";
@@ -504,6 +751,11 @@ async function initAigcPurchasePage() {
 
   function formatNumber(value) {
     return Number(value || 0).toLocaleString();
+  }
+
+  function toNumber(value) {
+    const number = Number(value || 0);
+    return Number.isFinite(number) ? number : 0;
   }
 
   async function getData() {
@@ -525,49 +777,304 @@ async function initAigcPurchasePage() {
     return response.json();
   }
 
-  function render(data) {
+  function getRecordMasterId(record) {
+    return String(
+      record.masterAccountId ||
+      record.masterId ||
+      record.accountId ||
+      record.enterpriseAccountId ||
+      record.parentMasterAccountId ||
+      record.parentId ||
+      ""
+    );
+  }
+
+  function getSummaryMasterId(record) {
+    return String(
+      record.masterAccountId ||
+      record.masterId ||
+      record.accountId ||
+      record.enterpriseAccountId ||
+      record.id ||
+      ""
+    );
+  }
+
+  function findCreditSummaryForMaster(summary, master) {
+    if (!master) {
+      return null;
+    }
+
+    return summary.find(item => {
+      const summaryMasterId = getSummaryMasterId(item);
+
+      if (summaryMasterId && summaryMasterId === String(master.id)) {
+        return true;
+      }
+
+      if (item.platformLogin && master.platformLogin) {
+        return String(item.platformLogin) === String(master.platformLogin);
+      }
+
+      if (item.enterpriseName && master.enterpriseName) {
+        return String(item.enterpriseName) === String(master.enterpriseName);
+      }
+
+      return false;
+    }) || null;
+  }
+
+  function isPurchaseForMaster(purchase, master, masters) {
+    if (!purchase || !master) {
+      return false;
+    }
+
+    const purchaseMasterId = getRecordMasterId(purchase);
+
+    if (purchaseMasterId) {
+      return purchaseMasterId === String(master.id);
+    }
+
+    if (purchase.platformLogin && master.platformLogin) {
+      return String(purchase.platformLogin) === String(master.platformLogin);
+    }
+
+    if (purchase.enterpriseName && master.enterpriseName) {
+      return String(purchase.enterpriseName) === String(master.enterpriseName);
+    }
+
+    return masters.length === 1;
+  }
+
+  function isSubAccountForMaster(sub, master, masters) {
+    if (!sub || !master) {
+      return false;
+    }
+
+    const subMasterId = getRecordMasterId(sub);
+
+    if (subMasterId) {
+      return subMasterId === String(master.id);
+    }
+
+    if (sub.masterPlatformLogin && master.platformLogin) {
+      return String(sub.masterPlatformLogin) === String(master.platformLogin);
+    }
+
+    if (sub.masterAccountLogin && master.platformLogin) {
+      return String(sub.masterAccountLogin) === String(master.platformLogin);
+    }
+
+    if (sub.enterpriseName && master.enterpriseName) {
+      return String(sub.enterpriseName) === String(master.enterpriseName);
+    }
+
+    /*
+     * Fallback:
+     * 如果旧子账号数据没有保存 masterAccountId，
+     * 只有在系统中只有一个主账号时才显示，避免多个主账号时混在一起。
+     */
+    return masters.length === 1;
+  }
+
+  function getSelectedMasterData(masterId, masters, summary, purchases, subs) {
+    if (!masterId) {
+      return {
+        master: null,
+        totalCredits: 0,
+        usedCredits: 0,
+        remainingCredits: 0,
+        totalPurchased: 0,
+        filteredPurchases: [],
+        filteredSubs: []
+      };
+    }
+
+    const selectedMaster = masters.find(master => String(master.id) === String(masterId)) || null;
+
+    if (!selectedMaster) {
+      return {
+        master: null,
+        totalCredits: 0,
+        usedCredits: 0,
+        remainingCredits: 0,
+        totalPurchased: 0,
+        filteredPurchases: [],
+        filteredSubs: []
+      };
+    }
+
+    const selectedSummary = findCreditSummaryForMaster(summary, selectedMaster);
+
+    const totalCredits = toNumber(
+      selectedSummary?.totalCredits ??
+      selectedMaster.totalCredits ??
+      selectedMaster.credits ??
+      selectedMaster.tokenLimit
+    );
+
+    const usedCredits = toNumber(
+      selectedSummary?.usedCredits ??
+      selectedMaster.usedCredits ??
+      selectedMaster.usedTokens
+    );
+
+    const remainingCredits = toNumber(
+      selectedSummary?.remainingCredits ??
+      selectedMaster.remainingCredits ??
+      selectedMaster.remainingTokens ??
+      Math.max(totalCredits - usedCredits, 0)
+    );
+
+    const filteredPurchases = purchases.filter(purchase => {
+      return isPurchaseForMaster(purchase, selectedMaster, masters);
+    });
+
+    const filteredSubs = subs.filter(sub => {
+      return isSubAccountForMaster(sub, selectedMaster, masters);
+    });
+
+    const totalPurchased = filteredPurchases.reduce((sum, item) => {
+      return sum + toNumber(item.tokens);
+    }, 0);
+
+    return {
+      master: selectedMaster,
+      totalCredits,
+      usedCredits,
+      remainingCredits,
+      totalPurchased,
+      filteredPurchases,
+      filteredSubs
+    };
+  }
+
+  function renderSubRows(subs, hasSelectedMaster) {
+    const tbody = document.getElementById("subAccountRowsBody");
+
+    if (!tbody) {
+      return;
+    }
+
+    if (!hasSelectedMaster) {
+      tbody.innerHTML = `<tr><td colspan="7">请选择主账号</td></tr>`;
+      return;
+    }
+
+    if (!subs.length) {
+      tbody.innerHTML = `<tr><td colspan="7">当前主账号暂无子账号数据</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = subs.map(sub => `
+      <tr>
+        <td>${sub.subAccountName || "-"}</td>
+        <td>${sub.platformLogin || "-"}</td>
+        <td>${formatNumber(sub.tokenLimit)}</td>
+        <td>${formatNumber(sub.usedTokens)}</td>
+        <td>${formatNumber(sub.remainingTokens)}</td>
+        <td>${sub.usageRate || 0}%</td>
+        <td>${sub.warningStatus === "warning" ? "低余额预警" : sub.warningStatus === "exceeded" ? "已达到上限" : "正常"}</td>
+      </tr>
+    `).join("");
+  }
+
+  function renderPurchaseRows(purchases, hasSelectedMaster) {
+    const tbody = document.getElementById("purchaseRecordsBody");
+
+    if (!tbody) {
+      return;
+    }
+
+    if (!hasSelectedMaster) {
+      tbody.innerHTML = `<tr><td colspan="5">请选择主账号</td></tr>`;
+      return;
+    }
+
+    if (!purchases.length) {
+      tbody.innerHTML = `<tr><td colspan="5">当前主账号暂无采购记录</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = purchases.slice().reverse().map(item => `
+      <tr>
+        <td>${item.packageName || "-"}</td>
+        <td>${formatNumber(item.tokens)}</td>
+        <td>¥${item.amount || 0}</td>
+        <td>${item.paymentStatus === "paid" ? "已完成" : item.paymentStatus || "-"}</td>
+        <td>${item.createdAt || "-"}</td>
+      </tr>
+    `).join("");
+  }
+
+  function updateSelectedMasterSummary(masterId, masters, summary, purchases, subs) {
+    const selectedData = getSelectedMasterData(masterId, masters, summary, purchases, subs);
+
+    const totalCreditsEl = document.getElementById("selectedTotalCredits");
+    const usedCreditsEl = document.getElementById("selectedUsedCredits");
+    const remainingCreditsEl = document.getElementById("selectedRemainingCredits");
+    const totalPurchasedEl = document.getElementById("selectedTotalPurchased");
+
+    if (totalCreditsEl) {
+      totalCreditsEl.textContent = formatNumber(selectedData.totalCredits);
+    }
+
+    if (usedCreditsEl) {
+      usedCreditsEl.textContent = formatNumber(selectedData.usedCredits);
+    }
+
+    if (remainingCreditsEl) {
+      remainingCreditsEl.textContent = formatNumber(selectedData.remainingCredits);
+    }
+
+    if (totalPurchasedEl) {
+      totalPurchasedEl.textContent = formatNumber(selectedData.totalPurchased);
+    }
+
+    renderSubRows(selectedData.filteredSubs, Boolean(masterId));
+    renderPurchaseRows(selectedData.filteredPurchases, Boolean(masterId));
+  }
+
+  function render(data, preferredMasterId = "") {
     const masters = data.masters || [];
     const subs = data.subs || [];
     const purchases = data.purchases || [];
     const summary = data.creditSummary || [];
 
-    const totalCredits = summary.reduce((sum, item) => sum + Number(item.totalCredits || 0), 0);
-    const usedCredits = summary.reduce((sum, item) => sum + Number(item.usedCredits || 0), 0);
-    const remainingCredits = summary.reduce((sum, item) => sum + Number(item.remainingCredits || 0), 0);
-    const totalPurchased = purchases.reduce((sum, item) => sum + Number(item.tokens || 0), 0);
+    const defaultMasterId = preferredMasterId || "";
 
     app.innerHTML = `
       <section class="summary-grid">
         <article class="card">
-          <span>主账号总点数</span>
-          <strong>${formatNumber(totalCredits)}</strong>
+          <span>当前主账号总点数</span>
+          <strong id="selectedTotalCredits">0</strong>
         </article>
         <article class="card">
-          <span>已使用 token</span>
-          <strong>${formatNumber(usedCredits)}</strong>
+          <span>当前主账号已使用 token</span>
+          <strong id="selectedUsedCredits">0</strong>
         </article>
         <article class="card">
-          <span>剩余 token</span>
-          <strong>${formatNumber(remainingCredits)}</strong>
+          <span>当前主账号剩余 token</span>
+          <strong id="selectedRemainingCredits">0</strong>
         </article>
         <article class="card">
-          <span>历史购买 token</span>
-          <strong>${formatNumber(totalPurchased)}</strong>
+          <span>当前主账号历史购买 token</span>
+          <strong id="selectedTotalPurchased">0</strong>
         </article>
       </section>
 
       <section class="panel">
         <h2>Token 套餐购买</h2>
-        <p>选择 AIGC 企业主账号和 token 套餐。当前版本为内部采购模拟，提交后会立即增加主账号总点数。</p>
+        <p>选择 AIGC 企业主账号和 token 套餐。上方数据、子账号分配和采购记录都会根据当前选中的主账号同步更新。</p>
 
         <div id="purchaseMessage" class="aigc-message"></div>
 
         <form id="purchaseForm" class="purchase-form">
-          <select name="masterAccountId" required>
+          <select id="masterAccountSelect" name="masterAccountId" required>
             <option value="">选择 AIGC 企业主账号</option>
             ${masters.map(master => `
-              <option value="${master.id}">
-                ${master.enterpriseName} / ${master.platformLogin} / 当前 ${formatNumber(master.totalCredits)} tokens
+              <option value="${master.id}" ${String(master.id) === String(defaultMasterId) ? "selected" : ""}>
+                ${master.enterpriseName || "-"} / ${master.platformLogin || "-"} / 当前 ${formatNumber(master.totalCredits)} tokens
               </option>
             `).join("")}
           </select>
@@ -586,7 +1093,7 @@ async function initAigcPurchasePage() {
       </section>
 
       <section class="panel">
-        <h2>子账号 token 分配概览</h2>
+        <h2>当前主账号子账号 token 分配概览</h2>
         <div class="table-wrap">
           <table>
             <thead>
@@ -600,25 +1107,15 @@ async function initAigcPurchasePage() {
                 <th>状态</th>
               </tr>
             </thead>
-            <tbody>
-              ${subs.map(sub => `
-                <tr>
-                  <td>${sub.subAccountName}</td>
-                  <td>${sub.platformLogin}</td>
-                  <td>${formatNumber(sub.tokenLimit)}</td>
-                  <td>${formatNumber(sub.usedTokens)}</td>
-                  <td>${formatNumber(sub.remainingTokens)}</td>
-                  <td>${sub.usageRate}%</td>
-                  <td>${sub.warningStatus === "warning" ? "低余额预警" : sub.warningStatus === "exceeded" ? "已达到上限" : "正常"}</td>
-                </tr>
-              `).join("") || `<tr><td colspan="7">暂无子账号数据</td></tr>`}
+            <tbody id="subAccountRowsBody">
+              <tr><td colspan="7">请选择主账号</td></tr>
             </tbody>
           </table>
         </div>
       </section>
 
       <section class="panel">
-        <h2>采购记录</h2>
+        <h2>当前主账号采购记录</h2>
         <div class="table-wrap">
           <table>
             <thead>
@@ -630,23 +1127,24 @@ async function initAigcPurchasePage() {
                 <th>时间</th>
               </tr>
             </thead>
-            <tbody>
-              ${purchases.slice().reverse().map(item => `
-                <tr>
-                  <td>${item.packageName}</td>
-                  <td>${formatNumber(item.tokens)}</td>
-                  <td>¥${item.amount}</td>
-                  <td>${item.paymentStatus === "paid" ? "已完成" : item.paymentStatus}</td>
-                  <td>${item.createdAt}</td>
-                </tr>
-              `).join("") || `<tr><td colspan="5">暂无采购记录</td></tr>`}
+            <tbody id="purchaseRecordsBody">
+              <tr><td colspan="5">请选择主账号</td></tr>
             </tbody>
           </table>
         </div>
       </section>
     `;
 
+    const masterSelect = document.getElementById("masterAccountSelect");
     const form = document.getElementById("purchaseForm");
+
+    if (masterSelect) {
+      updateSelectedMasterSummary(masterSelect.value, masters, summary, purchases, subs);
+
+      masterSelect.addEventListener("change", () => {
+        updateSelectedMasterSummary(masterSelect.value, masters, summary, purchases, subs);
+      });
+    }
 
     if (!form) {
       return;
@@ -657,8 +1155,9 @@ async function initAigcPurchasePage() {
 
       const formData = new FormData(form);
       const selectedPackage = packages[Number(formData.get("packageIndex"))];
+      const selectedMasterId = formData.get("masterAccountId");
 
-      if (!formData.get("masterAccountId")) {
+      if (!selectedMasterId) {
         showMessage("请选择 AIGC 企业主账号", false);
         return;
       }
@@ -669,7 +1168,7 @@ async function initAigcPurchasePage() {
       }
 
       const result = await postPurchase({
-        masterAccountId: formData.get("masterAccountId"),
+        masterAccountId: selectedMasterId,
         packageName: selectedPackage.name,
         tokens: selectedPackage.tokens,
         amount: selectedPackage.amount
@@ -682,7 +1181,7 @@ async function initAigcPurchasePage() {
           const refreshed = await getData();
 
           if (refreshed.success) {
-            render(refreshed.data);
+            render(refreshed.data, selectedMasterId);
           }
         }, 2500);
       }
