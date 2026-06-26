@@ -107,8 +107,26 @@ app.get("/account-management", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "account-management.html"));
 });
 
+/*
+  Dashboard style routes
+
+  /dashboard             -> default dashboard entrance
+  /dashboard-black-gold  -> black-gold style dashboard
+  /dashboard-mecha       -> mecha style dashboard
+
+  All dashboard pages are still admin-only.
+*/
+
 app.get("/dashboard", (req, res) => {
-  return sendAdminOnlyPage(req, res, "dashboard.html");
+  res.redirect("/dashboard-black-gold");
+});
+
+app.get("/dashboard-black-gold", (req, res) => {
+  return sendAdminOnlyPage(req, res, "dashboard-black-gold.html");
+});
+
+app.get("/dashboard-mecha", (req, res) => {
+  return sendAdminOnlyPage(req, res, "dashboard-mecha.html");
 });
 
 app.get("/aigc", (req, res) => {

@@ -1,7 +1,7 @@
 export const platformModel = {
   navItems: [
     { label: "首页", href: "#" },
-    { label: "管理员仪表盘", href: "/dashboard" },
+    { label: "仪表盘", href: "/dashboard" },
     { label: "账号管理", href: "/account-management" },
     { label: "核心平台", href: "#platforms" },
     { label: "CL-AIGC", href: "#cl-aigc" },
