@@ -43,8 +43,8 @@ export class AccountManagementView {
       <section class="account-hero-card">
         <div>
           <span class="hero-badge">AIGC企业客户中心</span>
-          <h1>企业主账号、子账号与 CL-Base 映射管理</h1>
-          <p>实现企业主账号统一点数池、AIGC 子账号独立创作空间，以及 CL-Base 与 AIGC 的一对一身份绑定</p>
+          <h1>企业主账号、子账号与 Harson-Base 映射管理</h1>
+          <p>实现企业主账号统一点数池、AIGC 子账号独立创作空间，以及 Harson-Base 与 AIGC 的一对一身份绑定</p>
         </div>
         <button id="logoutBtn" class="btn-outline">退出登录</button>
       </section>
@@ -97,8 +97,8 @@ export class AccountManagementView {
       </section>
 
       <section class="account-panel">
-        <h2>4. 建立 CL-Base ↔ AIGC 一对一映射</h2>
-        <p>每个 CL-Base 用户只能绑定一个 AIGC 子账号；每个 AIGC 子账号也只能绑定一个 CL-Base 用户</p>
+        <h2>4. 建立 Harson-Base ↔ AIGC 一对一映射</h2>
+        <p>每个 Harson-Base 用户只能绑定一个 AIGC 子账号；每个 AIGC 子账号也只能绑定一个 Harson-Base 用户</p>
         <div id="mappingMessage" class="auth-message"></div>
         <form id="mappingForm" class="management-form">
           <select name="clBaseUserId" required>${this.userOptions()}</select>
@@ -124,7 +124,7 @@ export class AccountManagementView {
       <section class="account-hero-card">
         <div>
           <h1>我的 AIGC 独立创作空间</h1>
-          <p>当前页面只显示与你的 CL-Base 账号绑定的 AIGC 子账号和作品，不会显示其他子账号的创作内容</p>
+          <p>当前页面只显示与你的 Harson-Base 账号绑定的 AIGC 子账号和作品，不会显示其他子账号的创作内容</p>
         </div>
         <button id="logoutBtn" class="btn-outline">退出登录</button>
       </section>
@@ -138,7 +138,7 @@ export class AccountManagementView {
             <strong>企业主账号：</strong>${mapping.masterAccount.enterpriseName} / ${mapping.masterAccount.platformName}
           </div>
         ` : `
-          <div class="auth-message error">当前 CL-Base 账号尚未绑定 AIGC 子账号，请联系管理员建立一对一映射</div>
+          <div class="auth-message error">当前 Harson-Base 账号尚未绑定 AIGC 子账号，请联系管理员建立一对一映射</div>
         `}
       </section>
 
@@ -190,7 +190,7 @@ export class AccountManagementView {
       <section class="account-hero-card">
         <div>
           <h1>请先登录</h1>
-          <p>你需要登录 CL-Base 账号后才能访问 AIGC 账号管理或个人创作空间</p>
+          <p>你需要登录 Harson-Base 账号后才能访问 AIGC 账号管理或个人创作空间</p>
         </div>
         <a href="/login" class="btn-primary">前往登录</a>
       </section>
@@ -327,7 +327,7 @@ export class AccountManagementView {
     const normalUsers = this.state.users.filter(item => item.role !== "admin");
 
     return [
-      `<option value="">选择 CL-Base 用户</option>`,
+      `<option value="">选择 Harson-Base 用户</option>`,
       ...normalUsers.map(item => `<option value="${item.id}">${item.name} / ${item.email}</option>`)
     ].join("");
   }
@@ -365,7 +365,7 @@ export class AccountManagementView {
 
       <h3>映射关系</h3>
       <table>${this.rows(
-        ["CL-Base 邮箱", "AIGC 子账号ID", "主账号ID", "状态"],
+        ["Harson-Base 邮箱", "AIGC 子账号ID", "主账号ID", "状态"],
         data.mappings.map(item => [
           item.clBaseEmail,
           item.aigcSubAccountId,
