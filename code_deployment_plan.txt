@@ -45,7 +45,7 @@ PREREQUISITES  (check every time, ~10 seconds)
         curl -s -o /dev/null -w "%{http_code}\n" --socks5 127.0.0.1:10808 https://github.com
     Expect:  200
 [ ] You can SSH to the server:
-        ssh root@43.99.62.107
+        ssh root@43.99.62.107  (password atchinadouble786 waala)
 
 
 ================================================================================
