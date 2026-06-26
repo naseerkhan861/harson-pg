@@ -1,0 +1,215 @@
+================================================================================
+HARSON-PG  CODE DEPLOYMENT PLAN   (read this top-to-bottom every time)
+================================================================================
+
+Two goals this plan always does, in order:
+  PHASE A — On the LAPTOP: merge changes from other branches into the deploy
+            branch, then push to GitHub.
+  PHASE B — Upload the code from the laptop to the web server and rebuild the
+            Docker container.
+  PHASE C — Verify the site is live and healthy.
+
+This plan is written for YOUR specific machine + server. Follow it in order.
+
+--------------------------------------------------------------------------------
+YOUR SETUP  (reference — don't change these)
+--------------------------------------------------------------------------------
+- Local repo (laptop) : /home/edison/HarsonRepo/harson-pg   (edison-System)
+- Deploy branch       : feature/admin-panel      (LOCAL name, singular "feature")
+                        origin/features/admin-panel  (REMOTE name, PLURAL "features")
+                        -> Plain `git pull` / `git push` use this tracking
+                           automatically. You rarely type the branch name.
+- GitHub access       : ONLY works through the xray/v2rayN SOCKS5 proxy at
+                        127.0.0.1:10808. If v2rayN/xray is OFF, every git
+                        push/pull fails with "GnuTLS recv error (-110)".
+- Server              : root@43.99.62.107   (Alibaba Cloud ECS)
+- Server app dir      : /var/www/harson-pg
+- Server has NO git   : and CANNOT reach GitHub directly.
+                        -> We deploy by RSYNC over SSH, NOT `git pull` on server.
+- Server stack        : Docker Compose (v5.1.4) + nginx.
+                        Containers:
+                          harson-pg    = the app, bound to 127.0.0.1:3000
+                          harson-mongo = mongo:7, internal only
+- nginx               : proxies public :80/:443  ->  127.0.0.1:3000
+- Server .env         : uses MongoDB Atlas (DB: intern_login_demo).
+                        DO NOT OVERWRITE IT (rsync excludes it).
+- Server data/*.csv   : live AIGC + user CSV data.
+                        DO NOT OVERWRITE THEM (rsync excludes them).
+- rsync               : already installed on both laptop and server.
+
+--------------------------------------------------------------------------------
+PREREQUISITES  (check every time, ~10 seconds)
+--------------------------------------------------------------------------------
+[ ] v2rayN / xray is RUNNING on the laptop (proxy at 127.0.0.1:10808).
+    Quick test:
+        curl -s -o /dev/null -w "%{http_code}\n" --socks5 127.0.0.1:10808 https://github.com
+    Expect:  200
+[ ] You can SSH to the server:
+        ssh root@43.99.62.107
+
+
+================================================================================
+PHASE A — MERGE + SYNC  (run on the LAPTOP)
+================================================================================
+Goal: get all changes you want to deploy onto `feature/admin-panel`, then push
+      it to GitHub.
+
+1) Go to the repo and check for uncommitted work
+   ----------------------------------------------------------------
+   cd /home/edison/HarsonRepo/harson-pg
+   git status
+   (commit or stash any uncommitted changes first)
+
+2) Get the latest from GitHub (through the proxy)
+   ----------------------------------------------------------------
+   git fetch origin
+   git checkout feature/admin-panel      # be on the deploy branch
+   git pull                              # updates from origin/features/admin-panel
+
+3) Merge in the other branch(es) whose changes you want to deploy
+   ----------------------------------------------------------------
+   git merge origin/<other-branch-name>
+   # example:  git merge origin/feature/dashboard-ui
+
+   If there are MERGE CONFLICTS:
+     - Open each conflicted file and resolve the  <<<<  ====  >>>>  markers.
+     - The most common conflict is package.json: keep the UNION of both
+       "dependencies" / "devDependencies" (don't drop any package).
+     - Then:
+         git add <conflicted-file>
+         git commit
+
+4) Push the updated deploy branch to GitHub
+   ----------------------------------------------------------------
+   git push            # pushes to origin/features/admin-panel
+
+5) Sanity check: your newest commit should be on top
+   ----------------------------------------------------------------
+   git log --oneline -5
+
+
+================================================================================
+PHASE B — UPLOAD TO SERVER + REBUILD
+================================================================================
+Goal: copy new code laptop -> server, rebuild the Docker image, restart the app.
+
+6) Rsync the code to the server  (run on LAPTOP)
+   ----------------------------------------------------------------
+   cd /home/edison/HarsonRepo/harson-pg
+
+   rsync -avz --delete \
+     --exclude '.env' \
+     --exclude 'data/' \
+     --exclude 'node_modules/' \
+     --exclude '.git/' \
+     --exclude 'release/' \
+     --exclude 'desktop/' \
+     --exclude '*.log' \
+     ./ root@43.99.62.107:/var/www/harson-pg/
+
+   *** CRITICAL ***  The .env and data/ excludes PROTECT the server's Atlas
+   config and live CSV data. NEVER remove them. --delete cleans stale files on
+   the server but respects the excludes. You'll enter the server root password.
+   Expect a list of files sent + a "sent X bytes ... speedup" summary.
+
+7) Rebuild + restart on the server  (run on LAPTOP, via SSH)
+   ----------------------------------------------------------------
+   ssh root@43.99.62.107 'cd /var/www/harson-pg && docker compose up -d --build && docker compose logs --tail=30 app'
+
+   This rebuilds the image (runs `npm ci` with the updated package.json) and
+   swaps the app container. harson-mongo keeps running (data preserved).
+
+
+================================================================================
+PHASE C — VERIFY IT'S LIVE
+================================================================================
+8) Confirm health  (run on LAPTOP, via SSH)
+   ----------------------------------------------------------------
+   ssh root@43.99.62.107 'cd /var/www/harson-pg && docker compose ps && docker compose logs --tail=20 app && curl -s -o /dev/null -w "HTTP %{http_code}\n" http://127.0.0.1:3000'
+
+   You want to see:
+     - harson-pg     Up            (NOT "Restarting")
+     - harson-mongo  Up
+     - log:  "MongoDB connected successfully"
+     - log:  "HARSON app running at http://localhost:3000"
+     - HTTP 200
+
+9) Open your website domain in a browser and confirm the new changes show.
+   (Hard-refresh with Ctrl+Shift+R to bypass browser cache.)
+
+
+================================================================================
+QUICK MODE  (after Phase A is done, Phase B in two commands)
+================================================================================
+   cd /home/edison/HarsonRepo/harson-pg && \
+   rsync -avz --delete --exclude '.env' --exclude 'data/' --exclude 'node_modules/' \
+     --exclude '.git/' --exclude 'release/' --exclude 'desktop/' --exclude '*.log' \
+     ./ root@43.99.62.107:/var/www/harson-pg/
+
+   ssh root@43.99.62.107 'cd /var/www/harson-pg && docker compose up -d --build && docker compose logs --tail=30 app'
+
+
+================================================================================
+ROLLBACK  (if the new version is broken)
+================================================================================
+The OLD container/image stays until you rebuild again, so the site keeps serving
+while you fix things. To roll back to previous code:
+
+  - On the LAPTOP: restore the previous code state in git
+        git log --oneline                 # find the last good commit
+        git checkout <good-commit> -- .   # or git reset --hard <good-commit>
+  - Then redo PHASE B (rsync + rebuild).
+
+To inspect images on the server:
+   ssh root@43.99.62.107 'docker images harson-pg'
+
+
+================================================================================
+COMMON PROBLEMS  ->  FIXES
+================================================================================
+1) "git pull/push fails: GnuTLS recv error (-110)"
+   -> v2rayN/xray is not running, or its port changed.
+   Fix: start v2rayN/xray; confirm port 10808 is listening:
+        ss -tlnp | grep 10808
+   The proxy is set globally for github.com only:
+        git config --global --get http.https://github.com/.proxy
+        (should print:  socks5://127.0.0.1:10808)
+
+2) "bash: rsync: command not found" during rsync
+   -> rsync missing on the server (or laptop).
+   Server:  ssh root@43.99.62.107 'yum install -y rsync'
+   Laptop:  sudo apt install rsync
+
+3) App keeps "Restarting" / log shows "MongoDB connection failed"
+   -> Check the server .env is intact (rsync must never touch it):
+        ssh root@43.99.62.107 'grep MONGODB_URI /var/www/harson-pg/.env'
+   -> If it uses Atlas: the SERVER's public IP must be in
+      MongoDB Atlas -> Network Access.
+
+4) "npm ci" errors during docker build (often a bad package.json)
+   -> The OLD container keeps running, so the site stays up.
+      Fix package.json on the laptop (usually a merge-conflict leftover),
+      then redo PHASE B (rsync + rebuild).
+
+5) rsync sent 0 files
+   -> Wrong working directory. You must be in
+      /home/edison/HarsonRepo/harson-pg  (the ./ source must be the repo root).
+
+6) Changes not showing on the website
+   -> Browser cache: hard-refresh (Ctrl+Shift+R).
+   -> Confirm rsync actually sent the changed files (check the file list).
+   -> Re-run PHASE C step 8.
+
+
+================================================================================
+OPTIONAL CLEANUPS  (do once, low priority)
+================================================================================
+- docker-compose.yml: delete the obsolete  `version: '3.8'`  line (warning msg).
+- package.json: move Electron tooling (electron, concurrently, @electron/rebuild,
+  electron-builder, etc.) from `dependencies` to `devDependencies`. They are for
+  the desktop build only, not the server; currently they get installed into the
+  production image needlessly and trigger EBADENGINE warnings on Node 20.
+- README vs code mismatch: README says auth is stored in MongoDB Atlas, but
+  authController.js and scripts/seedAdmin.js currently use the CSV model
+  (src/models/userCsvModel). The Mongo model (src/models/userMongoModel) exists
+  but is not wired into any route. Decide the source of truth and align them.
