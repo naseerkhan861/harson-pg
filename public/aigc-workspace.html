@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>CL-AIGC 工作空间</title>
+
+  <link
+    rel="stylesheet"
+    href="/css/aigc-workspace.css"
+  >
+
+  <script
+    src="/js/aigc-workspace.js"
+    defer
+  ></script>
+</head>
+
+<body>
+  <div class="workspace-shell">
+    <header class="workspace-header">
+      <div class="workspace-title">
+        <a
+          class="back-link"
+          href="/"
+        >
+          ← 返回平台首页
+        </a>
+
+        <div>
+          <span class="workspace-label">
+            HARSON AI PLATFORM
+          </span>
+
+          <h1>CL-AIGC 工作空间</h1>
+
+          <p>
+            时尚生成式 AI · 品牌视觉引擎
+          </p>
+        </div>
+      </div>
+
+      <div class="workspace-actions">
+        <span
+          id="connectionStatus"
+          class="connection-status"
+        >
+          尚未连接
+        </span>
+
+        <button
+          id="refreshSessionBtn"
+          class="refresh-button"
+          type="button"
+        >
+          刷新登录状态
+        </button>
+      </div>
+    </header>
+
+    <nav
+      id="moduleNavigation"
+      class="module-navigation"
+      aria-label="CL-AIGC 功能模块"
+    >
+      <button
+        class="module-button active"
+        type="button"
+        data-module="image-generator"
+      >
+        图片创作
+      </button>
+
+      <button
+        class="module-button"
+        type="button"
+        data-module="upscaler"
+      >
+        高清放大
+      </button>
+
+      <button
+        class="module-button"
+        type="button"
+        data-module="video-generator"
+      >
+        视频创作
+      </button>
+
+      <button
+        class="module-button"
+        type="button"
+        data-module="pattern-design"
+      >
+        AI 图案设计
+      </button>
+
+      <button
+        class="module-button"
+        type="button"
+        data-module="prompt-generator"
+      >
+        提示词生成
+      </button>
+
+      <button
+        class="module-button"
+        type="button"
+        data-module="clothing"
+      >
+        AI 服装
+      </button>
+
+      <button
+        class="module-button"
+        type="button"
+        data-module="e-commerce"
+      >
+        AI 电商
+      </button>
+    </nav>
+
+    <main class="workspace-main">
+      <section
+        id="loadingPanel"
+        class="state-panel"
+      >
+        <div class="loading-spinner"></div>
+
+        <h2>正在连接 CL-AIGC</h2>
+
+        <p>
+          系统正在检查账号映射和登录状态。
+        </p>
+      </section>
+
+      <section
+        id="errorPanel"
+        class="state-panel error-panel"
+        hidden
+      >
+        <h2>CL-AIGC 加载失败</h2>
+
+        <p id="errorMessage">
+          无法建立连接。
+        </p>
+
+        <button
+          id="retryButton"
+          class="primary-button"
+          type="button"
+        >
+          重新尝试
+        </button>
+      </section>
+
+      <section
+        id="mockPanel"
+        class="state-panel mock-panel"
+        hidden
+      >
+        <span class="mock-badge">
+          MOCK MODE
+        </span>
+
+        <h2>本地流程测试成功</h2>
+
+        <p>
+          HARSON 已经成功完成账号映射、模拟登录、
+          token 缓存和 iframe 地址生成。
+        </p>
+
+        <p>
+          当前尚未加载真实 yibaiaigc 页面。
+          对方接口可用后，将
+          YIBAI_AIGC_MOCK 设置为 false 即可联调。
+        </p>
+
+        <div
+          id="mockSessionDetails"
+          class="mock-details"
+        ></div>
+      </section>
+
+      <iframe
+        id="aigcFrame"
+        class="aigc-frame"
+        title="CL-AIGC 嵌入式工作空间"
+        allow="clipboard-read; clipboard-write"
+        referrerpolicy="no-referrer"
+        hidden
+      ></iframe>
+    </main>
+  </div>
+</body>
+</html>
