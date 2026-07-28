@@ -1,0 +1,11 @@
+node_modules
+npm-debug.log
+release
+desktop
+.git
+.gitignore
+.env
+data/*.csv
+*.log
+README.md
+*.docx

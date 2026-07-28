@@ -15,6 +15,10 @@ data/aigc_master_login_tokens.secure.csv
 data/aigc_active_sessions.secure.csv
 
 data/backup-aigc-*/
+# Ignore this specific .docx file
+HARSON_CL_Base_*.docx
+
+
 
 
 

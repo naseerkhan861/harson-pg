@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    image: harson-pg:latest
+    container_name: harson-pg
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"   # only exposed to host (Nginx will proxy)
+    env_file: .env
+    depends_on:
+      - mongo
+    volumes:
+      - ./data:/app/data        # makes your CSVs visible to the app
+
+  mongo:
+    image: mongo:7
+    container_name: harson-mongo
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    # NOT exposing mongo to the host — only the app container can reach it
+
+volumes:
+  mongo_data:

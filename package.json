@@ -35,7 +35,7 @@
   },
   "build": {
     "appId": "com.harson.clbase.beta",
-    "productName": "HARSON CL_Base Platform Beta",
+    "productName": "HARSON CL_Base Platform",
     "directories": {
       "output": "release"
     },
