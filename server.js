@@ -15,6 +15,10 @@ const connectDB = require("./src/db");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// App runs behind nginx, which sets X-Forwarded-For. Trust one proxy hop so
+// express-rate-limit sees the real client IP instead of erroring out.
+app.set("trust proxy", 1);
+
 app.use(
   helmet({
     contentSecurityPolicy: {
