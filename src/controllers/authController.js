@@ -1,5 +1,8 @@
 const jwt = require("jsonwebtoken");
 const userCsvModel = require("../models/userCsvModel");
+const aigcSessionService = require(
+  "../services/aigcSessionService"
+);
 
 const VALID_GENDERS = ["Male", "Female", "Other"];
 const VALID_AGE_GROUPS = [
@@ -118,12 +121,88 @@ async function login(req, res) {
   }
 }
 
-function logout(req, res) {
-  res.clearCookie("harson_token");
+async function logout(req, res) {
+  let aigcLogoutResult = null;
+  let aigcLogoutWarning = "";
+
+  try {
+    /*
+     * requireAuth 已经将当前登录用户
+     * 写入 req.user。
+     */
+    const userId =
+      String(
+        req.user?.id || ""
+      ).trim();
+
+    if (userId) {
+      aigcLogoutResult =
+        await aigcSessionService
+          .logoutUserAigcSession(
+            userId
+          );
+
+      /*
+       * YiBai 注销失败不能阻止
+       * Harson-Base 用户退出。
+       */
+      if (
+        aigcLogoutResult &&
+        aigcLogoutResult.success ===
+          false
+      ) {
+        aigcLogoutWarning =
+          aigcLogoutResult.message ||
+          "AIGC 共享登录态注销失败";
+
+        console.warn(
+          "Harson-Base 用户已退出，但 AIGC 共享登录态处理失败：",
+          aigcLogoutWarning
+        );
+      }
+    }
+  } catch (error) {
+    /*
+     * 外部 AIGC 服务异常时，
+     * 仍然必须清除本地登录 Cookie。
+     *
+     * 不输出 token、密码或请求体。
+     */
+    aigcLogoutWarning =
+      error.message ||
+      "AIGC 共享登录态处理失败";
+
+    console.warn(
+      "Harson-Base 注销时处理 AIGC 登录态失败：",
+      aigcLogoutWarning
+    );
+  } finally {
+    res.clearCookie(
+      "harson_token"
+    );
+  }
 
   return res.json({
     success: true,
-    message: "Logged out successfully."
+    message:
+      "Harson-Base 已退出登录。",
+
+    aigcSession: {
+      action:
+        aigcLogoutResult?.action ||
+        "not_processed",
+
+      tokenRetained:
+        aigcLogoutResult?.action ===
+        "token_retained",
+
+      providerLoggedOut:
+        aigcLogoutResult?.action ===
+        "provider_logged_out",
+
+      warning:
+        aigcLogoutWarning
+    }
   });
 }
 

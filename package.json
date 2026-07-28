@@ -50,12 +50,6 @@
       "scripts/**/*",
       ".env.example"
     ],
-    "extraResources": [
-      {
-        "from": ".env",
-        "to": ".env"
-      }
-    ],
     "mac": {
       "target": "dmg",
       "category": "public.app-category.business"

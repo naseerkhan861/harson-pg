@@ -207,6 +207,108 @@ function validateMasterTokenCapacity({ master, subs, newTokenLimit, excludedSubA
   }
 }
 
+/**
+ * 将 YiBai 外部账号返回的点数
+ * 同步为 HARSON 内部企业主账号总点数。
+ *
+ * 安全规则：
+ * 1. 点数必须是非负有效数字；
+ * 2. 主账号必须存在且处于 active 状态；
+ * 3. 新总点数不能低于已经分配给子账号的配额总和。
+ */
+function syncMasterTotalCredits({
+  masterAccountId,
+  totalCredits
+}) {
+  const normalizedMasterAccountId =
+    String(masterAccountId || "").trim();
+
+  if (!normalizedMasterAccountId) {
+    throw new Error(
+      "AIGC 企业主账号 ID 不能为空"
+    );
+  }
+
+  const numericTotalCredits =
+    Number(totalCredits);
+
+  if (
+    !Number.isFinite(numericTotalCredits) ||
+    numericTotalCredits < 0
+  ) {
+    throw new Error(
+      "同步总点数必须是非负有效数字"
+    );
+  }
+
+  const masters = readMasters();
+
+  const master = masters.find(
+    item =>
+      item.id === normalizedMasterAccountId &&
+      item.status === "active"
+  );
+
+  if (!master) {
+    throw new Error(
+      "未找到可用的 AIGC 企业主账号"
+    );
+  }
+
+  const subs = readSubs();
+
+  const allocatedTokens =
+    getAllocatedTokensForMaster(
+      subs,
+      master.id
+    );
+
+  /*
+   * 避免同步后的主账号总点数
+   * 低于已经承诺给内部子账号的配额。
+   *
+   * 例如：
+   * harson1 = 3000
+   * zi1 = 2000
+   * 已分配总额 = 5000
+   *
+   * 此时不能把主账号总点数同步为 4000。
+   */
+  if (numericTotalCredits < allocatedTokens) {
+    throw new Error(
+      `外部点数同步失败，当前内部子账号已经分配 ${allocatedTokens} tokens，外部账号返回的总点数为 ${numericTotalCredits}，不能低于已分配配额总和`
+    );
+  }
+
+  const previousTotalCredits =
+    toNumber(master.totalCredits, 0);
+
+  master.totalCredits =
+    String(numericTotalCredits);
+
+  master.updatedAt = now();
+
+  writeMasters(masters);
+
+  return {
+    ...withoutPassword(master),
+
+    previousTotalCredits,
+
+    syncedTotalCredits:
+      numericTotalCredits,
+
+    allocatedTokens,
+
+    availableForAllocation:
+      Math.max(
+        numericTotalCredits -
+          allocatedTokens,
+        0
+      )
+  };
+}
+
 async function createMaster({ enterpriseName, platformName, platformLogin, platformPassword, totalCredits }) {
   const masters = readMasters();
 
@@ -351,12 +453,10 @@ function createMapping({ clBaseUserId, clBaseEmail, aigcSubAccountId }) {
   const mappings = readMappings();
 
   if (mappings.some(item => item.clBaseUserId === clBaseUserId && item.mappingStatus === "active")) {
-    throw new Error("该 CL-Base 账号已经绑定了一个 AIGC 子账号");
+    throw new Error("该 Harson-Base 账号已经绑定了一个 AIGC 子账号");
   }
 
-  if (mappings.some(item => item.aigcSubAccountId === aigcSubAccountId && item.mappingStatus === "active")) {
-    throw new Error("该 AIGC 子账号已经绑定到其他 CL-Base 账号");
-  }
+
 
   const record = {
     id: nanoid(16),
@@ -497,7 +597,7 @@ function addMyWork({ clBaseUserId, title, workType, promptSummary, creditCost })
   const mapping = getMyMapping(clBaseUserId);
 
   if (!mapping || !mapping.aigcSubAccount) {
-    throw new Error("当前 CL-Base 账号尚未绑定可用的 AIGC 子账号");
+    throw new Error("当前 Harson-Base 账号尚未绑定可用的 AIGC 子账号");
   }
 
   const tokenCost = toNumber(creditCost, 0);
@@ -556,6 +656,7 @@ function addMyWork({ clBaseUserId, title, workType, promptSummary, creditCost })
 
 module.exports = {
   createMaster,
+  syncMasterTotalCredits,
   createSubAccount,
   updateSubAccountTokenSettings,
   createMapping,

@@ -15,7 +15,7 @@ export const platformModel = {
     {
       id: "cl-aigc",
       title: "CL-AIGC",
-      link: "https://yibaiaigc.com/dashboard",
+      link: "/aigc-workspace",
       subtitle: "时尚生成式 AI · 品牌视觉引擎",
       description: "面向鞋服品牌、电商团队与营销部门，支持快速生成模特图、商品图和广告素材，降低视觉内容制作成本。",
       badge: "内容生成",

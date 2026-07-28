@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>CL-AIGC 工作空间</title>
+
+  <link
+    rel="stylesheet"
+    href="/css/aigc-workspace.css"
+  >
+
+  <script
+    src="/js/aigc-workspace.js"
+    defer
+  ></script>
+</head>
+
+<body>
+  <div class="workspace-shell">
+    <header class="workspace-header">
+      <div class="workspace-title">
+        <a
+          class="back-link"
+          href="/"
+        >
+          ← 返回平台首页
+        </a>
+
+        <div>
+          <span class="workspace-label">
+            HARSON-BASE
+          </span>
+
+          <h1>CL-AIGC 工作空间</h1>
+
+          <p>
+            时尚生成式 AI · 品牌视觉引擎
+          </p>
+        </div>
+      </div>
+
+      <div class="workspace-actions">
+        <button
+          id="tokenBalanceButton"
+          class="token-balance-button"
+          type="button"
+          aria-label="查看 Token 余额和购买入口"
+          title="点击进入 Token 购买页面"
+        >
+          <span
+            class="token-balance-icon"
+            aria-hidden="true"
+          >
+            ⚡
+          </span>
+
+          <span class="token-balance-label">
+            Token
+          </span>
+
+          <strong id="tokenBalanceValue">
+            --
+          </strong>
+        </button>
+
+        <span
+          id="connectionStatus"
+          class="connection-status"
+          hidden
+        ></span>
+
+        <button
+          id="refreshSessionBtn"
+          class="refresh-button"
+          type="button"
+        >
+          刷新
+        </button>
+      </div>
+    </header>
+
+    <nav
+      id="moduleNavigation"
+      class="module-navigation"
+      aria-label="CL-AIGC 功能模块"
+    >
+      <button
+        class="module-button active"
+        type="button"
+        data-view="home"
+      >
+        首页
+      </button>
+
+      <button
+        class="module-button"
+        type="button"
+        data-module="image-generator"
+      >
+        图片创作
+      </button>
+
+      <button
+        class="module-button"
+        type="button"
+        data-module="upscaler"
+      >
+        高清放大
+      </button>
+
+      <button
+        class="module-button"
+        type="button"
+        data-module="video-generator"
+      >
+        视频创作
+      </button>
+
+      <button
+        class="module-button"
+        type="button"
+        data-module="pattern-design"
+      >
+        AI 图案设计
+      </button>
+
+      <button
+        class="module-button"
+        type="button"
+        data-module="prompt-generator"
+      >
+        提示词生成
+      </button>
+
+      <button
+        class="module-button"
+        type="button"
+        data-module="clothing"
+      >
+        AI 服装
+      </button>
+
+      <button
+        class="module-button"
+        type="button"
+        data-module="e-commerce"
+      >
+        AI 电商
+      </button>
+
+      <button
+        class="module-button"
+        type="button"
+        data-view="all-tools"
+      >
+        全部工具
+      </button>
+    </nav>
+
+    <main class="workspace-main">
+      <!-- =========================
+           CL-AIGC 自有首页
+           ========================= -->
+      <section
+        id="homePanel"
+        class="local-page home-page"
+        aria-label="CL-AIGC 首页"
+      >
+        <!-- Banner 轮播 -->
+        <section
+          id="homeBanner"
+          class="home-banner"
+          aria-label="最新工具推荐"
+        >
+          <div
+            id="homeBannerTrack"
+            class="home-banner-track"
+          >
+            <!-- Banner 1：全能图片 pro -->
+            <article
+              class="home-banner-slide is-active"
+              data-banner-index="0"
+              aria-hidden="false"
+            >
+              <img
+                class="home-banner-image"
+                src="/images/home-banners/banner-quanneng-pro.png"
+                alt="全能图片 pro"
+                fetchpriority="high"
+              >
+
+              <div class="home-banner-shade"></div>
+
+              <!--<div class="home-banner-content">
+                <span class="home-banner-label">
+                  热门工具
+                </span>
+
+                <h2>全能图片 pro</h2>
+
+                <p>
+                  支持人物、商品与场景视觉生成，
+                  为品牌海报、商品图和营销素材提供统一创作入口。
+                </p>
+
+                <span class="home-banner-feature">
+                  图片生成 · 商品视觉 · 品牌内容
+                </span>
+              </div>-->
+            </article>
+
+            <!-- Banner 2：Seedance 2.0 -->
+            <article
+              class="home-banner-slide"
+              data-banner-index="1"
+              aria-hidden="true"
+            >
+              <img
+                class="home-banner-image"
+                src="/images/home-banners/banner-seedance-2.png"
+                alt="Seedance 2.0 视频"
+                loading="lazy"
+              >
+
+              <div class="home-banner-shade"></div>
+
+              <!--<div class="home-banner-content">
+                <span class="home-banner-label">
+                  视频创作
+                </span>
+
+                <h2>Seedance 2.0 视频</h2>
+
+                <p>
+                  将创意描述与视觉素材转化为动态内容，
+                  适用于品牌短片、商品演示和社交媒体传播。
+                </p>
+
+                <span class="home-banner-feature">
+                  图生视频 · 动态内容 · 营销短片
+                </span>
+              </div>-->
+            </article>
+
+            <!-- Banner 3：OpenAI Image 2.0 -->
+            <article
+              class="home-banner-slide"
+              data-banner-index="2"
+              aria-hidden="true"
+            >
+              <img
+                class="home-banner-image"
+                src="/images/home-banners/banner-openai-image-2.png"
+                alt="OpenAI Image 2.0"
+                loading="lazy"
+              >
+
+              <div class="home-banner-shade"></div>
+
+              <!--<div class="home-banner-content">
+                <span class="home-banner-label">
+                  最新模型
+                </span>
+
+                <h2>OpenAI Image 2.0</h2>
+
+                <p>
+                  提供高质量图片生成与创意理解能力，
+                  支持更准确的文字指令和多样化视觉表达。
+                </p>
+
+                <span class="home-banner-feature">
+                  文字生图 · 创意理解 · 高质量输出
+                </span>
+              </div>
+            </article>-->
+          </div>
+
+          <button
+            id="homeBannerPrevBtn"
+            class="home-banner-arrow home-banner-arrow-left"
+            type="button"
+            aria-label="查看上一张 Banner"
+          >
+            ‹
+          </button>
+
+          <button
+            id="homeBannerNextBtn"
+            class="home-banner-arrow home-banner-arrow-right"
+            type="button"
+            aria-label="查看下一张 Banner"
+          >
+            ›
+          </button>
+
+          <div
+            id="homeBannerDots"
+            class="home-banner-dots"
+            aria-label="Banner 页面选择"
+          >
+            <button
+              class="home-banner-dot is-active"
+              type="button"
+              data-banner-target="0"
+              aria-label="查看全能图片 pro"
+              aria-current="true"
+            ></button>
+
+            <button
+              class="home-banner-dot"
+              type="button"
+              data-banner-target="1"
+              aria-label="查看 Seedance 2.0 视频"
+              aria-current="false"
+            ></button>
+
+            <button
+              class="home-banner-dot"
+              type="button"
+              data-banner-target="2"
+              aria-label="查看 OpenAI Image 2.0"
+              aria-current="false"
+            ></button>
+          </div>
+        </section>
+
+        <!-- 热门工具 -->
+        <section
+          class="home-showcase-section"
+          aria-labelledby="hotToolsTitle"
+        >
+          <div class="home-section-header">
+            <div>
+              <span class="home-section-kicker">
+                POPULAR TOOLS
+              </span>
+
+              <h2 id="hotToolsTitle">
+                热门工具
+              </h2>
+            </div>
+
+            <p>
+              当前使用频率较高的核心创作能力
+            </p>
+          </div>
+
+          <div class="home-hot-grid">
+            <article class="home-tool-card">
+              <div class="home-tool-media">
+                <img
+                  src="/images/all-tools/01-quanneng-tupian-pro.png"
+                  alt="全能图片 pro"
+                  loading="lazy"
+                >
+
+                <span class="home-tool-badge badge-hot">
+                  HOT
+                </span>
+              </div>
+
+              <div class="home-tool-body">
+                <h3>全能图片 pro</h3>
+
+                <p>
+                  生成人物、商品、品牌海报与多场景视觉素材。
+                </p>
+              </div>
+            </article>
+
+            <article class="home-tool-card">
+              <div class="home-tool-media">
+                <img
+                  src="/images/all-tools/06-seedance-video.png"
+                  alt="Seedance 2.0 视频"
+                  loading="lazy"
+                >
+
+                <span class="home-tool-badge badge-hot">
+                  HOT
+                </span>
+              </div>
+
+              <div class="home-tool-body">
+                <h3>Seedance 2.0 视频</h3>
+
+                <p>
+                  将图片和创意描述扩展为适合传播的动态内容。
+                </p>
+              </div>
+            </article>
+
+            <article class="home-tool-card">
+              <div class="home-tool-media">
+                <img
+                  src="/images/all-tools/08-product-hero.png"
+                  alt="AI 商品主图"
+                  loading="lazy"
+                >
+
+                <span class="home-tool-badge badge-hot">
+                  HOT
+                </span>
+              </div>
+
+              <div class="home-tool-body">
+                <h3>AI 商品主图</h3>
+
+                <p>
+                  面向电商零售场景生成具有商业表现力的商品主图。
+                </p>
+              </div>
+            </article>
+
+
+            <article class="home-tool-card">
+              <div class="home-tool-media">
+                <img
+                  src="/images/all-tools/13-upscaler.png"
+                  alt="高清放大 2.0"
+                  loading="lazy"
+                >
+
+                <span class="home-tool-badge badge-hot">
+                  HOT
+                </span>
+              </div>
+
+              <div class="home-tool-body">
+                <h3>高清放大 2.0</h3>
+
+                <p>
+                  提升图片分辨率与细节清晰度，适用于商品图和视觉素材优化。
+                </p>
+              </div>
+            </article>
+
+
+
+            
+          </div>
+        </section>
+
+        <!-- 最新工具 -->
+        <section
+          class="home-showcase-section home-latest-section"
+          aria-labelledby="latestToolsTitle"
+        >
+          <div class="home-section-header">
+            <div>
+              <span class="home-section-kicker">
+                NEW TOOLS
+              </span>
+
+              <h2 id="latestToolsTitle">
+                最新工具
+              </h2>
+            </div>
+
+            <button
+              id="exploreAllToolsBtn"
+              class="home-all-tools-button"
+              type="button"
+            >
+              查看全部工具
+              <span aria-hidden="true">→</span>
+            </button>
+          </div>
+
+          <div class="home-latest-grid">
+            <article class="home-tool-card">
+              <div class="home-tool-media">
+                <img
+                  src="/images/all-tools/03-subject-swap.png"
+                  alt="批量换主体"
+                  loading="lazy"
+                >
+
+                <span class="home-tool-badge badge-new">
+                  NEW
+                </span>
+              </div>
+
+              <div class="home-tool-body">
+                <h3>批量换主体</h3>
+
+                <p>
+                  在保留整体视觉结构的同时批量替换商品主体。
+                </p>
+              </div>
+            </article>
+
+            <article class="home-tool-card">
+              <div class="home-tool-media">
+                <img
+                  src="/images/all-tools/04-video-remix.png"
+                  alt="爆款视频复刻"
+                  loading="lazy"
+                >
+
+                <span class="home-tool-badge badge-new">
+                  NEW
+                </span>
+              </div>
+
+              <div class="home-tool-body">
+                <h3>爆款视频复刻</h3>
+
+                <p>
+                  参考已有视频结构，快速生成新的营销视频内容。
+                </p>
+              </div>
+            </article>
+
+            <article class="home-tool-card">
+              <div class="home-tool-media">
+                <img
+                  src="/images/all-tools/05-image-2.png"
+                  alt="image-2"
+                  loading="lazy"
+                >
+
+                <span class="home-tool-badge badge-new">
+                  NEW
+                </span>
+              </div>
+
+              <div class="home-tool-body">
+                <h3>image-2</h3>
+
+                <p>
+                  提供更准确的文字理解和高质量图片生成能力。
+                </p>
+              </div>
+            </article>
+
+            <article class="home-tool-card">
+              <div class="home-tool-media">
+                <img
+                  src="/images/all-tools/07-outfit-swap.png"
+                  alt="批量换衣"
+                  loading="lazy"
+                >
+
+                <span class="home-tool-badge badge-new">
+                  NEW
+                </span>
+              </div>
+
+              <div class="home-tool-body">
+                <h3>批量换衣</h3>
+
+                <p>
+                  通过参考服装图快速完成模特服装批量替换。
+                </p>
+              </div>
+            </article>
+
+            <article class="home-tool-card">
+              <div class="home-tool-media">
+                <img
+                  src="/images/all-tools/10-detail-page.png"
+                  alt="AI 商品详情页"
+                  loading="lazy"
+                >
+
+                <span class="home-tool-badge badge-new">
+                  NEW
+                </span>
+              </div>
+
+              <div class="home-tool-body">
+                <h3>AI 商品详情页</h3>
+
+                <p>
+                  根据商品素材生成适用于电商展示的详情页视觉。
+                </p>
+              </div>
+            </article>
+
+            <article class="home-tool-card">
+              <div class="home-tool-media">
+                <img
+                  src="/images/all-tools/28-element-swap.png"
+                  alt="AI 服装视频 · 元素替换"
+                  loading="lazy"
+                >
+
+                <span class="home-tool-badge badge-new">
+                  NEW
+                </span>
+              </div>
+
+              <div class="home-tool-body">
+                <h3>AI 服装视频 · 元素替换</h3>
+
+                <p>
+                  在动态服装内容中替换颜色、材质或指定视觉元素。
+                </p>
+              </div>
+            </article>
+          </div>
+        </section>
+      </section>
+
+      <!-- 全部工具页 -->
+      <section
+        id="allToolsPanel"
+        class="local-page all-tools-page"
+        aria-label="全部工具静态展示"
+        hidden
+      >
+        <div
+          id="allToolsGrid"
+          class="all-tools-grid"
+        ></div>
+      </section>
+
+      <!-- 加载状态 
+      <section
+        id="loadingPanel"
+        class="state-panel"
+        hidden
+      >
+        <div class="loading-spinner"></div>
+
+        <h2>正在连接 CL-AIGC</h2>
+
+        <<p>
+          系统正在检查账号映射和登录状态。
+        </p>-
+      </section>-->
+
+      <!-- 错误状态 -->
+      <section
+        id="errorPanel"
+        class="state-panel error-panel"
+        hidden
+      >
+        <h2>CL-AIGC 加载失败</h2>
+
+        <p id="errorMessage">
+          无法建立连接。
+        </p>
+
+        <button
+          id="retryButton"
+          class="primary-button"
+          type="button"
+        >
+          重新尝试
+        </button>
+      </section>
+
+      <!-- Mock 状态 -->
+      <section
+        id="mockPanel"
+        class="state-panel mock-panel"
+        hidden
+      >
+        <span class="mock-badge">
+          MOCK MODE
+        </span>
+
+        <h2>本地流程测试成功</h2>
+
+        <p>
+          HARSON 已经成功完成账号映射、模拟登录、
+          Token 缓存和 iframe 地址生成。
+        </p>
+
+        <p>
+          当前尚未加载真实 YiBai 页面。
+          对方接口可用后，将
+          YIBAI_AIGC_MOCK 设置为 false 即可联调。
+        </p>
+
+        <div
+          id="mockSessionDetails"
+          class="mock-details"
+        ></div>
+      </section>
+
+      <!-- YiBai iframe -->
+      <iframe
+        id="aigcFrame"
+        class="aigc-frame"
+        title="CL-AIGC 嵌入式工作空间"
+        allow="clipboard-read; clipboard-write"
+        referrerpolicy="no-referrer"
+        hidden
+      ></iframe>
+    </main>
+  </div>
+</body>
+</html>
