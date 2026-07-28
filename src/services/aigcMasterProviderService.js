@@ -149,13 +149,14 @@ function extractProviderSession({
   pointsField
 }) {
   const result =
-    loginResponse?.result || {};
+  loginResponse?.result || {};
 
-  const token =
-    requireText(
-      result.token,
-      "YiBai登录token"
-    );
+
+const token =
+  requireText(
+    result.token,
+    "YiBai登录token"
+  );
 
   const rawCredits =
     result[pointsField];

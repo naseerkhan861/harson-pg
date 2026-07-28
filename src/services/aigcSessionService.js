@@ -72,6 +72,59 @@ function getResponseMessage(
 }
 
 /**
+ * 根据企业账号绑定时保存的 pointsField，
+ * 从 YiBai 登录结果中读取需要展示的 Token 余额。
+ *
+ * 支持：
+ * - companyMpoint：企业总点数；
+ * - mpoint：当前成员点数。
+ *
+ * 旧配置没有 pointsField 时，
+ * 默认使用 companyMpoint。
+ */
+function readTokenBalance(
+  memberResult,
+  providerConfig
+) {
+  const configuredField =
+    String(
+      providerConfig?.pointsField ||
+      ""
+    ).trim();
+
+  const pointsField =
+    configuredField === "mpoint"
+      ? "mpoint"
+      : "companyMpoint";
+
+  const tokenBalance =
+    Number(
+      memberResult?.[pointsField]
+    );
+
+  if (
+    !Number.isFinite(
+      tokenBalance
+    ) ||
+    tokenBalance < 0
+  ) {
+    console.warn(
+      `YiBai 响应中没有有效的 ${pointsField}`
+    );
+
+    return {
+      pointsField,
+      tokenBalance: null
+    };
+  }
+
+  return {
+    pointsField,
+    tokenBalance
+  };
+}
+
+/**
  * 同一个内部企业主账号在同一时间
  * 只执行一个登录态相关任务。
  *
@@ -340,6 +393,12 @@ async function loginAndCacheToken(
     );
   }
 
+  const balanceData =
+    readTokenBalance(
+      loginResult.result,
+      providerConfig
+    );
+
   masterTokenCacheModel
     .upsertTokenCache({
       masterAccountId:
@@ -360,6 +419,12 @@ async function loginAndCacheToken(
     token,
 
     source: "login",
+
+    tokenBalance:
+      balanceData.tokenBalance,
+
+    pointsField:
+      balanceData.pointsField,
 
     aigcSubAccountId:
       subAccount.id,
@@ -517,11 +582,24 @@ async function getValidTokenForUser(
             accountContext
           );
 
+          const balanceData =
+            readTokenBalance(
+              validationResult.result,
+              accountContext
+                .providerConfig
+            );
+
           return {
             token:
               validatedToken,
 
             source: "cache",
+
+            tokenBalance:
+              balanceData.tokenBalance,
+
+            pointsField:
+              balanceData.pointsField,
 
             aigcSubAccountId:
               accountContext
@@ -551,19 +629,20 @@ async function getValidTokenForUser(
 }
 
 /**
- * iframe 通知登录失效时：
+ * 手动刷新或 iframe 通知登录失效时：
  *
- * 删除企业主账号旧 token，
- * 并重新执行账号密码登录。
+ * 1. 优先使用企业主账号缓存 token 调用 loginByToken；
+ * 2. loginByToken 成功时读取最新余额；
+ * 3. token 无效时删除旧缓存并重新账号密码登录。
+ *
+ * 不再无条件创建新 token，
+ * 避免影响同一企业共享登录态中的其他用户。
  */
 async function refreshTokenForUser(
   clBaseUserId
 ) {
   return getValidTokenForUser(
-    clBaseUserId,
-    {
-      forceRefresh: true
-    }
+    clBaseUserId
   );
 }
 
