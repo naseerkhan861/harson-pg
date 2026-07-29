@@ -3,6 +3,10 @@ require("dotenv").config();
 const path = require("path");
 const express = require("express");
 const jwt = require("jsonwebtoken");
+const {
+  USER_ROLES,
+  normalizeUserRole
+} = require("./src/constants/userRoles");
 const helmet = require("helmet");
 const compression = require("compression");
 const cookieParser = require("cookie-parser");
@@ -90,7 +94,11 @@ function sendAdminOnlyPage(req, res, filename) {
   try {
     const user = jwt.verify(token, process.env.JWT_SECRET);
 
-    if (!user || user.role !== "admin") {
+    if (
+      !user ||
+      normalizeUserRole(user.role) !==
+        USER_ROLES.PLATFORM_ADMIN
+    ) {
       return res.status(200).send("");
     }
 

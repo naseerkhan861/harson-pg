@@ -223,11 +223,60 @@ async function logout(req, res) {
   });
 }
 
-function me(req, res) {
-  return res.json({
-    success: true,
-    user: req.user || null
-  });
+async function me(req, res) {
+  try {
+    const userId = String(
+      req.user?.id || ""
+    ).trim();
+
+    if (!userId) {
+      res.clearCookie("harson_token");
+
+      return res.status(401).json({
+        success: false,
+        message:
+          "当前 Harson-Base 登录状态无效。"
+      });
+    }
+
+    const user =
+      await userCsvModel.findById(
+        userId
+      );
+
+    if (
+      !user ||
+      user.isActive !== true
+    ) {
+      res.clearCookie("harson_token");
+
+      return res.status(401).json({
+        success: false,
+        message:
+          "当前 Harson-Base 账号不存在或已停用。"
+      });
+    }
+
+    return res.json({
+      success: true,
+      user: {
+        ...user,
+        role:
+          normalizeUserRole(
+            user.role
+          )
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message:
+        error.message ||
+        "读取 Harson-Base 登录信息失败。"
+    });
+  }
 }
+
+
 
 module.exports = { register, login, logout, me };
