@@ -1036,38 +1036,28 @@ function updateTokenBalance(
         );
   }
 
-  try {
-    sessionStorage.setItem(
-      TOKEN_BALANCE_STORAGE_KEY,
-      String(
-        normalizedBalance
-      )
-    );
-  } catch {
-    // 浏览器禁用存储时，
-    // 仅保留当前页面展示。
-  }
-
   return true;
 }
 
-function restoreTokenBalance() {
-  try {
-    const savedBalance =
-      sessionStorage.getItem(
-        TOKEN_BALANCE_STORAGE_KEY
-      );
+function clearStoredTokenBalance() {
+  state.tokenBalance =
+    null;
 
-    if (
-      savedBalance !== null
-    ) {
-      updateTokenBalance(
-        savedBalance
-      );
-    }
+  if (
+    elements.tokenBalanceValue
+  ) {
+    elements.tokenBalanceValue
+      .textContent =
+      "--";
+  }
+
+  try {
+    sessionStorage.removeItem(
+      TOKEN_BALANCE_STORAGE_KEY
+    );
   } catch {
     // 浏览器禁用存储时，
-    // 保留默认占位符。
+    // 保持默认占位符。
   }
 }
 
@@ -2258,7 +2248,7 @@ function bindEvents() {
 function initializeWorkspace() {
   updateAllToolsFilterButtons();
   renderAllTools();
-  restoreTokenBalance();
+  clearStoredTokenBalance();
   initializeHomeBanner();
   bindEvents();
 

@@ -1,36 +1,76 @@
 "use strict";
 
 const jwt = require("jsonwebtoken");
+const userCsvModel = require(
+  "../models/userCsvModel"
+);
 
 const {
   USER_ROLES,
   normalizeUserRole
 } = require("../constants/userRoles");
 
-function requireAuth(req, res, next) {
-  const token = req.cookies.harson_token;
+
+async function requireAuth(
+  req,
+  res,
+  next
+) {
+  const token =
+    req.cookies?.harson_token;
 
   if (!token) {
     return res.status(401).json({
       success: false,
-      message: "Authentication required."
+      message:
+        "Authentication required."
     });
   }
 
   try {
-    req.user = jwt.verify(
-      token,
-      process.env.JWT_SECRET
-    );
+    const tokenUser =
+      jwt.verify(
+        token,
+        process.env.JWT_SECRET
+      );
 
-    req.user.role =
-      normalizeUserRole(req.user.role);
+    const currentUser =
+      await userCsvModel.findById(
+        tokenUser.id
+      );
 
-    next();
+    if (
+      !currentUser ||
+      !currentUser.isActive
+    ) {
+      return res.status(401).json({
+        success: false,
+        message:
+          "Current account is unavailable."
+      });
+    }
+
+    /*
+     * JWT 只用于确认登录身份。
+     * 角色和账号层级必须使用
+     * secure CSV 中的最新数据。
+     */
+    req.user = {
+      ...tokenUser,
+      ...currentUser,
+
+      role:
+        normalizeUserRole(
+          currentUser.role
+        )
+    };
+
+    return next();
   } catch {
     return res.status(401).json({
       success: false,
-      message: "Invalid or expired token."
+      message:
+        "Invalid or expired token."
     });
   }
 }

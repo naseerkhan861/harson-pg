@@ -190,31 +190,65 @@ function resolveUserAccount(
       "Harson-Base用户ID"
     );
 
-  const mappingData =
-    aigcAccountModel.getMyMapping(
-      normalizedUserId
-    );
+  /*
+   * 新企业成员优先使用直接关系：
+   *
+   * Harson-Base 用户 ID
+   * → AIGC 子账号 clBaseUserId
+   * → 企业主账号
+   *
+   * 旧用户没有直接关系时，
+   * 再兼容 account_mappings。
+   */
+  let mapping =
+    null;
 
-  if (!mappingData?.mapping) {
-    throw new Error(
-      "当前 Harson-Base 账号尚未配置 AIGC 子账号映射"
-    );
+  let subAccount =
+    aigcAccountModel
+      .getSubAccountByUserId(
+        normalizedUserId
+      );
+
+  let masterAccount =
+    null;
+
+  if (subAccount) {
+      masterAccount =
+        aigcAccountModel
+          .getMasterById(
+            subAccount.masterAccountId
+          );
+    } else {
+    const mappingData =
+      aigcAccountModel
+        .getMyMapping(
+          normalizedUserId
+        );
+
+    if (!mappingData?.mapping) {
+      throw new Error(
+        "当前 Harson-Base 账号尚未配置 AIGC 子账号"
+      );
+    }
+
+    mapping =
+      mappingData.mapping;
+
+    subAccount =
+      mappingData.aigcSubAccount;
+
+    masterAccount =
+      mappingData.masterAccount;
   }
-
-  const subAccount =
-    mappingData.aigcSubAccount;
 
   if (
     !subAccount ||
     subAccount.status !== "active"
   ) {
     throw new Error(
-      "当前映射的内部 AIGC 子账号不存在或已停用"
+      "当前关联的内部 AIGC 子账号不存在或已停用"
     );
   }
-
-  const masterAccount =
-    mappingData.masterAccount;
 
   if (
     !masterAccount ||
@@ -226,24 +260,47 @@ function resolveUserAccount(
   }
 
   /*
-   * 防止 CSV 中出现不一致关系：
+   * 新账号存在 clBaseUserId 时，
+   * 必须与当前登录用户一致。
    *
-   * 子账号所属主账号必须与映射记录
-   * 和查询到的主账号一致。
+   * 旧账号该字段可能为空，
+   * 因此继续允许通过旧 mapping 使用。
    */
   if (
     String(
-      subAccount.masterAccountId || ""
-    ) !==
-      String(masterAccount.id) ||
+      subAccount.clBaseUserId || ""
+    ).trim() &&
     String(
-      mappingData.mapping
-        .masterAccountId || ""
-    ) !==
-      String(masterAccount.id)
+      subAccount.clBaseUserId
+    ) !== normalizedUserId
   ) {
     throw new Error(
-      "AIGC 子账号、企业主账号和用户映射关系不一致"
+      "当前 Harson-Base 用户与 AIGC 子账号关系不一致"
+    );
+  }
+
+  if (
+    String(
+      subAccount.masterAccountId ||
+      ""
+    ) !==
+    String(masterAccount.id)
+  ) {
+    throw new Error(
+      "AIGC 子账号与企业主账号关系不一致"
+    );
+  }
+
+  if (
+    mapping &&
+    String(
+      mapping.masterAccountId ||
+      ""
+    ) !==
+    String(masterAccount.id)
+  ) {
+    throw new Error(
+      "AIGC 子账号、企业主账号和旧用户映射关系不一致"
     );
   }
 
@@ -272,13 +329,10 @@ function resolveUserAccount(
     clBaseUserId:
       normalizedUserId,
 
-    mapping:
-      mappingData.mapping,
+    mapping,
 
     subAccount,
-
     masterAccount,
-
     providerConfig
   };
 }

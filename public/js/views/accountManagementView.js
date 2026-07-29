@@ -3,9 +3,14 @@ export class AccountManagementView {
     this.vm = viewModel;
 
     this.state = {
+      currentUser: null,
+
       dashboard: null,
       users: [],
-      providerBindings: []
+      providerBindings: [],
+
+      enterpriseAccount: null,
+      memberAccount: null
     };
   }
 
@@ -15,10 +20,45 @@ export class AccountManagementView {
   }
 
   async load() {
-    const dashboardResult =
-      await this.vm.getAdminDashboard();
+    const authResult =
+      await this.vm.getCurrentUser();
 
-    if (dashboardResult.success) {
+    if (
+      !authResult.success ||
+      !authResult.user
+    ) {
+      this.showGate();
+      return;
+    }
+
+    const currentUser =
+      authResult.user;
+
+    this.state.currentUser =
+      currentUser;
+
+    /*
+    * 平台管理员：
+    * 查看全部企业、YiBai 绑定、
+    * 子账号和映射数据。
+    */
+    if (
+      currentUser.role ===
+      "platform_admin"
+    ) {
+      const dashboardResult =
+        await this.vm
+          .getAdminDashboard();
+
+      if (!dashboardResult.success) {
+        this.showAccessMessage(
+          "平台管理数据加载失败",
+          dashboardResult.message
+        );
+
+        return;
+      }
+
       this.state.dashboard =
         dashboardResult.data;
 
@@ -27,7 +67,8 @@ export class AccountManagementView {
         bindingsResult
       ] = await Promise.all([
         this.vm.getClBaseUsers(),
-        this.vm.getMasterProviderBindings()
+        this.vm
+          .getMasterProviderBindings()
       ]);
 
       this.state.users =
@@ -42,23 +83,425 @@ export class AccountManagementView {
 
       this.renderAdminDashboard();
       this.bindAdminForms();
+
       return;
     }
 
-    const workspaceResult =
-      await this.vm.getMyWorkspace();
+    /*
+    * 企业主账号：
+    * 只能查看自己的企业和成员。
+    */
+    if (
+      currentUser.role ===
+      "master_admin"
+    ) {
+      const enterpriseResult =
+        await this.vm
+          .getMyEnterpriseAccount();
 
-    if (workspaceResult.success) {
-      this.renderUserWorkspace(
-        workspaceResult.data
+      if (!enterpriseResult.success) {
+        this.showAccessMessage(
+          "企业账号加载失败",
+          enterpriseResult.message
+        );
+
+        return;
+      }
+
+      this.state.enterpriseAccount =
+        enterpriseResult.data;
+
+      this.renderEnterpriseMasterAccount(
+        enterpriseResult.data
+      );
+      this.bindEnterpriseMasterForms();
+      return;
+    }
+
+    /*
+    * 企业成员：
+    * 先验证企业成员绑定，
+    * 再加载个人创作工作区。
+    */
+    if (
+      currentUser.role === "member"
+    ) {
+      const memberResult =
+        await this.vm
+          .getMyEnterpriseMemberAccount();
+
+      if (!memberResult.success) {
+        this.showAccessMessage(
+          "企业成员账号加载失败",
+          memberResult.message
+        );
+
+        return;
+      }
+
+      this.state.memberAccount =
+        memberResult.data;
+
+      this.renderEnterpriseMemberAccount(
+        memberResult.data
       );
 
-      this.bindWorkForm();
       return;
     }
 
-    this.showGate();
+    this.showAccessMessage(
+      "当前账号暂无企业权限",
+      "请联系平台管理员配置 Harson-Base 账号角色。"
+    );
   }
+
+  renderEnterpriseMasterAccount(
+    data
+  ) {
+    const app =
+      document.getElementById(
+        "accountApp"
+      );
+
+    if (!app) {
+      return;
+    }
+
+    const masterAccount =
+      data.masterAccount || {};
+
+    const memberAccounts =
+      Array.isArray(
+        data.memberAccounts
+      )
+        ? data.memberAccounts
+        : [];
+
+    const summary =
+      data.summary || {};
+
+    const memberRows =
+      memberAccounts.length
+        ? memberAccounts
+            .map(
+              member => `
+                <tr>
+                  <td>
+                    ${member.subAccountName || "-"}
+                  </td>
+
+                  <td>
+                    ${member.platformLogin || "-"}
+                  </td>
+
+                  <td>
+                    ${member.tokenLimit || 0}
+                  </td>
+
+                  <td>
+                    ${member.usedTokens || 0}
+                  </td>
+
+                  <td>
+                    ${member.remainingTokens || 0}
+                  </td>
+
+                  <td>
+                    ${
+                      this.tokenStatusLabel(
+                        member.warningStatus
+                      )
+                    }
+                  </td>
+                </tr>
+              `
+            )
+            .join("")
+        : `
+            <tr>
+              <td colspan="6">
+                暂无企业成员账号
+              </td>
+            </tr>
+          `;
+
+    const tokenMemberOptions =
+      memberAccounts.length
+        ? memberAccounts
+            .map(
+              member => `
+                <option
+                  value="${member.id}"
+                >
+                  ${
+                    member.subAccountName ||
+                    member.platformLogin ||
+                    member.id
+                  }
+                </option>
+              `
+            )
+            .join("")
+        : `
+            <option value="">
+              当前企业暂无成员账号
+            </option>
+          `;
+
+    app.innerHTML = `
+      <section class="account-hero-card">
+        <div>
+          <span class="hero-badge">
+            Harson-Base 企业账号中心
+          </span>
+
+          <h1>
+            ${
+              masterAccount.enterpriseName ||
+              "企业账号"
+            }
+          </h1>
+
+          <p>
+            当前企业主账号只能查看和管理
+            本企业成员，不会显示其他企业数据。
+          </p>
+        </div>
+
+        <button
+          id="logoutBtn"
+          class="btn-outline"
+        >
+          退出登录
+        </button>
+      </section>
+
+      <section class="account-grid-three">
+        ${this.metricCard(
+          "企业成员数",
+          summary.memberCount || 0
+        )}
+
+        ${this.metricCard(
+          "已分配 token",
+          summary.totalAllocatedTokens || 0
+        )}
+
+        ${this.metricCard(
+          "已使用 token",
+          summary.totalUsedTokens || 0
+        )}
+
+        ${this.metricCard(
+          "剩余 token",
+          summary.totalRemainingTokens || 0
+        )}
+      </section>
+
+      <section class="account-panel">
+        <h2>
+          企业主账号信息
+        </h2>
+
+        <div class="mapping-card">
+          <strong>企业名称：</strong>
+          ${masterAccount.enterpriseName || "-"}
+          <br />
+
+          <strong>平台账号名称：</strong>
+          ${masterAccount.platformName || "-"}
+          <br />
+
+          <strong>总点数：</strong>
+          ${masterAccount.totalCredits || 0}
+          <br />
+
+          <strong>账号状态：</strong>
+          ${masterAccount.status || "-"}
+        </div>
+      </section>
+
+
+      <section class="account-panel">
+        <h2>
+          创建企业成员账号
+        </h2>
+
+        <p>
+          创建成员时会同时生成 Harson-Base
+          登录账号和对应的 AIGC 子账号。
+          新成员只能归属于当前企业。
+        </p>
+
+        <div
+          id="enterpriseMemberMessage"
+          class="auth-message"
+        ></div>
+
+        <form
+          id="enterpriseMemberForm"
+          class="management-form"
+        >
+          <input
+            name="name"
+            placeholder="成员姓名"
+            required
+          />
+
+          <input
+            name="email"
+            type="email"
+            placeholder="Harson-Base 登录邮箱"
+            autocomplete="off"
+            required
+          />
+
+          <input
+            name="password"
+            type="password"
+            minlength="8"
+            placeholder="Harson-Base 登录密码，至少 8 位"
+            autocomplete="new-password"
+            required
+          />
+
+          <input
+            name="subAccountName"
+            placeholder="AIGC 子账号名称，例如 视觉设计组"
+            required
+          />
+
+          <input
+            name="platformLogin"
+            type="email"
+            placeholder="AIGC 子账号登录邮箱"
+            autocomplete="off"
+            required
+          />
+
+          <input
+            name="platformPassword"
+            type="password"
+            minlength="8"
+            placeholder="AIGC 子账号密码，至少 8 位"
+            autocomplete="new-password"
+            required
+          />
+
+          <input
+            name="tokenLimit"
+            type="number"
+            min="0"
+            step="1"
+            placeholder="token 配额，例如 5000"
+            required
+          />
+
+          <input
+            name="warningThreshold"
+            type="number"
+            min="1"
+            max="100"
+            step="1"
+            value="10"
+            placeholder="剩余 token 预警阈值%"
+          />
+
+          <button type="submit">
+            创建企业成员
+          </button>
+        </form>
+      </section>
+
+      <section class="account-panel">
+        <h2>
+          调整企业成员 token 配额
+        </h2>
+
+        <p>
+          企业主账号只能调整当前企业成员的
+          token 配额和剩余 token 预警阈值。
+        </p>
+
+        <div
+          id="enterpriseTokenMessage"
+          class="auth-message"
+        ></div>
+
+        <form
+          id="enterpriseTokenForm"
+          class="management-form"
+        >
+          <select
+            name="subAccountId"
+            required
+            ${memberAccounts.length ? "" : "disabled"}
+          >
+            <option value="">
+              选择企业成员账号
+            </option>
+
+            ${tokenMemberOptions}
+          </select>
+
+          <input
+            name="tokenLimit"
+            type="number"
+            min="0"
+            step="1"
+            placeholder="新的 token 配额"
+            required
+            ${memberAccounts.length ? "" : "disabled"}
+          />
+
+          <input
+            name="warningThreshold"
+            type="number"
+            min="1"
+            max="100"
+            step="1"
+            value="10"
+            placeholder="剩余 token 预警阈值%"
+            ${memberAccounts.length ? "" : "disabled"}
+          />
+
+          <button
+            type="submit"
+            ${memberAccounts.length ? "" : "disabled"}
+          >
+            保存 token 配额
+          </button>
+        </form>
+      </section>
+
+      <section class="account-panel">
+        <h2>
+          本企业成员账号
+        </h2>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>成员账号</th>
+                <th>AIGC 登录邮箱</th>
+                <th>token 配额</th>
+                <th>已使用</th>
+                <th>剩余</th>
+                <th>状态</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              ${memberRows}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    `;
+
+  }
+
 
   renderAdminDashboard() {
     const app =
@@ -139,6 +582,29 @@ export class AccountManagementView {
           class="management-form"
         >
           <input
+            name="name"
+            placeholder="企业管理员姓名"
+            required
+          />
+
+          <input
+            name="email"
+            type="email"
+            placeholder="Harson-Base 登录邮箱"
+            autocomplete="off"
+            required
+          />
+
+          <input
+            name="password"
+            type="password"
+            minlength="8"
+            placeholder="Harson-Base 登录密码，至少 8 位"
+            autocomplete="new-password"
+            required
+          />
+
+          <input
             name="enterpriseName"
             placeholder="企业名称，例如 HARSON"
             required
@@ -146,21 +612,24 @@ export class AccountManagementView {
 
           <input
             name="platformName"
-            placeholder="平台名称，例如 yibaiaigc"
+            placeholder="AIGC 平台名称，例如 YiBai AIGC"
             required
           />
 
           <input
             name="platformLogin"
             type="email"
-            placeholder="内部主账号管理邮箱"
+            placeholder="AIGC 主账号登录邮箱"
+            autocomplete="off"
             required
           />
 
           <input
             name="platformPassword"
             type="password"
-            placeholder="内部主账号独立密码"
+            minlength="8"
+            placeholder="AIGC 主账号密码，至少 8 位"
+            autocomplete="new-password"
             required
           />
 
@@ -171,7 +640,7 @@ export class AccountManagementView {
           />
 
           <button type="submit">
-            创建主账号
+            创建企业主账号
           </button>
         </form>
       </section>
@@ -245,14 +714,12 @@ export class AccountManagementView {
 
       <section class="account-panel">
         <h2>
-          3. 创建 AIGC 子账号
+          3. 创建企业成员账号
         </h2>
 
         <p>
-          每个子账号独立运行，创作数据互相隔离。
-          管理员可为每个子账号设置独立 token
-          配额，并按剩余 token 百分比设置
-          预警阈值
+          创建成员时会同时生成 Harson-Base
+          登录账号、AIGC 子账号，并建立所属企业关系。
         </p>
 
         <div
@@ -272,8 +739,31 @@ export class AccountManagementView {
           </select>
 
           <input
+            name="name"
+            placeholder="成员姓名"
+            required
+          />
+
+          <input
+            name="email"
+            type="email"
+            placeholder="Harson-Base 登录邮箱"
+            autocomplete="off"
+            required
+          />
+
+          <input
+            name="password"
+            type="password"
+            minlength="8"
+            placeholder="Harson-Base 登录密码，至少 8 位"
+            autocomplete="new-password"
+            required
+          />
+
+          <input
             name="subAccountName"
-            placeholder="子账号名称，例如 Design Team A"
+            placeholder="AIGC 子账号名称，例如 视觉设计组"
             required
           />
 
@@ -281,13 +771,16 @@ export class AccountManagementView {
             name="platformLogin"
             type="email"
             placeholder="AIGC 子账号登录邮箱"
+            autocomplete="off"
             required
           />
 
           <input
             name="platformPassword"
             type="password"
-            placeholder="AIGC 子账号独立密码"
+            minlength="8"
+            placeholder="AIGC 子账号密码，至少 8 位"
+            autocomplete="new-password"
             required
           />
 
@@ -295,7 +788,8 @@ export class AccountManagementView {
             name="tokenLimit"
             type="number"
             min="0"
-            placeholder="Token 配额，例如 5000"
+            step="1"
+            placeholder="token 配额，例如 5000"
             required
           />
 
@@ -304,11 +798,13 @@ export class AccountManagementView {
             type="number"
             min="1"
             max="100"
-            placeholder="剩余预警阈值%，例如 10"
+            step="1"
+            value="10"
+            placeholder="剩余 token 预警阈值%"
           />
 
           <button type="submit">
-            创建子账号
+            创建企业成员
           </button>
         </form>
       </section>
@@ -418,6 +914,190 @@ export class AccountManagementView {
       </section>
     `;
   }
+
+
+  renderEnterpriseMemberAccount(
+    data
+  ) {
+    const app =
+      document.getElementById(
+        "accountApp"
+      );
+
+    if (!app) {
+      return;
+    }
+
+    const subAccount =
+      data.subAccount || {};
+
+    const tokenUsage =
+      data.tokenUsage || {};
+
+    const tokenLimit =
+      Number(
+        tokenUsage.tokenLimit ??
+        subAccount.tokenLimit ??
+        0
+      );
+
+    const usedTokens =
+      Number(
+        tokenUsage.usedTokens ??
+        subAccount.usedTokens ??
+        0
+      );
+
+    const remainingTokens =
+      Number(
+        tokenUsage.remainingTokens ??
+        subAccount.remainingTokens ??
+        Math.max(
+          tokenLimit - usedTokens,
+          0
+        )
+      );
+
+    const usageRate =
+      Number(
+        tokenUsage.usageRate ??
+        subAccount.usageRate ??
+        0
+      );
+
+    app.innerHTML = `
+      <section class="account-hero-card">
+        <div>
+          <span class="hero-badge">
+            Harson-Base 企业成员中心
+          </span>
+
+          <h1>
+            ${
+              subAccount.subAccountName ||
+              "企业成员账号"
+            }
+          </h1>
+
+          <p>
+            当前页面只显示你的企业成员账号、
+            AIGC 子账号和 token 使用情况。
+          </p>
+        </div>
+
+        <button
+          id="logoutBtn"
+          class="btn-outline"
+        >
+          退出登录
+        </button>
+      </section>
+
+      <section class="account-grid-three">
+        ${this.metricCard(
+          "token 配额",
+          tokenLimit
+        )}
+
+        ${this.metricCard(
+          "已使用 token",
+          usedTokens
+        )}
+
+        ${this.metricCard(
+          "剩余 token",
+          remainingTokens
+        )}
+
+        ${this.metricCard(
+          "已使用率",
+          `${usageRate}%`
+        )}
+      </section>
+
+      <section class="account-panel">
+        <h2>
+          我的企业成员账号
+        </h2>
+
+        ${this.tokenWarningBox({
+          tokenLimit,
+          usedTokens,
+          remainingTokens,
+
+          warningThreshold:
+            subAccount.warningThreshold,
+
+          warningStatus:
+            subAccount.warningStatus
+        })}
+
+        <div class="mapping-card">
+          <strong>
+            AIGC 子账号名称：
+          </strong>
+
+          ${
+            subAccount.subAccountName ||
+            "-"
+          }
+
+          <br />
+
+          <strong>
+            AIGC 登录邮箱：
+          </strong>
+
+          ${
+            subAccount.platformLogin ||
+            "-"
+          }
+
+          <br />
+
+          <strong>
+            企业主账号 ID：
+          </strong>
+
+          ${
+            subAccount.masterAccountId ||
+            "-"
+          }
+
+          <br />
+
+          <strong>
+            账号状态：
+          </strong>
+
+          ${
+            subAccount.status ||
+            "-"
+          }
+        </div>
+      </section>
+
+      <section class="account-panel">
+        <h2>
+          AIGC 工作区
+        </h2>
+
+        <p>
+          进入工作区后，系统将使用当前
+          Harson-Base 企业成员身份建立共享会话。
+        </p>
+
+        <a
+          href="/aigc-workspace"
+          class="btn-primary"
+        >
+          进入 AIGC 工作区
+        </a>
+      </section>
+    `;
+  }
+
+
 
   renderUserWorkspace(data) {
     const app =
@@ -616,6 +1296,45 @@ export class AccountManagementView {
     `;
   }
 
+
+  showAccessMessage(
+    title,
+    message
+  ) {
+    const app =
+      document.getElementById(
+        "accountApp"
+      );
+
+    if (!app) {
+      return;
+    }
+
+    app.innerHTML = `
+      <section class="account-hero-card">
+        <div>
+          <h1>
+            ${title || "页面加载失败"}
+          </h1>
+
+          <p>
+            ${
+              message ||
+              "请稍后重试。"
+            }
+          </p>
+        </div>
+
+        <button
+          id="logoutBtn"
+          class="btn-outline"
+        >
+          退出登录
+        </button>
+      </section>
+    `;
+  }
+
   showGate() {
     document.getElementById(
       "accountApp"
@@ -659,6 +1378,47 @@ export class AccountManagementView {
     );
   }
 
+ bindEnterpriseMasterForms() {
+    this.bindForm(
+      "enterpriseMemberForm",
+
+      async form => {
+        const payload =
+          this.formToObject(form);
+
+        const result =
+          await this.vm
+            .createEnterpriseMember(
+              payload
+            );
+
+        form
+          .querySelectorAll(
+            'input[type="password"]'
+          )
+          .forEach(input => {
+            input.value = "";
+          });
+
+        return result;
+      },
+
+      "enterpriseMemberMessage"
+    );
+
+    this.bindForm(
+      "enterpriseTokenForm",
+
+      async form =>
+        this.vm
+          .updateEnterpriseMemberTokenSettings(
+            this.formToObject(form)
+          ),
+
+      "enterpriseTokenMessage"
+    );
+  }
+
   bindAdminForms() {
     this.bindForm(
       "providerBindingForm",
@@ -688,28 +1448,67 @@ export class AccountManagementView {
 
     this.bindForm(
       "masterForm",
-      async form =>
-        this.vm.createMaster(
-          this.formToObject(form)
-        ),
+
+      async form => {
+        const payload =
+          this.formToObject(form);
+
+        const result =
+          await this.vm
+            .createEnterpriseMaster(
+              payload
+            );
+
+        form
+          .querySelectorAll(
+            'input[type="password"]'
+          )
+          .forEach(input => {
+            input.value = "";
+          });
+
+        return result;
+      },
+
       "masterMessage"
     );
 
     this.bindForm(
       "subAccountForm",
-      async form =>
-        this.vm.createSubAccount(
-          this.formToObject(form)
-        ),
+
+      async form => {
+        const payload =
+          this.formToObject(form);
+
+        const result =
+          await this.vm
+            .createEnterpriseMember(
+              payload
+            );
+
+        form
+          .querySelectorAll(
+            'input[type="password"]'
+          )
+          .forEach(input => {
+            input.value = "";
+          });
+
+        return result;
+      },
+
       "subAccountMessage"
     );
 
     this.bindForm(
       "tokenSettingsForm",
+
       async form =>
-        this.vm.updateSubTokenSettings(
-          this.formToObject(form)
-        ),
+        this.vm
+          .updateEnterpriseMemberTokenSettings(
+            this.formToObject(form)
+          ),
+
       "tokenSettingsMessage"
     );
 

@@ -669,6 +669,37 @@ function addMyWork({ clBaseUserId, title, workType, promptSummary, creditCost })
 }
 
 /**
+ * 根据企业主账号 ID 查询有效主账号。
+ *
+ * 只返回去除密码哈希后的账号数据。
+ */
+function getMasterById(
+  masterAccountId
+) {
+  const normalizedMasterAccountId =
+    String(
+      masterAccountId || ""
+    ).trim();
+
+  if (!normalizedMasterAccountId) {
+    return null;
+  }
+
+  const master =
+    readMasters().find(
+      item =>
+        item.id ===
+          normalizedMasterAccountId &&
+        item.status ===
+          "active"
+    );
+
+  return master
+    ? withoutPassword(master)
+    : null;
+}
+
+/**
  * 根据 Harson-Base 企业主登录用户，
  * 查询其管理的企业主账号。
  */
@@ -882,6 +913,7 @@ module.exports = {
   updateSubAccountTokenSettings,
   createMapping,
 
+  getMasterById,
   getMasterByOwnerUserId,
   listSubAccountsByMasterAccountId,
   getSubAccountByUserId,

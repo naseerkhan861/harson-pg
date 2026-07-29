@@ -12,7 +12,11 @@ const compression = require("compression");
 const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 const authRoutes = require("./src/routes/authRoutes");
+
 const aigcAccountRoutes = require("./src/routes/aigcAccountRoutes");
+const userCsvModel = require(
+  "./src/models/userCsvModel"
+);
 
 const connectDB = require("./src/db");
 
@@ -84,61 +88,129 @@ app.use(
 
 app.use(express.static(path.join(__dirname, "public")));
 
-function sendAdminOnlyPage(req, res, filename) {
-  const token = req.cookies?.harson_token;
+
+async function getCurrentPageUser(
+  req
+) {
+  const token =
+    req.cookies?.harson_token;
 
   if (!token) {
-    return res.status(200).send("");
+    return null;
   }
 
   try {
-    const user = jwt.verify(token, process.env.JWT_SECRET);
+    const tokenUser =
+      jwt.verify(
+        token,
+        process.env.JWT_SECRET
+      );
 
-    if (
-      !user ||
-      normalizeUserRole(user.role) !==
-        USER_ROLES.PLATFORM_ADMIN
-    ) {
-      return res.status(200).send("");
+    if (!tokenUser?.id) {
+      return null;
     }
 
-    return res.sendFile(path.join(__dirname, "public", filename));
+    const currentUser =
+      await userCsvModel.findById(
+        tokenUser.id
+      );
+
+    if (
+      !currentUser ||
+      !currentUser.isActive
+    ) {
+      return null;
+    }
+
+    return {
+      ...tokenUser,
+      ...currentUser,
+
+      role:
+        normalizeUserRole(
+          currentUser.role
+        )
+    };
   } catch {
-    return res.status(200).send("");
+    return null;
   }
 }
 
-function sendAuthenticatedPage(
+
+
+async function sendAdminOnlyPage(
   req,
   res,
   filename
 ) {
-  const token = req.cookies?.harson_token;
-
-  if (!token) {
-    return res.redirect("/login");
-  }
-
-  try {
-    const user = jwt.verify(
-      token,
-      process.env.JWT_SECRET
+  const user =
+    await getCurrentPageUser(
+      req
     );
 
-    if (!user?.id) {
-      return res.redirect("/login");
-    }
-
-    return res.sendFile(
-      path.join(
-        __dirname,
-        "public",
-        filename
-      )
-    );
-  } catch {
-    return res.redirect("/login");
+  if (
+    !user ||
+    user.role !==
+      USER_ROLES.PLATFORM_ADMIN
+  ) {
+    return res
+      .status(200)
+      .send("");
   }
+
+  return res.sendFile(
+    path.join(
+      __dirname,
+      "public",
+      filename
+    )
+  );
+}
+
+async function sendEnterpriseMemberPage(
+  req,
+  res,
+  filename
+) {
+  const user =
+    await getCurrentPageUser(
+      req
+    );
+
+  if (!user) {
+    return res.redirect(
+      "/login"
+    );
+  }
+
+  const masterAccountId =
+    String(
+      user.masterAccountId || ""
+    ).trim();
+
+  const subAccountId =
+    String(
+      user.subAccountId || ""
+    ).trim();
+
+  if (
+    user.role !==
+      USER_ROLES.MEMBER ||
+    !masterAccountId ||
+    !subAccountId
+  ) {
+    return res.redirect(
+      "/account-management"
+    );
+  }
+
+  return res.sendFile(
+    path.join(
+      __dirname,
+      "public",
+      filename
+    )
+  );
 }
 
 app.get("/", (req, res) => {
@@ -182,7 +254,7 @@ app.get("/aigc", (req, res) => {
 app.get(
   "/aigc-workspace",
   (req, res) => {
-    return sendAuthenticatedPage(
+    return sendEnterpriseMemberPage(
       req,
       res,
       "aigc-workspace.html"

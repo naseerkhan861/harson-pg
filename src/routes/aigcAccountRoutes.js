@@ -16,12 +16,14 @@ const router = express.Router();
 router.get(
   "/session",
   requireAuth,
+  requireMember,
   sessionController.getSession
 );
 
 router.post(
   "/session/refresh",
   requireAuth,
+  requireMember,
   sessionController.refreshSession
 );
 
