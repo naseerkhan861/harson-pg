@@ -285,6 +285,248 @@ async function createEnterpriseMemberAccount(
   }
 }
 
+/**
+ * 企业主账号查看自己的企业信息。
+ *
+ * 安全规则：
+ * 1. 只能读取当前登录用户绑定的企业；
+ * 2. 同时校验 JWT 中的 masterAccountId；
+ * 3. 不返回任何密码或密码哈希。
+ */
+function myEnterpriseAccount(
+  req,
+  res
+) {
+  try {
+    const userId = String(
+      req.user?.id || ""
+    ).trim();
+
+    const tokenMasterAccountId =
+      String(
+        req.user?.masterAccountId || ""
+      ).trim();
+
+    if (
+      !userId ||
+      !tokenMasterAccountId
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "当前登录账号缺少企业主账号关联信息。"
+      });
+    }
+
+    const masterAccount =
+      aigcAccountModel
+        .getMasterByOwnerUserId(
+          userId
+        );
+
+    if (!masterAccount) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "未找到当前用户管理的企业主账号。"
+      });
+    }
+
+    /*
+     * 防止 JWT 中的企业 ID
+     * 与真实企业归属不一致。
+     */
+    if (
+      masterAccount.id !==
+      tokenMasterAccountId
+    ) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "当前账号的企业归属校验失败。"
+      });
+    }
+
+    const memberAccounts =
+      aigcAccountModel
+        .listSubAccountsByMasterAccountId(
+          masterAccount.id
+        );
+
+    const summary =
+      memberAccounts.reduce(
+        (result, member) => {
+          result.memberCount += 1;
+
+          result.totalAllocatedTokens +=
+            Number(
+              member.tokenLimit || 0
+            );
+
+          result.totalUsedTokens +=
+            Number(
+              member.usedTokens || 0
+            );
+
+          result.totalRemainingTokens +=
+            Number(
+              member.remainingTokens || 0
+            );
+
+          return result;
+        },
+        {
+          memberCount: 0,
+          totalAllocatedTokens: 0,
+          totalUsedTokens: 0,
+          totalRemainingTokens: 0
+        }
+      );
+
+    return res.json({
+      success: true,
+      data: {
+        masterAccount,
+        memberAccounts,
+        summary
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message:
+        error.message ||
+        "读取企业账号信息失败。"
+    });
+  }
+}
+
+/**
+ * 企业成员查看自己的账号信息。
+ *
+ * 安全校验：
+ * 1. 根据当前登录用户 ID 查找子账号；
+ * 2. 校验 JWT 中的 subAccountId；
+ * 3. 校验 JWT 中的 masterAccountId；
+ * 4. 不返回密码或密码哈希。
+ */
+function myEnterpriseMemberAccount(
+  req,
+  res
+) {
+  try {
+    const userId = String(
+      req.user?.id || ""
+    ).trim();
+
+    const tokenMasterAccountId =
+      String(
+        req.user?.masterAccountId || ""
+      ).trim();
+
+    const tokenSubAccountId =
+      String(
+        req.user?.subAccountId || ""
+      ).trim();
+
+    if (
+      !userId ||
+      !tokenMasterAccountId ||
+      !tokenSubAccountId
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "当前登录账号缺少企业成员关联信息。"
+      });
+    }
+
+    const subAccount =
+      aigcAccountModel
+        .getSubAccountByUserId(
+          userId
+        );
+
+    if (!subAccount) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "未找到当前用户对应的企业子账号。"
+      });
+    }
+
+    if (
+      subAccount.id !==
+      tokenSubAccountId
+    ) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "当前账号的子账号归属校验失败。"
+      });
+    }
+
+    if (
+      subAccount.masterAccountId !==
+      tokenMasterAccountId
+    ) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "当前账号的企业归属校验失败。"
+      });
+    }
+
+    const tokenLimit =
+      Number(
+        subAccount.tokenLimit || 0
+      );
+
+    const usedTokens =
+      Number(
+        subAccount.usedTokens || 0
+      );
+
+    const remainingTokens =
+      Math.max(
+        tokenLimit - usedTokens,
+        0
+      );
+
+    const usageRate =
+      tokenLimit > 0
+        ? Number(
+            (
+              usedTokens /
+              tokenLimit *
+              100
+            ).toFixed(2)
+          )
+        : 0;
+
+    return res.json({
+      success: true,
+      data: {
+        subAccount,
+        tokenUsage: {
+          tokenLimit,
+          usedTokens,
+          remainingTokens,
+          usageRate
+        }
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message:
+        error.message ||
+        "读取企业成员账号信息失败。"
+    });
+  }
+}
+
+
 function updateSubAccountTokenSettings(req, res) {
   try {
     const { subAccountId, tokenLimit, warningThreshold } = req.body;
@@ -316,6 +558,124 @@ function updateSubAccountTokenSettings(req, res) {
     });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
+  }
+}
+
+/**
+ * 平台管理员或企业主账号调整子账号 token 配额。
+ *
+ * 安全规则：
+ * platform_admin 可以调整任意企业子账号；
+ * master_admin 只能调整自己企业下的子账号。
+ */
+function updateEnterpriseMemberTokenSettings(
+  req,
+  res
+) {
+  try {
+    const body = req.body || {};
+
+    const subAccountId = String(
+      body.subAccountId || ""
+    ).trim();
+
+    if (!subAccountId) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "请选择需要调整的企业子账号。"
+      });
+    }
+
+    if (
+      body.tokenLimit === undefined ||
+      body.tokenLimit === null ||
+      body.tokenLimit === ""
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "请输入新的 token 配额。"
+      });
+    }
+
+    const requesterRole =
+      normalizeUserRole(
+        req.user?.role
+      );
+
+    if (
+      requesterRole ===
+      USER_ROLES.MASTER_ADMIN
+    ) {
+      const masterAccountId = String(
+        req.user?.masterAccountId || ""
+      ).trim();
+
+      if (!masterAccountId) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "当前账号缺少企业主账号关联信息。"
+        });
+      }
+
+      const enterpriseMembers =
+        aigcAccountModel
+          .listSubAccountsByMasterAccountId(
+            masterAccountId
+          );
+
+      const targetMember =
+        enterpriseMembers.find(
+          member =>
+            member.id ===
+            subAccountId
+        );
+
+      if (!targetMember) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "无权修改其他企业的子账号。"
+        });
+      }
+    } else if (
+      requesterRole !==
+      USER_ROLES.PLATFORM_ADMIN
+    ) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "当前账号没有调整 token 配额的权限。"
+      });
+    }
+
+    const updatedSubAccount =
+      aigcAccountModel
+        .updateSubAccountTokenSettings({
+          subAccountId,
+
+          tokenLimit:
+            body.tokenLimit,
+
+          warningThreshold:
+            body.warningThreshold
+        });
+
+    return res.json({
+      success: true,
+      message:
+        "企业子账号 token 配额已更新。",
+      data: updatedSubAccount
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message:
+        error.message ||
+        "企业子账号 token 配额更新失败。"
+    });
   }
 }
 
@@ -610,8 +970,11 @@ module.exports = {
 
   createEnterpriseMasterAccount,
   createEnterpriseMemberAccount,
+  myEnterpriseAccount,
+  myEnterpriseMemberAccount,
 
   updateSubAccountTokenSettings,
+  updateEnterpriseMemberTokenSettings,
 
   listMasterProviderBindings,
   bindMasterProvider,

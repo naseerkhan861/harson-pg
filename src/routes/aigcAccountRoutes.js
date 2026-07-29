@@ -7,6 +7,8 @@ const {
   requireAuth,
   requireAdmin,
   requirePlatformAdmin,
+  requireMasterAdmin,
+  requireMember,
   requirePlatformOrMasterAdmin
 } = require("../middleware/authMiddleware");
 
@@ -74,6 +76,35 @@ router.post(
   requireAuth,
   requirePlatformOrMasterAdmin,
   controller.createEnterpriseMemberAccount
+);
+
+/*
+ * 企业主账号读取自己的企业资料、
+ * 子账号列表和 token 汇总。
+ */
+router.get(
+  "/enterprise/my-account",
+  requireAuth,
+  requireMasterAdmin,
+  controller.myEnterpriseAccount
+);
+
+router.get(
+  "/enterprise/member/my-account",
+  requireAuth,
+  requireMember,
+  controller.myEnterpriseMemberAccount
+);
+
+/*
+ * 平台管理员或企业主账号
+ * 调整企业子账号 token 配额。
+ */
+router.patch(
+  "/enterprise/member-accounts/token-settings",
+  requireAuth,
+  requirePlatformOrMasterAdmin,
+  controller.updateEnterpriseMemberTokenSettings
 );
 router.post("/admin/sub-accounts/token-settings", requireAuth, requireAdmin, controller.updateSubAccountTokenSettings);
 router.post("/admin/mappings", requireAuth, requireAdmin, controller.createMapping);

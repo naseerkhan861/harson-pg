@@ -122,6 +122,46 @@ function requirePlatformOrMasterAdmin(
   next();
 }
 
+function requireMember(
+  req,
+  res,
+  next
+) {
+  if (
+    getUserRole(req) !==
+    USER_ROLES.MEMBER
+  ) {
+    return res.status(403).json({
+      success: false,
+      message:
+        "Enterprise member permission required."
+    });
+  }
+
+  const masterAccountId =
+    String(
+      req.user?.masterAccountId || ""
+    ).trim();
+
+  const subAccountId =
+    String(
+      req.user?.subAccountId || ""
+    ).trim();
+
+  if (
+    !masterAccountId ||
+    !subAccountId
+  ) {
+    return res.status(403).json({
+      success: false,
+      message:
+        "Enterprise member account binding is missing."
+    });
+  }
+
+  next();
+}
+
 function optionalAuth(req, res, next) {
   const token = req.cookies.harson_token;
 
@@ -150,6 +190,7 @@ module.exports = {
   requireAdmin,
   requirePlatformAdmin,
   requireMasterAdmin,
+  requireMember,
   requirePlatformOrMasterAdmin,
   optionalAuth
 };
