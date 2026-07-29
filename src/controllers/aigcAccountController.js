@@ -3,6 +3,13 @@ const userCsvModel = require("../models/userCsvModel");
 const aigcMasterProviderService = require(
   "../services/aigcMasterProviderService"
 );
+const accountHierarchyService = require(
+  "../services/accountHierarchyService"
+);
+const {
+  USER_ROLES,
+  normalizeUserRole
+} = require("../constants/userRoles");
 
 async function dashboard(req, res) {
   try {
@@ -124,6 +131,157 @@ async function createSubAccount(req, res) {
     });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
+  }
+}
+
+/**
+ * 平台管理员创建企业主账号。
+ *
+ * 同时创建：
+ * 1. Harson-Base 登录账号；
+ * 2. AIGC 企业主账号；
+ * 3. 两者之间的层级关联。
+ */
+async function createEnterpriseMasterAccount(
+  req,
+  res
+) {
+  try {
+    const body = req.body || {};
+
+    const result =
+      await accountHierarchyService
+        .createEnterpriseMaster({
+          name: body.name,
+          email: body.email,
+          password: body.password,
+
+          enterpriseName:
+            body.enterpriseName,
+
+          platformName:
+            body.platformName,
+
+          platformLogin:
+            body.platformLogin,
+
+          platformPassword:
+            body.platformPassword,
+
+          totalCredits:
+            body.totalCredits
+        });
+
+    return res.status(201).json({
+      success: true,
+      message:
+        "Harson-Base 企业主账号创建成功。",
+      data: result
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message:
+        error.message ||
+        "Harson-Base 企业主账号创建失败。"
+    });
+  }
+}
+
+/**
+ * 创建企业子账号。
+ *
+ * platform_admin：
+ * 可以通过请求体指定 masterAccountId。
+ *
+ * master_admin：
+ * 只能在自己所属企业下创建子账号，
+ * 请求体中的其他企业 ID 会被忽略。
+ */
+async function createEnterpriseMemberAccount(
+  req,
+  res
+) {
+  try {
+    const body = req.body || {};
+
+    const requesterRole =
+      normalizeUserRole(
+        req.user?.role
+      );
+
+    let masterAccountId = "";
+
+    if (
+      requesterRole ===
+      USER_ROLES.PLATFORM_ADMIN
+    ) {
+      masterAccountId =
+        String(
+          body.masterAccountId || ""
+        ).trim();
+    } else if (
+      requesterRole ===
+      USER_ROLES.MASTER_ADMIN
+    ) {
+      masterAccountId =
+        String(
+          req.user?.masterAccountId || ""
+        ).trim();
+    } else {
+      return res.status(403).json({
+        success: false,
+        message:
+          "当前账号没有创建企业子账号的权限。"
+      });
+    }
+
+    if (!masterAccountId) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "缺少企业主账号关联信息。"
+      });
+    }
+
+    const result =
+      await accountHierarchyService
+        .createEnterpriseMember({
+          masterAccountId,
+
+          name: body.name,
+          email: body.email,
+          password: body.password,
+
+          subAccountName:
+            body.subAccountName,
+
+          platformLogin:
+            body.platformLogin,
+
+          platformPassword:
+            body.platformPassword,
+
+          tokenLimit:
+            body.tokenLimit,
+
+          warningThreshold:
+            body.warningThreshold
+        });
+
+    return res.status(201).json({
+      success: true,
+      message:
+        "Harson-Base 企业子账号创建成功。",
+      data: result
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message:
+        error.message ||
+        "Harson-Base 企业子账号创建失败。"
+    });
   }
 }
 
@@ -449,6 +607,10 @@ module.exports = {
 
   createMaster,
   createSubAccount,
+
+  createEnterpriseMasterAccount,
+  createEnterpriseMemberAccount,
+
   updateSubAccountTokenSettings,
 
   listMasterProviderBindings,

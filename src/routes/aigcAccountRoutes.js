@@ -3,7 +3,12 @@ const controller = require("../controllers/aigcAccountController");
 const sessionController = require(
   "../controllers/aigcSessionController"
 );
-const { requireAuth, requireAdmin } = require("../middleware/authMiddleware");
+const {
+  requireAuth,
+  requireAdmin,
+  requirePlatformAdmin,
+  requirePlatformOrMasterAdmin
+} = require("../middleware/authMiddleware");
 
 const router = express.Router();
 router.get(
@@ -24,6 +29,19 @@ router.post("/admin/token-purchases", requireAuth, requireAdmin, controller.purc
 
 router.get("/admin/clbase-users", requireAuth, requireAdmin, controller.listClBaseUsers);
 router.post("/admin/master-accounts", requireAuth, requireAdmin, controller.createMaster);
+/*
+ * 新账号层级接口：
+ *
+ * 仅平台管理员可以创建
+ * Harson-Base 企业主账号。
+ */
+router.post(
+  "/admin/enterprise-master-accounts",
+  requireAuth,
+  requirePlatformAdmin,
+  controller.createEnterpriseMasterAccount
+);
+
 router.get(
   "/admin/master-provider-bindings",
   requireAuth,
@@ -45,6 +63,18 @@ router.post(
   controller.syncMasterProvider
 );
 router.post("/admin/sub-accounts", requireAuth, requireAdmin, controller.createSubAccount);
+/*
+ * 平台管理员和企业主账号
+ * 都可以创建企业子账号。
+ *
+ * 企业主账号只能在自己的企业下创建。
+ */
+router.post(
+  "/enterprise/member-accounts",
+  requireAuth,
+  requirePlatformOrMasterAdmin,
+  controller.createEnterpriseMemberAccount
+);
 router.post("/admin/sub-accounts/token-settings", requireAuth, requireAdmin, controller.updateSubAccountTokenSettings);
 router.post("/admin/mappings", requireAuth, requireAdmin, controller.createMapping);
 

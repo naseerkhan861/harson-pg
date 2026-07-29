@@ -157,6 +157,80 @@ async function createUser({
   return sanitizeUser(newUser);
 }
 
+function updateUserHierarchy({
+  userId,
+  role,
+  masterAccountId = "",
+  subAccountId = ""
+}) {
+  const normalizedUserId =
+    String(userId || "").trim();
+
+  if (!normalizedUserId) {
+    throw new Error(
+      "Harson-Base 用户 ID 不能为空。"
+    );
+  }
+
+  const normalizedRole =
+    validateRole(role);
+
+  const users = readUsers();
+
+  const user = users.find(
+    item =>
+      String(item.id || "") ===
+      normalizedUserId
+  );
+
+  if (!user) {
+    throw new Error(
+      "未找到对应的 Harson-Base 用户。"
+    );
+  }
+
+  user.role = normalizedRole;
+
+  user.masterAccountId =
+    normalizeOptionalId(masterAccountId);
+
+  user.subAccountId =
+    normalizeOptionalId(subAccountId);
+
+  writeUsers(users);
+
+  return sanitizeUser(user);
+}
+
+function deleteUserForRollback(userId) {
+  const normalizedUserId =
+    String(userId || "").trim();
+
+  if (!normalizedUserId) {
+    return false;
+  }
+
+  const users = readUsers();
+
+  const remainingUsers = users.filter(
+    user =>
+      String(user.id || "") !==
+      normalizedUserId
+  );
+
+  if (
+    remainingUsers.length ===
+    users.length
+  ) {
+    return false;
+  }
+
+  writeUsers(remainingUsers);
+
+  return true;
+}
+
+
 async function verifyUser(email, password) {
   const normalizedEmail = normalizeEmail(email);
   const users = readUsers();
@@ -224,6 +298,8 @@ module.exports = {
   findById,
   listUsers,
   createUser,
+  updateUserHierarchy,
+  deleteUserForRollback,
   verifyUser,
   sanitizeUser,
   readUsers,

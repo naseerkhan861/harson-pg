@@ -668,12 +668,227 @@ function addMyWork({ clBaseUserId, title, workType, promptSummary, creditCost })
   };
 }
 
+/**
+ * 根据 Harson-Base 企业主登录用户，
+ * 查询其管理的企业主账号。
+ */
+function getMasterByOwnerUserId(
+  ownerUserId
+) {
+  const normalizedOwnerUserId =
+    String(ownerUserId || "").trim();
+
+  if (!normalizedOwnerUserId) {
+    return null;
+  }
+
+  const master = readMasters().find(
+    item =>
+      String(item.ownerUserId || "") ===
+        normalizedOwnerUserId &&
+      item.status === "active"
+  );
+
+  return master
+    ? withoutPassword(master)
+    : null;
+}
+
+/**
+ * 查询某个企业主账号下的全部子账号。
+ *
+ * 企业主账号管理页面需要同时看到：
+ * active、disabled 等状态。
+ */
+function listSubAccountsByMasterAccountId(
+  masterAccountId
+) {
+  const normalizedMasterAccountId =
+    String(masterAccountId || "").trim();
+
+  if (!normalizedMasterAccountId) {
+    return [];
+  }
+
+  const works = readWorks();
+
+  return readSubs()
+    .filter(
+      item =>
+        item.masterAccountId ===
+        normalizedMasterAccountId
+    )
+    .map(
+      item =>
+        enrichSubAccount(item, works)
+    );
+}
+
+/**
+ * 根据 Harson-Base 子账号登录用户，
+ * 查询其对应的有效 AIGC 子账号。
+ */
+function getSubAccountByUserId(
+  clBaseUserId
+) {
+  const normalizedUserId =
+    String(clBaseUserId || "").trim();
+
+  if (!normalizedUserId) {
+    return null;
+  }
+
+  const subAccount = readSubs().find(
+    item =>
+      String(item.clBaseUserId || "") ===
+        normalizedUserId &&
+      item.status === "active"
+  );
+
+  return subAccount
+    ? enrichSubAccount(
+        subAccount,
+        readWorks()
+      )
+    : null;
+}
+
+
+/**
+ * 仅用于企业主账号创建流程失败后的回滚。
+ *
+ * 已存在子账号或购买记录时禁止删除，
+ * 避免误删正式业务数据。
+ */
+function deleteMasterForRollback(
+  masterAccountId
+) {
+  const normalizedMasterAccountId =
+    String(masterAccountId || "").trim();
+
+  if (!normalizedMasterAccountId) {
+    return false;
+  }
+
+  const hasSubAccounts = readSubs().some(
+    sub =>
+      sub.masterAccountId ===
+      normalizedMasterAccountId
+  );
+
+  if (hasSubAccounts) {
+    throw new Error(
+      "该企业主账号已包含子账号，不能执行回滚删除。"
+    );
+  }
+
+  const hasPurchases =
+    readPurchases().some(
+      purchase =>
+        purchase.masterAccountId ===
+        normalizedMasterAccountId
+    );
+
+  if (hasPurchases) {
+    throw new Error(
+      "该企业主账号已有购买记录，不能执行回滚删除。"
+    );
+  }
+
+  const masters = readMasters();
+
+  const remainingMasters =
+    masters.filter(
+      master =>
+        master.id !==
+        normalizedMasterAccountId
+    );
+
+  if (
+    remainingMasters.length ===
+    masters.length
+  ) {
+    return false;
+  }
+
+  writeMasters(remainingMasters);
+
+  return true;
+}
+
+/**
+ * 仅用于企业子账号创建流程失败后的回滚。
+ *
+ * 已存在账号映射或创作记录时禁止删除。
+ */
+function deleteSubAccountForRollback(
+  subAccountId
+) {
+  const normalizedSubAccountId =
+    String(subAccountId || "").trim();
+
+  if (!normalizedSubAccountId) {
+    return false;
+  }
+
+  const hasMappings =
+    readMappings().some(
+      mapping =>
+        mapping.aigcSubAccountId ===
+        normalizedSubAccountId
+    );
+
+  if (hasMappings) {
+    throw new Error(
+      "该企业子账号已有用户映射，不能执行回滚删除。"
+    );
+  }
+
+  const hasWorks = readWorks().some(
+    work =>
+      work.aigcSubAccountId ===
+      normalizedSubAccountId
+  );
+
+  if (hasWorks) {
+    throw new Error(
+      "该企业子账号已有创作记录，不能执行回滚删除。"
+    );
+  }
+
+  const subs = readSubs();
+
+  const remainingSubs = subs.filter(
+    sub =>
+      sub.id !==
+      normalizedSubAccountId
+  );
+
+  if (
+    remainingSubs.length === subs.length
+  ) {
+    return false;
+  }
+
+  writeSubs(remainingSubs);
+
+  return true;
+}
+
 module.exports = {
   createMaster,
   syncMasterTotalCredits,
   createSubAccount,
   updateSubAccountTokenSettings,
   createMapping,
+
+  getMasterByOwnerUserId,
+  listSubAccountsByMasterAccountId,
+  getSubAccountByUserId,
+
+  deleteMasterForRollback,
+  deleteSubAccountForRollback,
+
   listAdminData,
   listAigcCenterData,
   purchaseTokens,
