@@ -1,4 +1,7 @@
 const jwt = require("jsonwebtoken");
+const {
+  normalizeUserRole
+} = require("../constants/userRoles");
 const userCsvModel = require("../models/userCsvModel");
 const aigcSessionService = require(
   "../services/aigcSessionService"
@@ -19,9 +22,23 @@ const VALID_AGE_GROUPS = [
 
 function createToken(user) {
   return jwt.sign(
-    { id: user.id, email: user.email, role: user.role },
+    {
+      id: user.id,
+      email: user.email,
+
+      role: normalizeUserRole(user.role),
+
+      masterAccountId:
+        user.masterAccountId || null,
+
+      subAccountId:
+        user.subAccountId || null
+    },
     process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || "2h" }
+    {
+      expiresIn:
+        process.env.JWT_EXPIRES_IN || "2h"
+    }
   );
 }
 

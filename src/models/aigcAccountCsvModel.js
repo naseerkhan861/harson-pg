@@ -22,6 +22,7 @@ console.log("[HARSON] PURCHASE_FILE =", PURCHASE_FILE);
 
 const MASTER_HEADERS = [
   "id",
+  "ownerUserId",
   "enterpriseName",
   "platformName",
   "platformLogin",
@@ -35,6 +36,7 @@ const MASTER_HEADERS = [
 
 const SUB_HEADERS = [
   "id",
+  "clBaseUserId",
   "masterAccountId",
   "subAccountName",
   "platformLogin",
@@ -309,7 +311,14 @@ function syncMasterTotalCredits({
   };
 }
 
-async function createMaster({ enterpriseName, platformName, platformLogin, platformPassword, totalCredits }) {
+async function createMaster({
+  ownerUserId = "",
+  enterpriseName,
+  platformName,
+  platformLogin,
+  platformPassword,
+  totalCredits
+}) {
   const masters = readMasters();
 
   if (masters.some(item => item.platformLogin.toLowerCase() === String(platformLogin).toLowerCase())) {
@@ -318,6 +327,8 @@ async function createMaster({ enterpriseName, platformName, platformLogin, platf
 
   const record = {
     id: nanoid(16),
+    ownerUserId:
+    String(ownerUserId || "").trim(),
     enterpriseName,
     platformName,
     platformLogin: String(platformLogin).toLowerCase(),
@@ -335,6 +346,7 @@ async function createMaster({ enterpriseName, platformName, platformLogin, platf
 }
 
 async function createSubAccount({
+  clBaseUserId = "",
   masterAccountId,
   subAccountName,
   platformLogin,
@@ -374,6 +386,8 @@ async function createSubAccount({
 
   const record = {
     id: nanoid(16),
+    clBaseUserId:
+    String(clBaseUserId || "").trim(),
     masterAccountId,
     subAccountName,
     platformLogin: String(platformLogin).toLowerCase(),

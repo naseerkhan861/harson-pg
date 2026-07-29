@@ -1,5 +1,12 @@
 const bcrypt = require("bcryptjs");
+
 const User = require("./User");
+
+function normalizeOptionalId(value) {
+  const normalizedValue = String(value || "").trim();
+
+  return normalizedValue || null;
+}
 
 function sanitizeUser(user) {
   return {
@@ -7,6 +14,10 @@ function sanitizeUser(user) {
     name: user.name,
     email: user.email,
     role: user.role,
+
+    masterAccountId: user.masterAccountId || null,
+    subAccountId: user.subAccountId || null,
+
     createdAt: user.createdAt,
     lastLoginAt: user.lastLoginAt,
     isActive: user.isActive
@@ -28,15 +39,28 @@ async function findById(id) {
 }
 
 async function listUsers() {
-  const users = await User.find().sort({ createdAt: -1 });
+  const users = await User.find().sort({
+    createdAt: -1
+  });
 
   return users.map(sanitizeUser);
 }
 
-async function createUser({ name, email, password, role = "user" }) {
-  const normalizedEmail = String(email).toLowerCase();
+async function createUser({
+  name,
+  email,
+  password,
+  role = "user",
+  masterAccountId = null,
+  subAccountId = null
+}) {
+  const normalizedEmail = String(email)
+    .trim()
+    .toLowerCase();
 
-  const existingUser = await User.findOne({ email: normalizedEmail });
+  const existingUser = await User.findOne({
+    email: normalizedEmail
+  });
 
   if (existingUser) {
     throw new Error("This email is already registered.");
@@ -49,6 +73,13 @@ async function createUser({ name, email, password, role = "user" }) {
     email: normalizedEmail,
     passwordHash,
     role,
+
+    masterAccountId:
+      normalizeOptionalId(masterAccountId),
+
+    subAccountId:
+      normalizeOptionalId(subAccountId),
+
     isActive: true
   });
 
@@ -57,20 +88,24 @@ async function createUser({ name, email, password, role = "user" }) {
 
 async function verifyUser(email, password) {
   const user = await User.findOne({
-    email: String(email).toLowerCase()
+    email: String(email).trim().toLowerCase()
   });
 
   if (!user || user.isActive !== true) {
     return null;
   }
 
-  const isValid = await bcrypt.compare(password, user.passwordHash);
+  const isValid = await bcrypt.compare(
+    password,
+    user.passwordHash
+  );
 
   if (!isValid) {
     return null;
   }
 
   user.lastLoginAt = new Date();
+
   await user.save();
 
   return sanitizeUser(user);

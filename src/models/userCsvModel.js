@@ -1,26 +1,27 @@
+"use strict";
+
 const path = require("path");
 const bcrypt = require("bcryptjs");
 const { nanoid } = require("nanoid");
-const { readCsv, writeCsv } = require("../utils/csvStore");
 
-/**
- * Runtime data directory
- *
- * Development:
- *   D:\\harson-platform\\harson-pg\\data
- *
- * Installed Electron app:
- *   C:\\Users\\<user>\\AppData\\Roaming\\HARSON CL_Base Platform\\data
- *
- * IMPORTANT:
- * Do not allow CSV_USER_FILE from .env to override this path in the packaged app.
- * The installed app must read/write user data from a writable AppData folder.
- */
+const {
+  ALLOWED_USER_ROLES,
+  LEGACY_USER_ROLES
+} = require("../constants/userRoles");
+
+const {
+  readCsv,
+  writeCsv
+} = require("../utils/csvStore");
+
 const DATA_DIR =
   process.env.HARSON_DATA_DIR ||
   path.join(__dirname, "../../data");
 
-const USER_FILE = path.join(DATA_DIR, "users.secure.csv");
+const USER_FILE = path.join(
+  DATA_DIR,
+  "users.secure.csv"
+);
 
 console.log("[HARSON] USER_FILE =", USER_FILE);
 
@@ -30,12 +31,36 @@ const USER_HEADERS = [
   "email",
   "passwordHash",
   "role",
+  "masterAccountId",
+  "subAccountId",
   "gender",
   "ageGroup",
   "createdAt",
   "lastLoginAt",
   "isActive"
 ];
+
+function normalizeOptionalId(value) {
+  return String(value || "").trim();
+}
+
+function normalizeEmail(email) {
+  return String(email || "")
+    .trim()
+    .toLowerCase();
+}
+
+function validateRole(role) {
+  const normalizedRole = String(
+    role || LEGACY_USER_ROLES.USER
+  ).trim();
+
+  if (!ALLOWED_USER_ROLES.includes(normalizedRole)) {
+    throw new Error("Invalid user role.");
+  }
+
+  return normalizedRole;
+}
 
 function readUsers() {
   return readCsv(USER_FILE, USER_HEADERS);
@@ -46,16 +71,26 @@ function writeUsers(users) {
 }
 
 async function findByEmail(email) {
+  const normalizedEmail = normalizeEmail(email);
   const users = readUsers();
 
-  return users.find(
-    user => user.email.toLowerCase() === String(email).toLowerCase()
+  return (
+    users.find(
+      user =>
+        normalizeEmail(user.email) ===
+        normalizedEmail
+    ) || null
   );
 }
 
 async function findById(id) {
   const users = readUsers();
-  const user = users.find(item => item.id === id);
+
+  const user = users.find(
+    item =>
+      String(item.id || "") ===
+      String(id || "")
+  );
 
   return user ? sanitizeUser(user) : null;
 }
@@ -68,30 +103,49 @@ async function createUser({
   name,
   email,
   password,
-  role = "user",
+  role = LEGACY_USER_ROLES.USER,
+  masterAccountId = "",
+  subAccountId = "",
   gender = "",
   ageGroup = ""
 }) {
   const users = readUsers();
+  const normalizedEmail = normalizeEmail(email);
+  const normalizedRole = validateRole(role);
 
   const existingUser = users.find(
-    user => user.email.toLowerCase() === String(email).toLowerCase()
+    user =>
+      normalizeEmail(user.email) ===
+      normalizedEmail
   );
 
   if (existingUser) {
-    throw new Error("This email is already registered.");
+    throw new Error(
+      "This email is already registered."
+    );
   }
 
-  const passwordHash = await bcrypt.hash(password, 12);
+  const passwordHash = await bcrypt.hash(
+    password,
+    12
+  );
 
   const newUser = {
     id: nanoid(16),
-    name,
-    email: String(email).toLowerCase(),
+    name: String(name || "").trim(),
+    email: normalizedEmail,
     passwordHash,
-    role,
-    gender,
-    ageGroup,
+    role: normalizedRole,
+
+    masterAccountId:
+      normalizeOptionalId(masterAccountId),
+
+    subAccountId:
+      normalizeOptionalId(subAccountId),
+
+    gender: String(gender || "").trim(),
+    ageGroup: String(ageGroup || "").trim(),
+
     createdAt: new Date().toISOString(),
     lastLoginAt: "",
     isActive: "true"
@@ -104,23 +158,31 @@ async function createUser({
 }
 
 async function verifyUser(email, password) {
+  const normalizedEmail = normalizeEmail(email);
   const users = readUsers();
 
   const user = users.find(
-    item => item.email.toLowerCase() === String(email).toLowerCase()
+    item =>
+      normalizeEmail(item.email) ===
+      normalizedEmail
   );
 
   if (!user || user.isActive !== "true") {
     return null;
   }
 
-  const isValid = await bcrypt.compare(password, user.passwordHash);
+  const isValid = await bcrypt.compare(
+    password,
+    user.passwordHash
+  );
 
   if (!isValid) {
     return null;
   }
 
-  user.lastLoginAt = new Date().toISOString();
+  user.lastLoginAt =
+    new Date().toISOString();
+
   writeUsers(users);
 
   return sanitizeUser(user);
@@ -131,12 +193,28 @@ function sanitizeUser(user) {
     id: user.id,
     name: user.name,
     email: user.email,
-    role: user.role,
+    role:
+      user.role ||
+      LEGACY_USER_ROLES.USER,
+
+    masterAccountId:
+      normalizeOptionalId(
+        user.masterAccountId
+      ) || null,
+
+    subAccountId:
+      normalizeOptionalId(
+        user.subAccountId
+      ) || null,
+
     gender: user.gender || "",
     ageGroup: user.ageGroup || "",
     createdAt: user.createdAt,
     lastLoginAt: user.lastLoginAt,
-    isActive: user.isActive === "true"
+
+    isActive:
+      user.isActive === true ||
+      user.isActive === "true"
   };
 }
 

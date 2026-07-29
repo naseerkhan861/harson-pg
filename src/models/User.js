@@ -1,5 +1,10 @@
 const mongoose = require("mongoose");
 
+const {
+  ALLOWED_USER_ROLES,
+  LEGACY_USER_ROLES
+} = require("../constants/userRoles");
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -23,7 +28,44 @@ const userSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      default: "user"
+      enum: ALLOWED_USER_ROLES,
+      default: LEGACY_USER_ROLES.USER,
+      index: true
+    },
+
+    /*
+     * 企业主账号 ID。
+     *
+     * platform_admin：
+     * masterAccountId 为 null。
+     *
+     * master_admin：
+     * 保存自己管理的企业主账号 ID。
+     *
+     * member：
+     * 保存自己所属的企业主账号 ID。
+     */
+    masterAccountId: {
+      type: String,
+      default: null,
+      trim: true,
+      index: true
+    },
+
+    /*
+     * 企业子账号 ID。
+     *
+     * platform_admin 和 master_admin：
+     * subAccountId 为 null。
+     *
+     * member：
+     * 保存自己的企业子账号 ID。
+     */
+    subAccountId: {
+      type: String,
+      default: null,
+      trim: true,
+      index: true
     },
 
     lastLoginAt: {
