@@ -1,5 +1,8 @@
 const aigcAccountModel = require("../models/aigcAccountCsvModel");
 const userCsvModel = require("../models/userCsvModel");
+const aigcMasterProviderService = require(
+  "../services/aigcMasterProviderService"
+);
 
 async function dashboard(req, res) {
   try {
@@ -165,7 +168,7 @@ async function createMapping(req, res) {
     if (!clBaseUserId || !aigcSubAccountId) {
       return res.status(400).json({
         success: false,
-        message: "请选择 CL-Base 用户和 AIGC 子账号"
+        message: "请选择 Harson-Base 用户和 AIGC 子账号"
       });
     }
 
@@ -175,7 +178,7 @@ async function createMapping(req, res) {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "未找到对应的 CL-Base 用户"
+        message: "未找到对应的 Harson-Base 用户"
       });
     }
 
@@ -187,13 +190,192 @@ async function createMapping(req, res) {
 
     return res.status(201).json({
       success: true,
-      message: "CL-Base 与 AIGC 子账号一对一映射创建成功",
+      message: "Harson-Base 与 AIGC 子账号一对一映射创建成功",
       data: mapping
     });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
   }
 }
+
+/**
+ * 管理员查看：
+ *
+ * 内部 AIGC 企业主账号
+ * → YiBai 外部账号
+ *
+ * 的全部绑定记录。
+ */
+function listMasterProviderBindings(
+  req,
+  res
+) {
+  try {
+    const bindings =
+      aigcMasterProviderService
+        .listMasterProviderBindings();
+
+    return res.json({
+      success: true,
+      data: bindings
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
+
+
+async function bindMasterProvider(
+  req,
+  res
+) {
+  try {
+    const {
+      masterAccountId,
+      providerAccount,
+      providerPassword,
+      pointsField
+    } = req.body || {};
+
+    const normalizedMasterAccountId =
+      String(
+        masterAccountId || ""
+      ).trim();
+
+    const normalizedProviderAccount =
+      String(
+        providerAccount || ""
+      ).trim();
+
+    /*
+     * 密码不能写入日志，也不能放进响应。
+     * 此处仅检查是否提交，真正的验证由
+     * aigcMasterProviderService 调用 YiBai
+     * 登录接口完成。
+     */
+    if (
+      !normalizedMasterAccountId
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "请选择内部 AIGC 企业主账号"
+      });
+    }
+
+    if (
+      !normalizedProviderAccount
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "请输入 YiBai 外部账号"
+      });
+    }
+
+    if (
+      typeof providerPassword !==
+        "string" ||
+      providerPassword.length === 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "请输入 YiBai 登录密码"
+      });
+    }
+
+    const result =
+      await aigcMasterProviderService
+        .bindMasterProviderAndSync({
+          masterAccountId:
+            normalizedMasterAccountId,
+
+          providerAccount:
+            normalizedProviderAccount,
+
+          /*
+           * 不要 trim 密码。
+           * 密码中的空格可能属于真实密码。
+           */
+          providerPassword,
+
+          pointsField:
+            String(
+              pointsField ||
+              "companyMpoint"
+            ).trim()
+        });
+
+    return res.status(201).json({
+      success: true,
+
+      message:
+        "YiBai 账号验证成功，绑定、点数同步和登录缓存已完成",
+
+      data: result
+    });
+  } catch (error) {
+    /*
+     * 这里只返回 Service 的安全错误信息。
+     * 不返回 req.body，也不返回管理员输入的密码。
+     */
+    return res.status(400).json({
+      success: false,
+
+      message:
+        error.message ||
+        "YiBai 账号绑定失败"
+    });
+  }
+}
+
+/**
+ * 管理员对已经存在的绑定
+ * 重新读取 YiBai 点数。
+ */
+async function syncMasterProvider(
+  req,
+  res
+) {
+  try {
+    const masterAccountId =
+      String(
+        req.params.masterAccountId || ""
+      ).trim();
+
+    if (!masterAccountId) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "AIGC 企业主账号 ID 不能为空"
+      });
+    }
+
+    const result =
+      await aigcMasterProviderService
+        .syncBoundMasterProvider(
+          masterAccountId
+        );
+
+    return res.json({
+      success: true,
+      message:
+        "YiBai 外部账号点数同步成功",
+      data: result
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
 
 async function listClBaseUsers(req, res) {
   try {
@@ -264,9 +446,15 @@ module.exports = {
   dashboard,
   aigcCenter,
   purchaseTokens,
+
   createMaster,
   createSubAccount,
   updateSubAccountTokenSettings,
+
+  listMasterProviderBindings,
+  bindMasterProvider,
+  syncMasterProvider,
+
   createMapping,
   listClBaseUsers,
   myAigcWorkspace,

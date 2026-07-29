@@ -35,6 +35,11 @@ app.use(
         ],
         "img-src": ["'self'", "data:", "https://www.zhihuiyunji.com"],
         "connect-src": ["'self'"],
+        "frame-src": [
+          "'self'",
+          "https://cl-base.yibaiaigc.com",
+          "https://yibaiaigc.com"
+        ],
         "frame-ancestors": ["'self'"],
         "upgrade-insecure-requests": null
       }
@@ -95,6 +100,39 @@ function sendAdminOnlyPage(req, res, filename) {
   }
 }
 
+function sendAuthenticatedPage(
+  req,
+  res,
+  filename
+) {
+  const token = req.cookies?.harson_token;
+
+  if (!token) {
+    return res.redirect("/login");
+  }
+
+  try {
+    const user = jwt.verify(
+      token,
+      process.env.JWT_SECRET
+    );
+
+    if (!user?.id) {
+      return res.redirect("/login");
+    }
+
+    return res.sendFile(
+      path.join(
+        __dirname,
+        "public",
+        filename
+      )
+    );
+  } catch {
+    return res.redirect("/login");
+  }
+}
+
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
@@ -132,6 +170,17 @@ app.get("/dashboard-mecha", (req, res) => {
 app.get("/aigc", (req, res) => {
   return sendAdminOnlyPage(req, res, "aigc.html");
 });
+
+app.get(
+  "/aigc-workspace",
+  (req, res) => {
+    return sendAuthenticatedPage(
+      req,
+      res,
+      "aigc-workspace.html"
+    );
+  }
+);
 
 app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, "public", "index.html"));

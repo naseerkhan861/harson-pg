@@ -38,12 +38,12 @@ export class HomeView {
 
   platformTemplate(platform) {
     const platformTitle = platform.link
-      ? `<a href="${platform.link}" target="_blank" rel="noopener noreferrer">${platform.title}</a>`
+      ? `<a href="${platform.link}">${platform.title}</a>`
       : platform.title;
 
     const actionButton = platform.link
       ? `
-        <a class="platform-action" href="${platform.link}" target="_blank" rel="noopener noreferrer">
+        <a class="platform-action" href="${platform.link}">
           ${platform.actionLabel || "进入平台"} <i class="fas fa-arrow-right"></i>
         </a>
       `
