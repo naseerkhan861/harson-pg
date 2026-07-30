@@ -551,6 +551,164 @@ async function syncMasterUserData(
 }
 
 
+
+/**
+ * 当前 Harson-Base 用户
+ * 明确点击“Token 明细”后，
+ *“Token 明细”后，
+ * 读取其所属企业的真实 Token 充值记录。
+ *
+ * 用户数据接口调用完成后，
+ * 必须恢复 Workspace 管理端登录状态。
+ */
+async function getMyRechargeRecords(
+  req,
+  res
+) {
+  const mapping =
+    aigcAccountModel
+      .getMyMapping(
+        req.user.id
+      );
+
+  const masterAccountId =
+    String(
+      mapping?.masterAccount?.id ||
+      mapping?.mapping
+        ?.masterAccountId ||
+      ""
+    ).trim();
+
+  if (!masterAccountId) {
+    return res.status(404).json({
+      success: false,
+
+      message:
+        "当前 Harson-Base 账号尚未绑定可用的 AIGC 企业主账号"
+    });
+  }
+
+  const datePay =
+    String(
+      req.query?.datePay || ""
+    ).trim();
+
+  const requestedPageSize =
+    Number.parseInt(
+      req.query?.pageSize,
+      10
+    );
+
+  const pageSize =
+    Number.isFinite(
+      requestedPageSize
+    )
+      ? Math.min(
+          Math.max(
+            requestedPageSize,
+            1
+          ),
+          100
+        )
+      : 100;
+
+  let rechargeResult = null;
+  let rechargeError = null;
+  let workspaceRestoreError = null;
+
+  try {
+    rechargeResult =
+      await aigcUserDataService
+        .getRechargeRecords(
+          masterAccountId,
+          {
+            datePay,
+            pageSize,
+
+            /*
+             * 只有用户明确点击
+             * Token 明细时才允许
+             * 建立用户数据登录。
+             */
+            allowLogin: true
+          }
+        );
+  } catch (error) {
+    rechargeError = error;
+  }
+
+  try {
+    /*
+     * 用户数据登录可能导致
+     * Workspace 管理端 Token 失效，
+     * 因此读取完成后重新建立管理端登录。
+     */
+    await aigcMasterProviderService
+      .syncBoundMasterProvider(
+        masterAccountId
+      );
+  } catch (error) {
+    workspaceRestoreError =
+      error;
+  } finally {
+    try {
+      /*
+       * 管理端重新登录后，
+       * 不保留可能已经失效的
+       * Access-Token-User。
+       */
+      aigcUserDataService
+        .clearUserDataToken(
+          masterAccountId
+        );
+    } catch (error) {
+      console.warn(
+        "清理 YiBai 用户端 Token 缓存失败：",
+        error.message
+      );
+    }
+  }
+
+  if (workspaceRestoreError) {
+    return res.status(500).json({
+      success: false,
+
+      message:
+        rechargeError
+          ? `Token 明细读取失败，且 Workspace 登录状态恢复失败：${workspaceRestoreError.message}`
+          : `Token 明细读取成功，但 Workspace 登录状态恢复失败：${workspaceRestoreError.message}`
+    });
+  }
+
+  if (rechargeError) {
+    return res.status(400).json({
+      success: false,
+
+      message:
+        `CL-AIGC Token 明细读取失败：${rechargeError.message}。Workspace 登录状态已恢复`
+    });
+  }
+
+  return res.json({
+    success: true,
+
+    message:
+      "Token 明细读取成功，Workspace 登录状态已恢复",
+
+    data: {
+      summary:
+        rechargeResult.summary,
+
+      records:
+        rechargeResult.records,
+
+      workspaceRestored:
+        true
+    }
+  });
+}
+
+
 async function listClBaseUsers(req, res) {
   try {
     const users = await userCsvModel.listUsers();
@@ -941,5 +1099,6 @@ module.exports = {
   listClBaseUsers,
   myAigcWorkspace,
   addMyWork,
-  unbindMasterProvider
+  unbindMasterProvider,
+  getMyRechargeRecords
 };

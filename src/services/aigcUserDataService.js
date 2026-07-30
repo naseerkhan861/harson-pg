@@ -467,6 +467,263 @@ function toNonNegativeNumber(
   return numericValue;
 }
 
+
+/**
+ * 将 CL-AIGC 充值订单转换为
+ * Harson-Base 前端可安全使用的结构。
+ */
+function normalizeRechargeRecord(
+  record = {}
+) {
+  return {
+    orderId:
+      String(
+        record.orderId ?? ""
+      ).trim(),
+
+    orderSn:
+      String(
+        record.orderSn ?? ""
+      ).trim(),
+
+    productName:
+      String(
+        record.productName || ""
+      ).trim(),
+
+    orderAmount:
+      toNonNegativeNumber(
+        record.orderAmount
+      ),
+
+    tokenAmount:
+      toNonNegativeNumber(
+        record.productNum
+      ),
+
+    datePay:
+      String(
+        record.datePay || ""
+      ).trim(),
+
+    dateBegin:
+      String(
+        record.dateBegin || ""
+      ).trim(),
+
+    dateEnd:
+      String(
+        record.dateEnd || ""
+      ).trim(),
+
+    companyId:
+      String(
+        record.companyId ?? ""
+      ).trim(),
+
+    memberId:
+      String(
+        record.memberId ?? ""
+      ).trim(),
+
+    service:
+      String(
+        record.service || ""
+      ).trim(),
+
+    payWay:
+      String(
+        record.payWay || ""
+      ).trim()
+  };
+}
+
+/**
+ * 同一订单优先使用 orderId 去重，
+ * 没有 orderId 时使用 orderSn。
+ *
+ * 后出现的数据覆盖前面的数据，
+ * 后出现的数据覆盖前面的数据。
+ */
+function deduplicateRechargeRecords(
+  records
+) {
+  const recordMap =
+    new Map();
+
+  records.forEach(
+    (
+      rawRecord,
+      index
+    ) => {
+      const record =
+        normalizeRechargeRecord(
+          rawRecord
+        );
+
+      const key =
+        record.orderId ||
+        record.orderSn ||
+        [
+          "fallback",
+          record.datePay,
+          record.memberId,
+          record.tokenAmount,
+          record.orderAmount,
+          index
+        ].join(":");
+
+      recordMap.set(
+        key,
+        record
+      );
+    }
+  );
+
+  return Array.from(
+    recordMap.values()
+  );
+}
+
+/**
+ * 读取当前企业可见的
+ * 真实充值订单记录。
+ *
+ * 默认 allowLogin=false：
+ * 页面普通加载不会自动切换用户数据登录态。
+ *
+ * 只有用户明确触发 Token 明细时，
+ * Controller 才可以传 allowLogin=true，
+ * 并在读取完成后恢复 Workspace 登录态。
+ */
+async function getRechargeRecords(
+  masterAccountId,
+  {
+    datePay = "",
+    pageSize = 100,
+    allowLogin = false
+  } = {}
+) {
+  const tokenContext =
+    await getValidUserDataToken(
+      masterAccountId,
+      {
+        allowLogin
+      }
+    );
+
+  if (!tokenContext.success) {
+    throw new Error(
+      tokenContext.message ||
+      "无法建立 CL-AIGC 用户数据登录状态"
+    );
+  }
+
+  const rechargeResponse =
+    await yibaiUserDataClient
+      .selectAllRecharge(
+        tokenContext.token,
+        {
+          datePay,
+          pageSize
+        }
+      );
+
+  if (
+    !isSuccessfulResponse(
+      rechargeResponse
+    )
+  ) {
+    if (
+      Number(
+        rechargeResponse?.code
+      ) === 601
+    ) {
+      userTokenCacheModel
+        .removeTokenCache(
+          tokenContext
+            .masterAccountId
+        );
+    }
+
+    throw new Error(
+      getResponseMessage(
+        rechargeResponse,
+        "读取 CL-AIGC Token 充值记录失败"
+      )
+    );
+  }
+
+  const rawRecords =
+    Array.isArray(
+      rechargeResponse.result
+    )
+      ? rechargeResponse.result
+      : [];
+
+  const records =
+    deduplicateRechargeRecords(
+      rawRecords
+    )
+      .sort(
+        (
+          left,
+          right
+        ) =>
+          right.datePay
+            .localeCompare(
+              left.datePay
+            )
+      );
+
+  const totalPaidAmount =
+    records.reduce(
+      (
+        total,
+        record
+      ) =>
+        total +
+        record.orderAmount,
+      0
+    );
+
+  const totalTokenAmount =
+    records.reduce(
+      (
+        total,
+        record
+      ) =>
+        total +
+        record.tokenAmount,
+      0
+    );
+
+  return {
+    masterAccountId:
+      tokenContext
+        .masterAccountId,
+
+    providerAccount:
+      tokenContext
+        .providerAccount,
+
+    tokenSource:
+      tokenContext.source,
+
+    summary: {
+      totalOrders:
+        records.length,
+
+      totalPaidAmount,
+
+      totalTokenAmount
+    },
+
+    records
+  };
+}
+
+
 function taskStatusLabel(
   status
 ) {
@@ -655,7 +912,7 @@ async function getCompanyTaskSnapshot(
   if (!tokenContext.success) {
     throw new Error(
       tokenContext.message ||
-      "无法建立 YiBai 用户数据登录状态"
+      "无法建立 CL-AIGC 用户数据登录状态"
     );
   }
 
@@ -984,7 +1241,7 @@ async function getMemberTaskSnapshot(
   if (!tokenContext.success) {
     throw new Error(
       tokenContext.message ||
-      "无法建立 YiBai 用户数据登录状态"
+      "无法建立 CL-AIGC 用户数据登录状态"
     );
   }
 
@@ -1141,5 +1398,6 @@ module.exports = {
   getCompanyTaskSnapshot,
   getMemberTaskSnapshot,
   syncCompanyTaskSnapshot,
-  clearUserDataToken
+  clearUserDataToken,
+  getRechargeRecords
 };

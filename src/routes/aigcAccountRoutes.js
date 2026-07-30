@@ -24,6 +24,12 @@ router.post(
   sessionController.refreshSession
 );
 
+router.get(
+  "/my-workspace/recharge-records",
+  requireAuth,
+  controller.getMyRechargeRecords
+);
+
 router.get("/admin/dashboard", requireAuth, requireAdmin, controller.dashboard);
 router.get("/admin/aigc-center", requireAuth, requireAdmin, controller.aigcCenter);
 router.post("/admin/token-purchases", requireAuth, requireAdmin, controller.purchaseTokens);

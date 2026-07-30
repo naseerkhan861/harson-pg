@@ -8,7 +8,7 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <title>CL-Base Token 购买</title>
+  <title>CL-AIGC 购买中心</title>
 
   <link
     rel="stylesheet"
@@ -22,258 +22,504 @@
 </head>
 
 <body>
-  <div class="purchase-shell">
-    <header class="purchase-header">
+  <div class="purchase-app">
+    <header class="topbar">
       <a
         class="back-link"
         href="/aigc-workspace.html"
       >
-        ← 返回 CL-Base 工作空间
+        <span aria-hidden="true">←</span>
+        返回 CL-AIGC 工作空间
       </a>
 
-      <span class="platform-label">
-        HARSON-BASE
+      <div class="brand">
+        <span>CL-AIGC</span>
+        <strong>购买中心</strong>
+      </div>
+
+      <span class="beta-badge">
+        测试版
       </span>
-
-      <h1>Token 购买</h1>
-
-      <p>
-        购买 Token 后，可用于 CL-Base
-        图片、视频和其他 AIGC 功能。
-      </p>
     </header>
 
-    <main class="purchase-main">
-      <section class="balance-card">
-        <div>
-          <span class="section-label">
-            当前 Token 余额
+    <nav
+      class="purchase-tabs"
+      role="tablist"
+      aria-label="购买中心分类"
+    >
+      <button
+        id="personalTab"
+        class="purchase-tab"
+        type="button"
+        role="tab"
+        aria-selected="false"
+        aria-controls="personalPanel"
+        data-tab="personal"
+      >
+        个人会员
+      </button>
+
+      <button
+        id="enterpriseTab"
+        class="purchase-tab"
+        type="button"
+        role="tab"
+        aria-selected="false"
+        aria-controls="enterprisePanel"
+        data-tab="enterprise"
+      >
+        企业会员
+      </button>
+
+      <button
+        id="tokenTab"
+        class="purchase-tab is-active"
+        type="button"
+        role="tab"
+        aria-selected="true"
+        aria-controls="tokenPanel"
+        data-tab="token"
+      >
+        Token 加油包
+      </button>
+    </nav>
+
+    <main class="purchase-content">
+      <section
+        id="personalPanel"
+        class="tab-panel"
+        role="tabpanel"
+        aria-labelledby="personalTab"
+        data-panel="personal"
+        hidden
+      >
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">
+              PERSONAL MEMBERSHIP
+            </span>
+
+            <h1>个人会员</h1>
+
+            <p>
+              根据个人创作频率选择会员方案。
+              当前为测试版，会员支付暂未开放。
+            </p>
+          </div>
+
+          <span class="status-badge">
+            会员方案展示
+          </span>
+        </div>
+
+        <div
+          id="membershipGrid"
+          class="membership-grid"
+        ></div>
+      </section>
+
+      <section
+        id="enterprisePanel"
+        class="tab-panel"
+        role="tabpanel"
+        aria-labelledby="enterpriseTab"
+        data-panel="enterprise"
+        hidden
+      >
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">
+              ENTERPRISE MEMBERSHIP
+            </span>
+
+            <h1>企业会员</h1>
+
+            <p>
+              面向团队的统一账号、共享 Token、
+              配额管理和培训支持方案。
+            </p>
+          </div>
+
+          <span class="status-badge">
+            企业专属方案
+          </span>
+        </div>
+
+        <section class="enterprise-card">
+          <div class="enterprise-copy">
+            <span class="enterprise-label">
+              HARSON-BASE ENTERPRISE
+            </span>
+
+            <h2>
+              企业会员包含个人会员权益，
+              并提供团队级账号与 Token 管理能力
+            </h2>
+
+            <ul class="enterprise-benefits">
+              <li>
+                <span>✓</span>
+                企业主账号和内部子账号统一管理
+              </li>
+
+              <li>
+                <span>✓</span>
+                支持多席位同时使用共享 Token
+              </li>
+
+              <li>
+                <span>✓</span>
+                支持子账号 Token 配额和余额预警
+              </li>
+
+              <li>
+                <span>✓</span>
+                支持企业创作任务和使用记录汇总
+              </li>
+
+              <li>
+                <span>✓</span>
+                提供产品培训、用户培训和上线支持
+              </li>
+            </ul>
+
+            <button
+              id="enterpriseConsultButton"
+              class="enterprise-button"
+              type="button"
+            >
+              咨询企业会员
+            </button>
+          </div>
+
+          <div class="consult-card">
+            <div class="consult-code">
+              <span>企业咨询</span>
+              <small>二维码待配置</small>
+            </div>
+
+            <strong>
+              联系企业服务顾问
+            </strong>
+
+            <p>
+              正式上线前，在此处配置企业客服二维码。
+            </p>
+          </div>
+        </section>
+      </section>
+
+      <section
+        id="tokenPanel"
+        class="tab-panel is-active"
+        role="tabpanel"
+        aria-labelledby="tokenTab"
+        data-panel="token"
+      >
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">
+              TOKEN TOP-UP
+            </span>
+
+            <h1>Token 加油包</h1>
+
+            <p>
+              Token 可用于 CL-AIGC
+              图片、视频和其他工具创造。
+            </p>
+          </div>
+
+          <span class="status-badge">
+            测试版 · 暂未接入支付
+          </span>
+        </div>
+
+        <section class="balance-card">
+          <div class="balance-total-block">
+            <span class="balance-label">
+              当前 Token 余额
+            </span>
+
+            <div class="balance-value">
+              <span
+                class="token-icon token-icon-large"
+                aria-hidden="true"
+              >
+                ⚡
+              </span>
+
+              <strong id="currentTokenBalance">
+                --
+              </strong>
+            </div>
+          </div>
+
+          <span
+            class="balance-symbol"
+            aria-hidden="true"
+          >
+            =
           </span>
 
-          <div class="balance-value">
+          <div class="balance-parts">
+            <div>
+              <span>账户 Token</span>
+
+              <strong id="accountTokenBalance">
+                --
+              </strong>
+            </div>
+
             <span
-              class="token-icon"
+              class="balance-symbol"
               aria-hidden="true"
             >
-              ⚡
+              +
             </span>
 
-            <strong id="currentTokenBalance">
-              --
-            </strong>
-          </div>
-        </div>
+            <div>
+              <span>赠送 Token</span>
 
-        <button
-          class="details-button"
-          type="button"
-          disabled
-        >
-          Token 明细
-        </button>
-      </section>
-
-      <section class="package-section">
-        <div class="section-heading">
-          <div>
-            <span class="section-label">
-              选择购买套餐
-            </span>
-
-            <h2>Token 加油包</h2>
-          </div>
-
-          <span class="temporary-badge">
-            测试页面
-          </span>
-        </div>
-
-        <div class="package-grid">
-          <button
-            class="package-card"
-            type="button"
-            data-token="100"
-            data-price="10"
-          >
-            <span class="package-token">
-              <span
-                class="package-token-icon"
-                aria-hidden="true"
-              >
-                ⚡
-              </span>
-
-              <span>100</span>
-            </span>
-
-            <span class="package-price">
-              ¥10
-            </span>
-          </button>
-
-          <button
-            class="package-card"
-            type="button"
-            data-token="500"
-            data-price="50"
-          >
-            <span class="package-token">
-              <span
-                class="package-token-icon"
-                aria-hidden="true"
-              >
-                ⚡
-              </span>
-
-              <span>500</span>
-            </span>
-
-            <span class="package-price">
-              ¥50
-            </span>
-          </button>
-
-          <button
-            class="package-card"
-            type="button"
-            data-token="1000"
-            data-price="100"
-          >
-            <span class="package-token">
-              <span
-                class="package-token-icon"
-                aria-hidden="true"
-              >
-                ⚡
-              </span>
-
-              <span>1,000</span>
-            </span>
-
-            <span class="package-price">
-              ¥100
-            </span>
-          </button>
-
-          <button
-            class="package-card"
-            type="button"
-            data-token="2100"
-            data-price="200"
-          >
-            <span class="package-token">
-              <span
-                class="package-token-icon"
-                aria-hidden="true"
-              >
-                ⚡
-              </span>
-
-              <span>2,000</span>
-
-              <small>+100</small>
-            </span>
-
-            <span class="package-price">
-              ¥200
-            </span>
-          </button>
-
-          <button
-            class="package-card"
-            type="button"
-            data-token="5250"
-            data-price="500"
-          >
-            <span class="package-token">
-              <span
-                class="package-token-icon"
-                aria-hidden="true"
-              >
-                ⚡
-              </span>
-
-              <span>5,000</span>
-
-              <small>+250</small>
-            </span>
-
-            <span class="package-price">
-              ¥500
-            </span>
-          </button>
-
-          <button
-            class="package-card selected"
-            type="button"
-            data-token="11000"
-            data-price="1000"
-          >
-            <span class="package-token">
-              <span
-                class="package-token-icon"
-                aria-hidden="true"
-              >
-                ⚡
-              </span>
-
-              <span>10,000</span>
-
-              <small>+1,000</small>
-            </span>
-
-            <span class="package-price">
-              ¥1,000
-            </span>
-          </button>
-        </div>
-      </section>
-
-      <section class="payment-section">
-        <label class="agreement-row">
-          <input
-            id="agreementCheckbox"
-            type="checkbox"
-          >
-
-          <span>
-            我已阅读并同意用户服务协议、
-            付费服务协议和隐私政策
-          </span>
-        </label>
-
-        <div class="payment-summary">
-          <div>
-            <span>本次购买</span>
-
-            <strong id="selectedToken">
-              11,000 Token
-            </strong>
-          </div>
-
-          <div>
-            <span>应付金额</span>
-
-            <strong id="selectedPrice">
-              ¥1,000
-            </strong>
+              <strong id="bonusTokenBalance">
+                0
+              </strong>
+            </div>
           </div>
 
           <button
-            id="testPaymentButton"
-            class="payment-button"
+            id="tokenDetailsButton"
+            class="details-button"
             type="button"
           >
-            确认购买
+            Token 明细
+            <span aria-hidden="true">›</span>
           </button>
-        </div>
+        </section>
 
-        <p class="payment-notice">
-          当前为前端测试页面，尚未接入支付宝、
-          微信支付或真实 Token 充值接口。
-        </p>
+        <section class="package-section">
+          <div class="section-heading">
+            <div>
+              <span class="section-label">
+                选择充值金额
+              </span>
+
+              <h2>购买 Token</h2>
+            </div>
+
+            <div class="selected-summary">
+              <span>本次获得</span>
+
+              <strong id="selectedToken">
+                11,000 Token
+              </strong>
+            </div>
+          </div>
+
+          <div
+            id="packageGrid"
+            class="package-grid"
+          ></div>
+
+          <p class="package-notice">
+            温馨提示：Token 不可兑换会员、转赠或提现。
+            当前页面不会产生真实扣款或充值。
+          </p>
+        </section>
+
+        <section class="payment-bar">
+          <label class="agreement-row">
+            <input
+              id="agreementCheckbox"
+              type="checkbox"
+            >
+
+            <span>
+              我已阅读并同意
+              <a href="#" data-agreement="用户服务协议">
+                用户服务协议
+              </a>
+              、
+              <a href="#" data-agreement="付费服务协议">
+                付费服务协议
+              </a>
+              和
+              <a href="#" data-agreement="隐私政策">
+                隐私政策
+              </a>
+            </span>
+          </label>
+
+          <div class="payment-actions">
+            <div class="payment-total">
+              <span>共付款</span>
+
+              <strong id="selectedPrice">
+                ¥1,000
+              </strong>
+            </div>
+
+            <button
+              class="payment-button alipay-button"
+              type="button"
+              data-payment-method="支付宝"
+              disabled
+            >
+              <span aria-hidden="true">支</span>
+              支付宝支付
+            </button>
+
+            <button
+              class="payment-button wechat-button"
+              type="button"
+              data-payment-method="微信"
+              disabled
+            >
+              <span aria-hidden="true">微</span>
+              微信支付
+            </button>
+          </div>
+        </section>
       </section>
     </main>
   </div>
+
+  <div
+    id="tokenDetailsModal"
+    class="token-details-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="tokenDetailsTitle"
+    hidden
+  >
+    <button
+      class="token-details-backdrop"
+      type="button"
+      data-close-token-details
+      aria-label="关闭 Token 明细"
+    ></button>
+
+    <section class="token-details-dialog">
+      <header class="token-details-header">
+        <div>
+          <span class="eyebrow">
+            TOKEN RECORDS
+          </span>
+
+          <h2 id="tokenDetailsTitle">
+            Token 明细
+          </h2>
+
+          <p>
+            显示当前企业的真实 Token 充值记录。
+          </p>
+        </div>
+
+        <button
+          id="tokenDetailsCloseButton"
+          class="token-details-close"
+          type="button"
+          data-close-token-details
+          aria-label="关闭"
+        >
+          ×
+        </button>
+      </header>
+
+      <div
+        id="tokenDetailsLoading"
+        class="token-details-state"
+        hidden
+      >
+        正在读取 Token 明细……
+      </div>
+
+      <div
+        id="tokenDetailsError"
+        class="token-details-state token-details-error"
+        hidden
+      ></div>
+
+      <div
+        id="tokenDetailsEmpty"
+        class="token-details-state"
+        hidden
+      >
+        当前没有可显示的 Token 充值记录。
+      </div>
+
+      <div
+        id="tokenDetailsContent"
+        class="token-details-content"
+        hidden
+      >
+        <div class="token-details-summary">
+          <article>
+            <span>充值订单</span>
+
+            <strong id="tokenDetailsOrderCount">
+              0
+            </strong>
+          </article>
+
+          <article>
+            <span>累计支付</span>
+
+            <strong id="tokenDetailsPaidAmount">
+              ¥0
+            </strong>
+          </article>
+
+          <article>
+            <span>累计获得 Token</span>
+
+            <strong id="tokenDetailsTokenAmount">
+              0
+            </strong>
+          </article>
+        </div>
+
+        <div class="token-details-table-wrap">
+          <table class="token-details-table">
+            <thead>
+              <tr>
+                <th>订单号</th>
+                <th>充值套餐</th>
+                <th>Token 数量</th>
+                <th>支付金额</th>
+                <th>支付方式</th>
+                <th>支付时间</th>
+                <th>有效期</th>
+              </tr>
+            </thead>
+
+            <tbody id="tokenDetailsTableBody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <footer class="token-details-footer">
+        <span>
+          读取完成后系统会恢复 Workspace 登录状态。
+        </span>
+
+        <button
+          id="tokenDetailsRefreshButton"
+          class="token-details-refresh"
+          type="button"
+        >
+          重新读取
+        </button>
+      </footer>
+    </section>
+  </div>
+
+  <div
+    id="purchaseToast"
+    class="purchase-toast"
+    role="status"
+    aria-live="polite"
+  ></div>
 </body>
 </html>
