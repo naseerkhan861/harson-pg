@@ -18,6 +18,9 @@ const DEFAULT_VIEW =
 const HOME_BANNER_INTERVAL_MS =
   4500;
 
+const TOKEN_BALANCE_POLL_INTERVAL_MS =
+  30 * 1000;
+
 const BACKGROUND_TOKEN_WAIT_MS =
   5000;
 
@@ -542,6 +545,12 @@ const TOOL_FILTERS = Object.freeze({
     ]
   }
 });
+
+let tokenBalancePollingTimerId =
+  null;
+
+let tokenBalancePollingRequestActive =
+  false;
 
 const state = {
   currentView:
@@ -2173,6 +2182,123 @@ function handleIframeMessage(
   }
 }
 
+
+/**
+ * 使用现有 Workspace Token
+ * 只读查询最新余额。
+ *
+ * 不会重新进行账号密码登录，
+ * 不会刷新或替换 iframe。
+ */
+async function fetchReadOnlyTokenBalance() {
+  if (
+    document.hidden ||
+    tokenBalancePollingRequestActive
+  ) {
+    return;
+  }
+
+  tokenBalancePollingRequestActive =
+    true;
+
+  try {
+    const response =
+      await fetch(
+        "/api/aigc/session/token-balance",
+        {
+          method: "GET",
+
+          credentials:
+            "include",
+
+          headers: {
+            Accept:
+              "application/json"
+          }
+        }
+      );
+
+    const data =
+      await readJsonResponse(
+        response
+      );
+
+    if (
+      response.status === 401
+    ) {
+      window.location.href =
+        "/login";
+
+      return;
+    }
+
+    if (
+      !response.ok ||
+      !data.success
+    ) {
+      console.warn(
+        "自动读取 Token 余额失败：",
+        data.message ||
+        response.status
+      );
+
+      return;
+    }
+
+    if (
+      data.result?.available !==
+      true
+    ) {
+      return;
+    }
+
+    updateTokenBalance(
+      data.result.tokenBalance
+    );
+  } catch (error) {
+    console.warn(
+      "自动读取 Token 余额失败：",
+      error
+    );
+  } finally {
+    tokenBalancePollingRequestActive =
+      false;
+  }
+}
+
+function stopTokenBalancePolling() {
+  if (
+    tokenBalancePollingTimerId ===
+    null
+  ) {
+    return;
+  }
+
+  window.clearInterval(
+    tokenBalancePollingTimerId
+  );
+
+  tokenBalancePollingTimerId =
+    null;
+}
+
+function startTokenBalancePolling() {
+  stopTokenBalancePolling();
+
+  /*
+   * 页面初始化时立即读取一次，
+   * 后续每 30 秒只读查询一次。
+   */
+  fetchReadOnlyTokenBalance();
+
+  tokenBalancePollingTimerId =
+    window.setInterval(
+      fetchReadOnlyTokenBalance,
+      TOKEN_BALANCE_POLL_INTERVAL_MS
+    );
+}
+
+
 function handleTokenBalanceClick() {
   window.location.href =
     "/cl-base-token-purchase.html";
@@ -2245,6 +2371,8 @@ function bindEvents() {
     () => {
       stopHomeBannerAutoPlay();
 
+      stopTokenBalancePolling();
+
       cancelBackgroundTokenSync({
         resetButton:
           false
@@ -2261,6 +2389,7 @@ function initializeWorkspace() {
   restoreTokenBalance();
   initializeHomeBanner();
   bindEvents();
+  startTokenBalancePolling();
 
   showLocalView(
     DEFAULT_VIEW

@@ -42,9 +42,12 @@ const MASTER_PROVIDER_HEADERS = [
 
 const ALLOWED_POINTS_FIELDS =
   new Set([
-    "companyMpoint",
-    "mpoint"
+    "balance",
+    "companyBalance",
+    "mpoint",
+    "companyMpoint"
   ]);
+
 
 function now() {
   return new Date().toISOString();
@@ -72,7 +75,7 @@ function normalizePointsField(
   const normalizedValue =
     String(
       value ||
-      "companyMpoint"
+      "balance"
     ).trim();
 
   if (
@@ -81,12 +84,13 @@ function normalizePointsField(
     )
   ) {
     throw new Error(
-      "YiBai点数字段只能是 companyMpoint 或 mpoint"
+      "YiBai点数字段只能是 balance、companyBalance、mpoint 或 companyMpoint"
     );
   }
 
   return normalizedValue;
 }
+
 
 function normalizeCredits(
   value
@@ -236,7 +240,7 @@ function toSafeRecord(
 
     pointsField:
       record.pointsField ||
-      "companyMpoint",
+      "balance",
 
     syncedTotalCredits:
       normalizeCredits(
@@ -659,10 +663,57 @@ function disableMasterProviderConfig(
   return true;
 }
 
+
+/**
+ * 正式删除 YiBai 外部账号绑定。
+ *
+ * 删除内容包括：
+ * - YiBai 外部账号
+ * - 加密密码
+ * - 点数字段配置
+ * - 外部企业信息
+ * - 最近同步快照
+ *
+ * 不删除 Harson-Base 企业主账号。
+ */
+function removeMasterProviderConfig(
+  masterAccountId
+) {
+  const normalizedMasterAccountId =
+    requireText(
+      masterAccountId,
+      "AIGC企业主账号ID"
+    );
+
+  const rows =
+    readRows();
+
+  const remainingRows =
+    rows.filter(
+      item =>
+        item.masterAccountId !==
+        normalizedMasterAccountId
+    );
+
+  const removed =
+    remainingRows.length !==
+    rows.length;
+
+  if (removed) {
+    writeRows(
+      remainingRows
+    );
+  }
+
+  return removed;
+}
+
+
 module.exports = {
   listMasterProviderConfigs,
   getProviderConfigByMasterAccountId,
   upsertMasterProviderConfig,
   updateProviderSyncSnapshot,
-  disableMasterProviderConfig
+  disableMasterProviderConfig,
+  removeMasterProviderConfig
 };

@@ -53,7 +53,6 @@ export class AccountManagementView {
         workspaceResult.data
       );
 
-      this.bindWorkForm();
       return;
     }
 
@@ -222,12 +221,20 @@ export class AccountManagementView {
             name="pointsField"
             required
           >
-            <option value="companyMpoint">
-              companyMpoint（企业总点数）
+            <option value="balance">
+              balance（当前账号余额）
+            </option>
+
+            <option value="companyBalance">
+              companyBalance（企业余额）
             </option>
 
             <option value="mpoint">
               mpoint（成员点数）
+            </option>
+
+            <option value="companyMpoint">
+              companyMpoint（企业点数）
             </option>
           </select>
 
@@ -425,14 +432,56 @@ export class AccountManagementView {
         "accountApp"
       );
 
-    const mapping = data.mapping;
-    const works = data.works || [];
+    const mapping =
+      data?.mapping || null;
+
+    const works =
+      Array.isArray(
+        data?.works
+      )
+        ? data.works
+        : [];
+
+    const taskSummary = {
+      totalTasks: 0,
+      successfulTasks: 0,
+      failedTasks: 0,
+      processingTasks: 0,
+      deductedTokens: 0,
+      refundedTokens: 0,
+      netUsedTokens: 0,
+      ...(data?.taskSummary || {})
+    };
+
+    const taskSync = {
+      status:
+        "not_synced",
+
+      memberId:
+        null,
+
+      latestSyncedAt:
+        null,
+
+      source:
+        "yibai_snapshot",
+
+      ...(data?.taskSync || {})
+    };
 
     const subAccount =
-      mapping &&
-      mapping.aigcSubAccount
-        ? mapping.aigcSubAccount
-        : null;
+      mapping?.aigcSubAccount ||
+      null;
+
+    const masterAccount =
+      mapping?.masterAccount ||
+      null;
+
+    const mappingReady =
+      Boolean(
+        subAccount &&
+        masterAccount
+      );
 
     app.innerHTML = `
       <section class="account-hero-card">
@@ -443,8 +492,9 @@ export class AccountManagementView {
 
           <p>
             当前页面只显示与你的 Harson-Base
-            账号绑定的 AIGC 子账号和作品，
-            不会显示其他子账号的创作内容
+            账号绑定的 AIGC 子账号，以及从
+            YiBai 同步的真实任务和 Token
+            使用情况
           </p>
         </div>
 
@@ -462,27 +512,27 @@ export class AccountManagementView {
         </h2>
 
         ${
-          mapping
+          mappingReady
             ? `
               <div class="mapping-card">
                 <strong>
                   AIGC 子账号：
                 </strong>
-                ${mapping.aigcSubAccount.subAccountName}
+                ${subAccount.subAccountName || "-"}
                 <br/>
 
                 <strong>
                   AIGC 登录名：
                 </strong>
-                ${mapping.aigcSubAccount.platformLogin}
+                ${subAccount.platformLogin || "-"}
                 <br/>
 
                 <strong>
                   企业主账号：
                 </strong>
-                ${mapping.masterAccount.enterpriseName}
+                ${masterAccount.enterpriseName || "-"}
                 /
-                ${mapping.masterAccount.platformName}
+                ${masterAccount.platformName || "-"}
               </div>
             `
             : `
@@ -495,12 +545,27 @@ export class AccountManagementView {
         }
       </section>
 
+      <section class="account-panel">
+        <h2>
+          真实数据同步状态
+        </h2>
+
+        ${this.taskSyncMessage(
+          taskSync
+        )}
+
+        ${this.taskSummaryTable(
+          taskSummary,
+          taskSync
+        )}
+      </section>
+
       ${
         subAccount
           ? `
             <section class="account-panel">
               <h2>
-                我的 AIGC token 使用情况
+                我的 AIGC Token 使用情况
               </h2>
 
               ${this.tokenWarningBox(
@@ -512,7 +577,7 @@ export class AccountManagementView {
                   ${this.rows(
                     [
                       "Token 配额",
-                      "已使用",
+                      "真实净消耗",
                       "剩余",
                       "已使用率",
                       "剩余率",
@@ -521,17 +586,17 @@ export class AccountManagementView {
                     ],
                     [
                       [
-                        subAccount.tokenLimit,
-                        subAccount.usedTokens,
-                        subAccount.remainingTokens,
-                        `${subAccount.usageRate}%`,
+                        subAccount.tokenLimit ?? 0,
+                        subAccount.usedTokens ?? 0,
+                        subAccount.remainingTokens ?? 0,
+                        `${subAccount.usageRate ?? 0}%`,
                         `${
                           subAccount.remainingRate ??
                           this.calculateRemainingRate(
                             subAccount
                           )
                         }%`,
-                        `${subAccount.warningThreshold}%`,
+                        `${subAccount.warningThreshold ?? 0}%`,
                         this.tokenStatusLabel(
                           subAccount.warningStatus
                         )
@@ -547,68 +612,21 @@ export class AccountManagementView {
 
       <section class="account-panel">
         <h2>
-          新增创作记录
-        </h2>
-
-        <p>
-          这里模拟保存 AIGC 创作记录，保存后
-          仅当前绑定子账号可见，并会计入当前
-          子账号 token 使用量
-        </p>
-
-        <div
-          id="workMessage"
-          class="auth-message"
-        ></div>
-
-        <form
-          id="workForm"
-          class="management-form"
-        >
-          <input
-            name="title"
-            placeholder="作品标题"
-            required
-          />
-
-          <input
-            name="workType"
-            placeholder="作品类型，例如 AI 模特图 / 品牌海报"
-            required
-          />
-
-          <input
-            name="creditCost"
-            type="number"
-            min="0"
-            placeholder="消耗 token"
-          />
-
-          <textarea
-            name="promptSummary"
-            placeholder="提示词摘要 / 创作说明"
-          ></textarea>
-
-          <button
-            type="submit"
-            ${mapping ? "" : "disabled"}
-          >
-            保存创作记录
-          </button>
-        </form>
-      </section>
-
-      <section class="account-panel">
-        <h2>
-          我的创作记录
+          我的真实创作记录
         </h2>
 
         ${
           works.length
-            ? this.worksTable(works)
+            ? `
+              <div class="table-wrap">
+                ${this.worksTable(
+                  works
+                )}
+              </div>
+            `
             : `
               <p class="muted">
-                暂无创作记录
+                暂无已同步的真实创作记录
               </p>
             `
         }
@@ -723,6 +741,8 @@ export class AccountManagementView {
     );
 
     this.bindProviderSyncButtons();
+    this.bindUserDataSyncButtons();
+    this.bindProviderUnbindButtons();
   }
 
   bindProviderSyncButtons() {
@@ -788,59 +808,157 @@ export class AccountManagementView {
       });
   }
 
-  bindWorkForm() {
-    const form =
-      document.getElementById(
-        "workForm"
-      );
+  bindUserDataSyncButtons() {
+    document
+      .querySelectorAll(
+        ".sync-user-data-btn"
+      )
+      .forEach(button => {
+        button.addEventListener(
+          "click",
+          async () => {
+            const masterAccountId =
+              String(
+                button.dataset
+                  .masterAccountId || ""
+              ).trim();
 
-    if (!form) {
-      return;
-    }
+            if (!masterAccountId) {
+              this.showLocalMessage(
+                "providerBindingMessage",
+                "缺少企业主账号 ID",
+                false
+              );
 
-    form.addEventListener(
-      "submit",
-      async event => {
-        event.preventDefault();
+              return;
+            }
 
-        const result =
-          await this.vm.addWork(
-            this.formToObject(form)
-          );
+            const confirmed =
+              window.confirm(
+                "同步真实创作记录期间，系统会临时切换 YiBai 登录状态，并在完成后恢复 Workspace。是否继续？"
+              );
 
-        const box =
-          document.getElementById(
-            "workMessage"
-          );
+            if (!confirmed) {
+              return;
+            }
 
-        if (box) {
-          box.textContent =
-            result.message ||
-            "操作失败，请稍后重试";
+            const originalText =
+              button.textContent;
 
-          box.className =
-            result.success
-              ? "auth-message success"
-              : "auth-message error";
+            button.disabled = true;
+            button.textContent =
+              "同步创作记录中...";
 
-          box.style.display = "block";
-        } else {
-          this.flash(
-            result.message,
-            result.success
-          );
-        }
+            const result =
+              await this.vm
+                .syncMasterUserData(
+                  masterAccountId
+                );
 
-        if (result.success) {
-          setTimeout(
-            async () => {
-              await this.load();
-            },
-            2000
-          );
-        }
-      }
-    );
+            this.showLocalMessage(
+              "providerBindingMessage",
+              result.message,
+              result.success
+            );
+
+            if (result.success) {
+              setTimeout(
+                async () => {
+                  await this.load();
+                },
+                800
+              );
+
+              return;
+            }
+
+            button.disabled = false;
+            button.textContent =
+              originalText;
+          }
+        );
+      });
+  }
+
+  bindProviderUnbindButtons() {
+    document
+      .querySelectorAll(
+        ".unbind-provider-btn"
+      )
+      .forEach(button => {
+        button.addEventListener(
+          "click",
+          async () => {
+            const masterAccountId =
+              String(
+                button.dataset
+                  .masterAccountId || ""
+              ).trim();
+
+            if (!masterAccountId) {
+              this.showLocalMessage(
+                "providerBindingMessage",
+                "缺少企业主账号 ID",
+                false
+              );
+
+              return;
+            }
+
+            const confirmed =
+              window.confirm(
+                "解绑后，当前企业的 YiBai 登录状态、真实任务快照、主账号点数和所有子账号 Token 配额都会清零。Harson-Base 账号与用户映射会保留。确定继续吗？"
+              );
+
+            if (!confirmed) {
+              return;
+            }
+
+            const secondConfirmed =
+              window.confirm(
+                "此操作会删除已保存的 YiBai 加密凭据。重新绑定时需要再次填写 YiBai 账号和密码。确认解绑？"
+              );
+
+            if (!secondConfirmed) {
+              return;
+            }
+
+            const originalText =
+              button.textContent;
+
+            button.disabled = true;
+            button.textContent =
+              "解绑中...";
+
+            const result =
+              await this.vm
+                .unbindMasterProvider(
+                  masterAccountId
+                );
+
+            this.showLocalMessage(
+              "providerBindingMessage",
+              result.message,
+              result.success
+            );
+
+            if (result.success) {
+              setTimeout(
+                async () => {
+                  await this.load();
+                },
+                800
+              );
+
+              return;
+            }
+
+            button.disabled = false;
+            button.textContent =
+              originalText;
+          }
+        );
+      });
   }
 
   bindForm(
@@ -1113,13 +1231,33 @@ export class AccountManagementView {
           binding.lastSyncedAt ||
             "尚未同步",
           `
-            <button
-              type="button"
-              class="btn-outline sync-provider-btn"
-              data-master-account-id="${binding.masterAccountId}"
+            <div
+              class="provider-action-group"
             >
-              重新同步
-            </button>
+              <button
+                type="button"
+                class="btn-outline sync-provider-btn"
+                data-master-account-id="${binding.masterAccountId}"
+              >
+                重新同步点数
+              </button>
+
+              <button
+                type="button"
+                class="btn-outline sync-user-data-btn"
+                data-master-account-id="${binding.masterAccountId}"
+              >
+                同步创作记录
+              </button>
+
+              <button
+                type="button"
+                class="btn-outline unbind-provider-btn"
+                data-master-account-id="${binding.masterAccountId}"
+              >
+                解绑 YiBai
+              </button>
+            </div>
           `
         ];
       }
@@ -1341,28 +1479,160 @@ export class AccountManagementView {
     `;
   }
 
-      worksTable(works) {
-        return `
-          <table>
-            ${this.rows(
+      taskSyncMessage(
+    taskSync
+  ) {
+    const status =
+      String(
+        taskSync?.status ||
+        "not_synced"
+      );
+
+    const latestSyncedAt =
+      taskSync?.latestSyncedAt ||
+      "尚未同步";
+
+    if (status === "resolved") {
+      return `
+        <div class="auth-message success">
+          当前数据来自 YiBai 真实任务快照。
+          最近同步时间：${latestSyncedAt}
+        </div>
+      `;
+    }
+
+    if (status === "mapping_missing") {
+      return `
+        <div class="auth-message error">
+          当前账号尚未建立完整的
+          Harson-Base 与 AIGC 子账号映射
+        </div>
+      `;
+    }
+
+    if (status === "identity_missing") {
+      return `
+        <div class="auth-message error">
+          当前映射缺少 AIGC 登录名或
+          子账号名称，无法匹配真实任务
+        </div>
+      `;
+    }
+
+    if (status === "member_unresolved") {
+      return `
+        <div class="auth-message error">
+          已读取 YiBai 任务快照，但没有找到
+          与当前账号匹配的 YiBai 成员
+        </div>
+      `;
+    }
+
+    if (status === "member_ambiguous") {
+      return `
+        <div class="auth-message error">
+          当前账号匹配到多个 YiBai 成员，
+          为防止数据泄露，暂不显示任务
+        </div>
+      `;
+    }
+
+    return `
+      <div class="auth-message error">
+        管理员尚未同步 YiBai 真实创作记录
+      </div>
+    `;
+  }
+
+  taskSummaryTable(
+    taskSummary,
+    taskSync
+  ) {
+    return `
+      <div class="table-wrap">
+        <table>
+          ${this.rows(
+            [
+              "任务总数",
+              "成功",
+              "失败",
+              "处理中",
+              "累计扣除",
+              "累计退回",
+              "真实净消耗",
+              "最近同步时间"
+            ],
+            [
               [
-                "标题",
-                "类型",
-                "消耗 token",
-                "创建时间"
-              ],
-              works.map(
-                item => [
-                  item.title,
-                  item.workType,
-                  item.creditCost,
-                  item.createdAt
-                ]
-              )
-            )}
-          </table>
-        `;
-      }
+                taskSummary.totalTasks ?? 0,
+                taskSummary.successfulTasks ?? 0,
+                taskSummary.failedTasks ?? 0,
+                taskSummary.processingTasks ?? 0,
+                taskSummary.deductedTokens ?? 0,
+                taskSummary.refundedTokens ?? 0,
+                taskSummary.netUsedTokens ?? 0,
+                taskSync.latestSyncedAt ||
+                  "尚未同步"
+              ]
+            ]
+          )}
+        </table>
+      </div>
+    `;
+  }
+
+  worksTable(works) {
+    return `
+      <table>
+        ${this.rows(
+          [
+            "任务标题",
+            "任务类型",
+            "状态",
+            "YiBai 使用成员",
+            "净消耗 Token",
+            "完成或创建时间"
+          ],
+          works.map(
+            item => [
+              item.title ||
+                "AIGC 创作任务",
+
+              item.workType ||
+                "AIGC",
+
+              item.statusLabel ||
+                this.realTaskStatusLabel(
+                  item.status
+                ),
+
+              item.memberName ||
+                "-",
+
+              item.creditCost ?? 0,
+
+              item.createdAt ||
+                "-"
+            ]
+          )
+        )}
+      </table>
+    `;
+  }
+
+  realTaskStatusLabel(
+    status
+  ) {
+    if (status === "O") {
+      return "成功";
+    }
+
+    if (status === "R") {
+      return "失败";
+    }
+
+    return "处理中";
+  }
 
   calculateRemainingRate(
     subAccount

@@ -1,7 +1,15 @@
 const aigcAccountModel = require("../models/aigcAccountCsvModel");
+
+const taskSnapshotModel = require(
+  "../models/aigcTaskSnapshotCsvModel"
+);
 const userCsvModel = require("../models/userCsvModel");
 const aigcMasterProviderService = require(
   "../services/aigcMasterProviderService"
+);
+
+const aigcUserDataService = require(
+  "../services/aigcUserDataService"
 );
 
 async function dashboard(req, res) {
@@ -338,6 +346,58 @@ async function bindMasterProvider(
  * 管理员对已经存在的绑定
  * 重新读取 YiBai 点数。
  */
+
+/**
+ * 管理员解除 Harson-Base 企业主账号
+ * 与 YiBai 外部账号的绑定。
+ */
+async function unbindMasterProvider(
+  req,
+  res
+) {
+  try {
+    const masterAccountId =
+      String(
+        req.params.masterAccountId ||
+        ""
+      ).trim();
+
+    if (!masterAccountId) {
+      return res.status(400).json({
+        success: false,
+
+        message:
+          "AIGC 企业主账号 ID 不能为空"
+      });
+    }
+
+    const result =
+      await aigcMasterProviderService
+        .unbindMasterProvider(
+          masterAccountId
+        );
+
+    return res.json({
+      success: true,
+
+      message:
+        "YiBai 外部账号已解绑，主账号和子账号点数已归零",
+
+      data:
+        result
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+
+      message:
+        error.message ||
+        "YiBai 外部账号解绑失败"
+    });
+  }
+}
+
+
 async function syncMasterProvider(
   req,
   res
@@ -377,6 +437,120 @@ async function syncMasterProvider(
 }
 
 
+
+/**
+ * 管理员明确触发 YiBai 用户数据同步。
+ *
+ * 顺序：
+ * 1. 建立用户端登录；
+ * 2. 获取并保存真实任务快照；
+ * 3. 重新建立管理端登录；
+ * 4. 清除临时用户端 Token。
+ *
+ * 无论任务同步成功或失败，
+ * 都会尝试恢复 Workspace 管理端 Session。
+ */
+async function syncMasterUserData(
+  req,
+  res
+) {
+  const masterAccountId =
+    String(
+      req.params.masterAccountId ||
+      ""
+    ).trim();
+
+  if (!masterAccountId) {
+    return res.status(400).json({
+      success: false,
+
+      message:
+        "AIGC 企业主账号 ID 不能为空"
+    });
+  }
+
+  let taskSyncResult = null;
+  let taskSyncError = null;
+  let workspaceRestoreError = null;
+
+  try {
+    taskSyncResult =
+      await aigcUserDataService
+        .syncCompanyTaskSnapshot(
+          masterAccountId
+        );
+  } catch (error) {
+    taskSyncError = error;
+  }
+
+  try {
+    /*
+     * 用户端登录可能影响管理端 Token，
+     * 因此同步后重新建立管理端 Session。
+     */
+    await aigcMasterProviderService
+      .syncBoundMasterProvider(
+        masterAccountId
+      );
+  } catch (error) {
+    workspaceRestoreError =
+      error;
+  } finally {
+    try {
+      /*
+       * 管理端重新登录后，
+       * 用户端 Token 很可能已经失效，
+       * 不保留无效缓存。
+       */
+      aigcUserDataService
+        .clearUserDataToken(
+          masterAccountId
+        );
+    } catch (error) {
+      console.warn(
+        "清理 YiBai 用户端 Token 缓存失败：",
+        error.message
+      );
+    }
+  }
+
+  if (workspaceRestoreError) {
+    return res.status(500).json({
+      success: false,
+
+      message:
+        taskSyncError
+          ? `YiBai 用户数据同步失败，且 Workspace 登录状态恢复失败：${workspaceRestoreError.message}`
+          : `真实创作记录已同步，但 Workspace 登录状态恢复失败：${workspaceRestoreError.message}`
+    });
+  }
+
+  if (taskSyncError) {
+    return res.status(400).json({
+      success: false,
+
+      message:
+        `YiBai 用户数据同步失败：${taskSyncError.message}。Workspace 登录状态已恢复`
+    });
+  }
+
+  return res.json({
+    success: true,
+
+    message:
+      "YiBai 真实创作记录同步成功，Workspace 登录状态已恢复",
+
+    data: {
+      taskSync:
+        taskSyncResult,
+
+      workspaceRestored:
+        true
+    }
+  });
+}
+
+
 async function listClBaseUsers(req, res) {
   try {
     const users = await userCsvModel.listUsers();
@@ -388,19 +562,326 @@ async function listClBaseUsers(req, res) {
   }
 }
 
-function myAigcWorkspace(req, res) {
+
+function toNumber(
+  value,
+  fallbackValue = 0
+) {
+  const numericValue =
+    Number(value);
+
+  return Number.isFinite(
+    numericValue
+  )
+    ? numericValue
+    : fallbackValue;
+}
+
+function buildRealTokenUsage(
+  subAccount,
+  taskSummary
+) {
+  const tokenLimit =
+    Math.max(
+      toNumber(
+        subAccount?.tokenLimit,
+        0
+      ),
+      0
+    );
+
+  const usedTokens =
+    Math.max(
+      toNumber(
+        taskSummary
+          ?.netUsedTokens,
+        0
+      ),
+      0
+    );
+
+  const remainingTokens =
+    tokenLimit > 0
+      ? Math.max(
+          tokenLimit -
+          usedTokens,
+          0
+        )
+      : 0;
+
+  const usageRate =
+    tokenLimit > 0
+      ? Number(
+          (
+            usedTokens /
+            tokenLimit *
+            100
+          ).toFixed(2)
+        )
+      : 0;
+
+  const remainingRate =
+    tokenLimit > 0
+      ? Number(
+          (
+            remainingTokens /
+            tokenLimit *
+            100
+          ).toFixed(2)
+        )
+      : 0;
+
+  const warningThreshold =
+    Math.max(
+      toNumber(
+        subAccount
+          ?.warningThreshold,
+        10
+      ),
+      0
+    );
+
+  let warningStatus =
+    "normal";
+
+  if (
+    tokenLimit > 0 &&
+    remainingTokens <= 0
+  ) {
+    warningStatus =
+      "exceeded";
+  } else if (
+    tokenLimit > 0 &&
+    remainingRate <=
+      warningThreshold
+  ) {
+    warningStatus =
+      "warning";
+  }
+
+  return {
+    tokenLimit,
+    usedTokens,
+    remainingTokens,
+    usageRate,
+    remainingRate,
+    warningThreshold,
+    warningStatus
+  };
+}
+
+function taskStatusLabel(
+  status
+) {
+  if (status === "O") {
+    return "成功";
+  }
+
+  if (status === "R") {
+    return "失败";
+  }
+
+  return "处理中";
+}
+
+function toWorkspaceWork(
+  task
+) {
+  return {
+    id:
+      task.providerTaskId,
+
+    title:
+      task.objectName ||
+      "AIGC 创作任务",
+
+    workType:
+      task.object ||
+      "AIGC",
+
+    promptSummary:
+      taskStatusLabel(
+        task.status
+      ),
+
+    creditCost:
+      task.netPoint,
+
+    status:
+      task.status,
+
+    statusLabel:
+      taskStatusLabel(
+        task.status
+      ),
+
+    imageUrl:
+      task.imageUrl,
+
+    memberId:
+      task.memberId,
+
+    memberName:
+      task.memberName,
+
+    createdAt:
+      task.dateEnd ||
+      task.dateCreate ||
+      task.syncedAt
+  };
+}
+
+function myAigcWorkspace(
+  req,
+  res
+) {
   try {
+    const originalMapping =
+      aigcAccountModel
+        .getMyMapping(
+          req.user.id
+        );
+
+    if (
+      !originalMapping ||
+      !originalMapping
+        .aigcSubAccount
+    ) {
+      return res.json({
+        success: true,
+
+        data: {
+          mapping:
+            originalMapping,
+
+          works: [],
+
+          taskSummary: {
+            totalTasks: 0,
+            successfulTasks: 0,
+            failedTasks: 0,
+            processingTasks: 0,
+            deductedTokens: 0,
+            refundedTokens: 0,
+            netUsedTokens: 0
+          },
+
+          taskSync: {
+            status:
+              "mapping_missing",
+
+            memberId:
+              null,
+
+            latestSyncedAt:
+              null,
+
+            source:
+              "yibai_snapshot"
+          }
+        }
+      });
+    }
+
+    const masterAccountId =
+      String(
+        originalMapping
+          .mapping
+          ?.masterAccountId ||
+        originalMapping
+          .aigcSubAccount
+          ?.masterAccountId ||
+        originalMapping
+          .masterAccount
+          ?.id ||
+        ""
+      ).trim();
+
+    const snapshot =
+      taskSnapshotModel
+        .listTaskSnapshotByIdentity({
+          masterAccountId,
+
+          identities: [
+            originalMapping
+              .aigcSubAccount
+              ?.platformLogin,
+
+            originalMapping
+              .aigcSubAccount
+              ?.subAccountName,
+
+            originalMapping
+              .mapping
+              ?.clBaseEmail,
+
+            req.user.email
+          ]
+        });
+
+    const realTokenUsage =
+      buildRealTokenUsage(
+        originalMapping
+          .aigcSubAccount,
+
+        snapshot.summary
+      );
+
+    const mapping = {
+      ...originalMapping,
+
+      aigcSubAccount: {
+        ...originalMapping
+          .aigcSubAccount,
+
+        ...realTokenUsage
+      }
+    };
+
     return res.json({
       success: true,
+
       data: {
-        mapping: aigcAccountModel.getMyMapping(req.user.id),
-        works: aigcAccountModel.listMyWorks(req.user.id)
+        mapping,
+
+        /*
+         * 保留 works 字段，
+         * 让现有前端直接显示真实任务，
+         * 不再读取模拟 creative_works。
+         */
+        works:
+          snapshot.tasks.map(
+            toWorkspaceWork
+          ),
+
+        taskSummary:
+          snapshot.summary,
+
+        taskSync: {
+          status:
+            snapshot.status,
+
+          memberId:
+            snapshot.memberId,
+
+          latestSyncedAt:
+            snapshot
+              .latestSyncedAt,
+
+          source:
+            "yibai_snapshot"
+        }
       }
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({
+      success: false,
+      message:
+        error.message
+    });
   }
 }
+
 
 function addMyWork(req, res) {
   try {
@@ -454,9 +935,11 @@ module.exports = {
   listMasterProviderBindings,
   bindMasterProvider,
   syncMasterProvider,
+  syncMasterUserData,
 
   createMapping,
   listClBaseUsers,
   myAigcWorkspace,
-  addMyWork
+  addMyWork,
+  unbindMasterProvider
 };
