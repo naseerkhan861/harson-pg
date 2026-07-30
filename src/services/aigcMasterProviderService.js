@@ -14,6 +14,16 @@ const masterTokenCacheModel =
     "../models/aigcMasterTokenCacheCsvModel"
   );
 
+const userTokenCacheModel =
+  require(
+    "../models/aigcUserTokenCacheCsvModel"
+  );
+
+const taskSnapshotModel =
+  require(
+    "../models/aigcTaskSnapshotCsvModel"
+  );
+
 const credentialCrypto = require(
   "../utils/yibaiCredentialCrypto"
 );
@@ -56,21 +66,30 @@ function normalizePointsField(
   const normalizedValue =
     String(
       value ||
-      "companyMpoint"
+      "balance"
     ).trim();
 
+  const allowedFields =
+    new Set([
+      "balance",
+      "companyBalance",
+      "mpoint",
+      "companyMpoint"
+    ]);
+
   if (
-    normalizedValue !==
-      "companyMpoint" &&
-    normalizedValue !== "mpoint"
+    !allowedFields.has(
+      normalizedValue
+    )
   ) {
     throw new Error(
-      "YiBai点数字段只能是 companyMpoint 或 mpoint"
+      "YiBai点数字段只能是 balance、companyBalance、mpoint 或 companyMpoint"
     );
   }
 
   return normalizedValue;
 }
+
 
 function isSuccessfulResponse(
   response
@@ -149,17 +168,30 @@ function extractProviderSession({
   pointsField
 }) {
   const result =
-  loginResponse?.result || {};
+    loginResponse?.result || {};
 
+  const token =
+    requireText(
+      result.token,
+      "YiBai登录token"
+    );
 
-const token =
-  requireText(
-    result.token,
-    "YiBai登录token"
-  );
+  const normalizedPointsField =
+    normalizePointsField(
+      pointsField
+    );
 
+  /*
+   * 只读取管理员明确选择的字段。
+   *
+   * 不自动切换到其他字段；
+   * 0 是有效余额，不能因为是 0
+   * 就改读其他字段。
+   */
   const rawCredits =
-    result[pointsField];
+    result[
+      normalizedPointsField
+    ];
 
   if (
     rawCredits === undefined ||
@@ -167,12 +199,14 @@ const token =
     rawCredits === ""
   ) {
     throw new Error(
-      `YiBai登录响应中缺少点数字段：${pointsField}`
+      `YiBai登录响应中缺少管理员选择的点数字段：${normalizedPointsField}`
     );
   }
 
   const syncedTotalCredits =
-    Number(rawCredits);
+    Number(
+      rawCredits
+    );
 
   if (
     !Number.isFinite(
@@ -181,12 +215,15 @@ const token =
     syncedTotalCredits < 0
   ) {
     throw new Error(
-      `YiBai返回的 ${pointsField} 不是有效的非负数字`
+      `YiBai返回的 ${normalizedPointsField} 不是有效的非负数字`
     );
   }
 
   return {
     token,
+
+    pointsField:
+      normalizedPointsField,
 
     syncedTotalCredits,
 
@@ -211,6 +248,7 @@ const token =
       ).trim()
   };
 }
+
 
 function buildSafeResult({
   binding,
@@ -888,6 +926,113 @@ async function syncBoundMasterProvider(
   );
 }
 
+
+/**
+ * 正式解除 Harson-Base 企业主账号
+ * 与 YiBai 外部账号的绑定。
+ *
+ * 保留：
+ * - Harson-Base 企业主账号
+ * - Harson-Base 子账号
+ * - Harson-Base 用户映射
+ *
+ * 清理：
+ * - 主账号和子账号点数
+ * - YiBai 真实任务快照
+ * - 管理端 Token
+ * - 用户端 Token
+ * - YiBai 绑定和加密凭据
+ */
+async function unbindMasterProvider(
+  masterAccountId
+) {
+  const normalizedMasterAccountId =
+    requireText(
+      masterAccountId,
+      "AIGC企业主账号ID"
+    );
+
+  return withMasterAccountLock(
+    normalizedMasterAccountId,
+    async () => {
+      const providerConfig =
+        masterProviderConfigModel
+          .getProviderConfigByMasterAccountId(
+            normalizedMasterAccountId
+          );
+
+      if (!providerConfig) {
+        throw new Error(
+          "当前企业主账号没有有效的 YiBai 绑定"
+        );
+      }
+
+      /*
+       * 先清空内部点数。
+       * 此步骤失败时不删除外部绑定。
+       */
+      const creditReset =
+        await Promise.resolve(
+          aigcAccountModel
+            .resetMasterTotalCreditsAfterProviderUnbind(
+              normalizedMasterAccountId
+            )
+        );
+
+      const deletedTaskCount =
+        taskSnapshotModel
+          .deleteTasksByMasterAccountId(
+            normalizedMasterAccountId
+          );
+
+      const managementTokenRemoved =
+        masterTokenCacheModel
+          .removeTokenCache(
+            normalizedMasterAccountId
+          );
+
+      const userTokenRemoved =
+        userTokenCacheModel
+          .removeTokenCache(
+            normalizedMasterAccountId
+          );
+
+      /*
+       * 最后删除绑定和加密凭据。
+       */
+      const bindingRemoved =
+        masterProviderConfigModel
+          .removeMasterProviderConfig(
+            normalizedMasterAccountId
+          );
+
+      if (!bindingRemoved) {
+        throw new Error(
+          "YiBai 外部账号绑定删除失败"
+        );
+      }
+
+      return {
+        masterAccountId:
+          normalizedMasterAccountId,
+
+        providerAccount:
+          providerConfig
+            .providerAccount,
+
+        creditReset,
+        deletedTaskCount,
+        managementTokenRemoved,
+        userTokenRemoved,
+
+        bindingRemoved:
+          true
+      };
+    }
+  );
+}
+
+
 function listMasterProviderBindings() {
   return masterProviderConfigModel
     .listMasterProviderConfigs();
@@ -896,5 +1041,6 @@ function listMasterProviderBindings() {
 module.exports = {
   bindMasterProviderAndSync,
   syncBoundMasterProvider,
-  listMasterProviderBindings
+  listMasterProviderBindings,
+  unbindMasterProvider
 };

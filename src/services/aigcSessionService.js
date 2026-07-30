@@ -71,58 +71,117 @@ function getResponseMessage(
   );
 }
 
-/**
- * 根据企业账号绑定时保存的 pointsField，
- * 从 YiBai 登录结果中读取需要展示的 Token 余额。
- *
- * 支持：
- * - companyMpoint：企业总点数；
- * - mpoint：当前成员点数。
- *
- * 旧配置没有 pointsField 时，
- * 默认使用 companyMpoint。
- */
 function readTokenBalance(
   memberResult,
   providerConfig
 ) {
+  /*
+   * 管理端 /api/member/loginByToken
+   * 返回多个余额字段。
+   *
+   * Workspace 与 iframe 当前展示的是：
+   * - balance
+   * - companyBalance
+   *
+   * mpoint 和 companyMpoint 在当前接口中
+   * 可能为 0，不能优先于 balance。
+   *
+   * 用户数据接口 /user/member/*
+   * 仍由后续独立 Client 处理，
+   * 不替代这里的管理端 Session 接口。
+   */
   const configuredField =
     String(
       providerConfig?.pointsField ||
       ""
     ).trim();
 
-  const pointsField =
-    configuredField === "mpoint"
-      ? "mpoint"
-      : "companyMpoint";
+  const candidates = [
+    {
+      field: "balance",
+      value: memberResult?.balance
+    },
 
-  const tokenBalance =
-    Number(
-      memberResult?.[pointsField]
+    {
+      field: "companyBalance",
+      value:
+        memberResult?.companyBalance
+    },
+
+    {
+      field: "mpoint",
+      value: memberResult?.mpoint
+    },
+
+    {
+      field: "companyMpoint",
+      value:
+        memberResult?.companyMpoint
+    },
+
+    ...(configuredField
+      ? [
+          {
+            field:
+              configuredField,
+
+            value:
+              memberResult?.[
+                configuredField
+              ]
+          }
+        ]
+      : [])
+  ];
+
+  const selectedBalance =
+    candidates.find(
+      candidate => {
+        if (
+          candidate.value === null ||
+          candidate.value ===
+            undefined ||
+          candidate.value === ""
+        ) {
+          return false;
+        }
+
+        const numericValue =
+          Number(
+            candidate.value
+          );
+
+        return (
+          Number.isFinite(
+            numericValue
+          ) &&
+          numericValue >= 0
+        );
+      }
     );
 
-  if (
-    !Number.isFinite(
-      tokenBalance
-    ) ||
-    tokenBalance < 0
-  ) {
+  if (!selectedBalance) {
     console.warn(
-      `YiBai 响应中没有有效的 ${pointsField}`
+      "YiBai 管理端响应中没有有效余额字段"
     );
 
     return {
-      pointsField,
+      pointsField: null,
       tokenBalance: null
     };
   }
 
   return {
-    pointsField,
-    tokenBalance
+    pointsField:
+      selectedBalance.field,
+
+    tokenBalance:
+      Number(
+        selectedBalance.value
+      )
   };
 }
+
 
 /**
  * 同一个内部企业主账号在同一时间
@@ -658,6 +717,136 @@ async function refreshTokenForUser(
  * 此函数不清除 Harson-Base Cookie，
  * Cookie 仍由 authController 负责。
  */
+
+/**
+ * 使用现有 Workspace 缓存 Token
+ * 只读查询 YiBai 最新余额。
+ *
+ * 不会重新进行账号密码登录，
+ * 不会删除或覆盖缓存 Token。
+ */
+async function getCachedTokenBalanceForUser(
+  clBaseUserId
+) {
+  const accountContext =
+    resolveUserAccount(
+      clBaseUserId
+    );
+
+  const masterAccountId =
+    accountContext
+      .masterAccount
+      .id;
+
+  const providerAccount =
+    accountContext
+      .providerConfig
+      .providerAccount;
+
+  return withMasterAccountLock(
+    masterAccountId,
+    async () => {
+      let cachedToken = null;
+
+      try {
+        cachedToken =
+          masterTokenCacheModel
+            .getTokenCache(
+              masterAccountId
+            );
+      } catch {
+        return {
+          success: false,
+          available: false,
+          reason: "token_cache_unreadable",
+          tokenBalance: null,
+          message:
+            "Workspace Token 缓存暂不可用"
+        };
+      }
+
+      if (!cachedToken?.token) {
+        return {
+          success: false,
+          available: false,
+          reason: "token_missing",
+          tokenBalance: null,
+          message:
+            "当前没有可用的 Workspace Token"
+        };
+      }
+
+      if (
+        cachedToken.providerAccount !==
+        providerAccount
+      ) {
+        return {
+          success: false,
+          available: false,
+          reason:
+            "provider_account_changed",
+          tokenBalance: null,
+          message:
+            "YiBai 外部账号已变更"
+        };
+      }
+
+      const validationResult =
+        await yibaiAigcClient
+          .loginByToken(
+            cachedToken.token
+          );
+
+      if (
+        !isSuccessfulResponse(
+          validationResult
+        )
+      ) {
+        return {
+          success: false,
+          available: false,
+
+          reason:
+            Number(
+              validationResult?.code
+            ) === 601
+              ? "token_expired"
+              : "token_invalid",
+
+          tokenBalance: null,
+
+          message:
+            getResponseMessage(
+              validationResult,
+              "Workspace Token 当前不可用"
+            )
+        };
+      }
+
+      const balanceData =
+        readTokenBalance(
+          validationResult.result,
+          accountContext
+            .providerConfig
+        );
+
+      return {
+        success: true,
+        available: true,
+
+        tokenBalance:
+          balanceData.tokenBalance,
+
+        pointsField:
+          balanceData.pointsField,
+
+        masterAccountId
+      };
+    }
+  );
+}
+
+
 async function logoutUserAigcSession(
   clBaseUserId
 ) {
@@ -814,5 +1003,6 @@ async function logoutUserAigcSession(
 module.exports = {
   getValidTokenForUser,
   refreshTokenForUser,
-  logoutUserAigcSession
+  logoutUserAigcSession,
+  getCachedTokenBalanceForUser
 };

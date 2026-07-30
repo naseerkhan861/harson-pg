@@ -18,6 +18,9 @@ const DEFAULT_VIEW =
 const HOME_BANNER_INTERVAL_MS =
   4500;
 
+const TOKEN_BALANCE_POLL_INTERVAL_MS =
+  30 * 1000;
+
 const BACKGROUND_TOKEN_WAIT_MS =
   5000;
 
@@ -258,9 +261,306 @@ const ALL_TOOLS = Object.freeze([
   }
 ]);
 
+/*
+ * 全部工具分类映射
+ *
+ * primary:
+ * - image-create：图片创作
+ * - image-edit：图片编辑
+ * - video-create：视频创作
+ *
+ * business:
+ * - fashion-commerce：服装电商
+ * - pattern-design：图案设计
+ * - photo-editing：摄影后期
+ */
+const TOOL_FILTERS = Object.freeze({
+  "全能图片 pro": {
+    primary: "image-create",
+    business: [
+      "fashion-commerce"
+    ]
+  },
+
+  "Seedream 5.0 Pro": {
+    primary: "image-create",
+    business: []
+  },
+
+  "批量换主体": {
+    primary: "image-edit",
+    business: [
+      "fashion-commerce",
+      "photo-editing"
+    ]
+  },
+
+  "爆款视频复刻": {
+    primary: "video-create",
+    business: [
+      "fashion-commerce"
+    ]
+  },
+
+  "image-2": {
+    primary: "image-create",
+    business: []
+  },
+
+  "Seedance 2.0 视频": {
+    primary: "video-create",
+    business: []
+  },
+
+  "批量换衣": {
+    primary: "image-edit",
+    business: [
+      "fashion-commerce",
+      "photo-editing"
+    ]
+  },
+
+  "AI 商品主图": {
+    primary: "image-create",
+    business: [
+      "fashion-commerce"
+    ]
+  },
+
+  "智能仿商品图 / 详情图": {
+    primary: "image-create",
+    business: [
+      "fashion-commerce"
+    ]
+  },
+
+  "AI 商品详情页": {
+    primary: "image-create",
+    business: [
+      "fashion-commerce"
+    ]
+  },
+
+  "Seedream 4.5": {
+    primary: "image-create",
+    business: []
+  },
+
+  "家纺主图裂变": {
+    primary: "image-create",
+    business: [
+      "fashion-commerce"
+    ]
+  },
+
+  "高清放大 2.0": {
+    primary: "image-edit",
+    business: [
+      "photo-editing"
+    ]
+  },
+
+  "悠船 MJ V7": {
+    primary: "image-create",
+    business: []
+  },
+
+  "提取花纹 · 高级版": {
+    primary: "image-edit",
+    business: [
+      "pattern-design",
+      "photo-editing"
+    ]
+  },
+
+  "一键同款": {
+    primary: "image-create",
+    business: [
+      "fashion-commerce"
+    ]
+  },
+
+  "服装主图裂变": {
+    primary: "image-create",
+    business: [
+      "fashion-commerce"
+    ]
+  },
+
+  "风格转换": {
+    primary: "image-edit",
+    business: [
+      "pattern-design",
+      "photo-editing"
+    ]
+  },
+
+  "服装主图姿势裂变": {
+    primary: "image-create",
+    business: [
+      "fashion-commerce"
+    ]
+  },
+
+  "AI 服装视频（测试版）": {
+    primary: "video-create",
+    business: [
+      "fashion-commerce"
+    ]
+  },
+
+  "图案接版（四方连续）": {
+    primary: "image-edit",
+    business: [
+      "pattern-design"
+    ]
+  },
+
+  "转矢量": {
+    primary: "image-edit",
+    business: [
+      "pattern-design",
+      "photo-editing"
+    ]
+  },
+
+  "去水印": {
+    primary: "image-edit",
+    business: [
+      "photo-editing"
+    ]
+  },
+
+  "服装详情图裂变": {
+    primary: "image-create",
+    business: [
+      "fashion-commerce"
+    ]
+  },
+
+  "抠图移除背景": {
+    primary: "image-edit",
+    business: [
+      "fashion-commerce",
+      "photo-editing"
+    ]
+  },
+
+  "混图": {
+    primary: "image-edit",
+    business: [
+      "photo-editing"
+    ]
+  },
+
+  "FLUX.1 Kontext": {
+    primary: "image-create",
+    business: [
+      "photo-editing"
+    ]
+  },
+
+  "AI 服装视频 · 元素替换": {
+    primary: "video-create",
+    business: [
+      "fashion-commerce"
+    ]
+  },
+
+  "提取线稿": {
+    primary: "image-edit",
+    business: [
+      "pattern-design",
+      "photo-editing"
+    ]
+  },
+
+  "风格绘画": {
+    primary: "image-create",
+    business: [
+      "pattern-design"
+    ]
+  },
+
+  "去布纹": {
+    primary: "image-edit",
+    business: [
+      "pattern-design",
+      "photo-editing"
+    ]
+  },
+
+  "图案配色": {
+    primary: "image-edit",
+    business: [
+      "pattern-design",
+      "photo-editing"
+    ]
+  },
+
+  "图案接版（跳接）": {
+    primary: "image-edit",
+    business: [
+      "pattern-design"
+    ]
+  },
+
+  "FLUX Krea": {
+    primary: "image-create",
+    business: []
+  },
+
+  "爱马仕文生图": {
+    primary: "image-create",
+    business: [
+      "pattern-design"
+    ]
+  },
+
+  "指定风格造型": {
+    primary: "image-create",
+    business: [
+      "fashion-commerce"
+    ]
+  },
+
+  "爱马仕图生图": {
+    primary: "image-create",
+    business: [
+      "pattern-design"
+    ]
+  },
+
+  "图片混合": {
+    primary: "image-edit",
+    business: [
+      "photo-editing"
+    ]
+  },
+
+  "平面转立体": {
+    primary: "image-create",
+    business: [
+      "fashion-commerce"
+    ]
+  }
+});
+
+let tokenBalancePollingTimerId =
+  null;
+
+let tokenBalancePollingRequestActive =
+  false;
+
 const state = {
   currentView:
     DEFAULT_VIEW,
+
+    allToolsPrimaryFilter:
+      "all",
+
+    allToolsBusinessFilter:
+      "all",
 
   currentModule:
     DEFAULT_MODULE,
@@ -318,6 +618,13 @@ const elements = {
   allToolsGrid:
     document.getElementById(
       "allToolsGrid"
+    ),
+
+  allToolsFilterButtons:
+    Array.from(
+      document.querySelectorAll(
+        "#allToolsPanel button[data-filter-group][data-filter-value]"
+      )
     ),
 
   loadingPanel:
@@ -410,6 +717,96 @@ const elements = {
     )
 };
 
+function getToolFilterConfig(
+  tool
+) {
+  const filterConfig =
+    TOOL_FILTERS[tool.name];
+
+  if (
+    filterConfig
+  ) {
+    return filterConfig;
+  }
+
+  console.warn(
+    `工具“${tool.name}”尚未配置分类。`
+  );
+
+  return {
+    primary: "",
+    business: []
+  };
+}
+
+function toolMatchesActiveFilters(
+  tool
+) {
+  const filterConfig =
+    getToolFilterConfig(
+      tool
+    );
+
+  const primaryMatches =
+    state.allToolsPrimaryFilter ===
+      "all" ||
+    filterConfig.primary ===
+      state.allToolsPrimaryFilter;
+
+  const businessMatches =
+    state.allToolsBusinessFilter ===
+      "all" ||
+    filterConfig.business.includes(
+      state.allToolsBusinessFilter
+    );
+
+  return (
+    primaryMatches &&
+    businessMatches
+  );
+}
+
+function updateAllToolsFilterButtons() {
+  elements.allToolsFilterButtons
+    .forEach(button => {
+      const group =
+        button.dataset.filterGroup;
+
+      const value =
+        button.dataset.filterValue;
+
+      let isActive = false;
+
+      if (
+        group === "primary"
+      ) {
+        isActive =
+          value ===
+          state.allToolsPrimaryFilter;
+      }
+
+      if (
+        group === "business"
+      ) {
+        isActive =
+          value ===
+          state.allToolsBusinessFilter;
+      }
+
+      button.classList.toggle(
+        "is-active",
+        isActive
+      );
+
+      button.setAttribute(
+        "aria-pressed",
+        String(
+          isActive
+        )
+      );
+    });
+}
+
 function renderAllTools() {
   if (
     !elements.allToolsGrid
@@ -417,10 +814,44 @@ function renderAllTools() {
     return;
   }
 
+  const visibleTools =
+    ALL_TOOLS.filter(
+      tool =>
+        toolMatchesActiveFilters(
+          tool
+        )
+    );
+
   const fragment =
     document.createDocumentFragment();
 
-  ALL_TOOLS.forEach(tool => {
+  if (
+    visibleTools.length === 0
+  ) {
+    const emptyMessage =
+      document.createElement(
+        "p"
+      );
+
+    emptyMessage.className =
+      "all-tools-empty";
+
+    emptyMessage.textContent =
+      "当前分类组合下暂无工具";
+
+    fragment.append(
+      emptyMessage
+    );
+
+    elements.allToolsGrid
+      .replaceChildren(
+        fragment
+      );
+
+    return;
+  }
+
+  visibleTools.forEach(tool => {
     const card =
       document.createElement(
         "article"
@@ -438,7 +869,8 @@ function renderAllTools() {
       "catalog-cover";
 
     if (
-      typeof tool.cover === "string" &&
+      typeof tool.cover ===
+        "string" &&
       tool.cover.trim() !== ""
     ) {
       const image =
@@ -505,6 +937,49 @@ function renderAllTools() {
       fragment
     );
 }
+
+function handleAllToolsFilterClick(
+  event
+) {
+  const button =
+    event.target.closest(
+      "button[data-filter-group][data-filter-value]"
+    );
+
+  if (
+    !button ||
+    !elements.allToolsPanel
+      ?.contains(
+        button
+      )
+  ) {
+    return;
+  }
+
+  const group =
+    button.dataset.filterGroup;
+
+  const value =
+    button.dataset.filterValue;
+
+  if (
+    group === "primary"
+  ) {
+    state.allToolsPrimaryFilter =
+      value;
+  } else if (
+    group === "business"
+  ) {
+    state.allToolsBusinessFilter =
+      value;
+  } else {
+    return;
+  }
+
+  updateAllToolsFilterButtons();
+  renderAllTools();
+}
+
 
 function setConnectionStatus(
   text,
@@ -1707,6 +2182,123 @@ function handleIframeMessage(
   }
 }
 
+
+/**
+ * 使用现有 Workspace Token
+ * 只读查询最新余额。
+ *
+ * 不会重新进行账号密码登录，
+ * 不会刷新或替换 iframe。
+ */
+async function fetchReadOnlyTokenBalance() {
+  if (
+    document.hidden ||
+    tokenBalancePollingRequestActive
+  ) {
+    return;
+  }
+
+  tokenBalancePollingRequestActive =
+    true;
+
+  try {
+    const response =
+      await fetch(
+        "/api/aigc/session/token-balance",
+        {
+          method: "GET",
+
+          credentials:
+            "include",
+
+          headers: {
+            Accept:
+              "application/json"
+          }
+        }
+      );
+
+    const data =
+      await readJsonResponse(
+        response
+      );
+
+    if (
+      response.status === 401
+    ) {
+      window.location.href =
+        "/login";
+
+      return;
+    }
+
+    if (
+      !response.ok ||
+      !data.success
+    ) {
+      console.warn(
+        "自动读取 Token 余额失败：",
+        data.message ||
+        response.status
+      );
+
+      return;
+    }
+
+    if (
+      data.result?.available !==
+      true
+    ) {
+      return;
+    }
+
+    updateTokenBalance(
+      data.result.tokenBalance
+    );
+  } catch (error) {
+    console.warn(
+      "自动读取 Token 余额失败：",
+      error
+    );
+  } finally {
+    tokenBalancePollingRequestActive =
+      false;
+  }
+}
+
+function stopTokenBalancePolling() {
+  if (
+    tokenBalancePollingTimerId ===
+    null
+  ) {
+    return;
+  }
+
+  window.clearInterval(
+    tokenBalancePollingTimerId
+  );
+
+  tokenBalancePollingTimerId =
+    null;
+}
+
+function startTokenBalancePolling() {
+  stopTokenBalancePolling();
+
+  /*
+   * 页面初始化时立即读取一次，
+   * 后续每 30 秒只读查询一次。
+   */
+  fetchReadOnlyTokenBalance();
+
+  tokenBalancePollingTimerId =
+    window.setInterval(
+      fetchReadOnlyTokenBalance,
+      TOKEN_BALANCE_POLL_INTERVAL_MS
+    );
+}
+
+
 function handleTokenBalanceClick() {
   window.location.href =
     "/cl-base-token-purchase.html";
@@ -1727,6 +2319,12 @@ function bindEvents() {
           "all-tools"
         );
       }
+    );
+
+  elements.allToolsPanel
+    ?.addEventListener(
+      "click",
+      handleAllToolsFilterClick
     );
 
   elements.refreshButton
@@ -1773,6 +2371,8 @@ function bindEvents() {
     () => {
       stopHomeBannerAutoPlay();
 
+      stopTokenBalancePolling();
+
       cancelBackgroundTokenSync({
         resetButton:
           false
@@ -1784,10 +2384,12 @@ function bindEvents() {
 }
 
 function initializeWorkspace() {
+  updateAllToolsFilterButtons();
   renderAllTools();
   restoreTokenBalance();
   initializeHomeBanner();
   bindEvents();
+  startTokenBalancePolling();
 
   showLocalView(
     DEFAULT_VIEW

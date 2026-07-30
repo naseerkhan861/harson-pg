@@ -34,7 +34,7 @@
 
         <div>
           <span class="workspace-label">
-            HARSON-BASE
+            HARSON-BASE-BETA
           </span>
 
           <h1>CL-AIGC 工作空间</h1>
@@ -614,9 +614,95 @@
       <section
         id="allToolsPanel"
         class="local-page all-tools-page"
-        aria-label="全部工具静态展示"
+        aria-label="全部工具"
         hidden
       >
+        <div class="all-tools-filters">
+          <!-- 一级分类 -->
+          <div
+            class="all-tools-primary-filter"
+            aria-label="工具创作类型"
+          >
+            <button
+              class="all-tools-primary-button is-active"
+              type="button"
+              data-filter-group="primary"
+              data-filter-value="all"
+            >
+              全部工具
+            </button>
+
+            <button
+              class="all-tools-primary-button"
+              type="button"
+              data-filter-group="primary"
+              data-filter-value="image-create"
+            >
+              图片创作
+            </button>
+
+            <button
+              class="all-tools-primary-button"
+              type="button"
+              data-filter-group="primary"
+              data-filter-value="image-edit"
+            >
+              图片编辑
+            </button>
+
+            <button
+              class="all-tools-primary-button"
+              type="button"
+              data-filter-group="primary"
+              data-filter-value="video-create"
+            >
+              视频创作
+            </button>
+          </div>
+
+          <!-- 二级分类 -->
+          <div
+            class="all-tools-secondary-filter"
+            aria-label="工具业务类型"
+          >
+            <button
+              class="all-tools-secondary-button is-active"
+              type="button"
+              data-filter-group="business"
+              data-filter-value="all"
+            >
+              全部类型
+            </button>
+
+            <button
+              class="all-tools-secondary-button"
+              type="button"
+              data-filter-group="business"
+              data-filter-value="fashion-commerce"
+            >
+              服装电商
+            </button>
+
+            <button
+              class="all-tools-secondary-button"
+              type="button"
+              data-filter-group="business"
+              data-filter-value="pattern-design"
+            >
+              图案设计
+            </button>
+
+            <button
+              class="all-tools-secondary-button"
+              type="button"
+              data-filter-group="business"
+              data-filter-value="photo-editing"
+            >
+              摄影后期
+            </button>
+          </div>
+        </div>
+
         <div
           id="allToolsGrid"
           class="all-tools-grid"

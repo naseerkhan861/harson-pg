@@ -2439,3 +2439,224 @@ button {
   opacity: 0.55;
 }
 
+
+/* =========================================================
+   全部工具分类筛选栏
+   保留现有页面容器和工具卡片样式
+   ========================================================= */
+
+.all-tools-filters {
+  margin: 0 0 14px;
+
+  padding:
+    2px 2px 14px;
+
+  border-bottom:
+    1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* 一级分类 */
+.all-tools-primary-filter {
+  display: flex;
+  align-items: center;
+
+  gap: 32px;
+
+  min-height: 43px;
+
+  padding: 0 4px;
+
+  overflow-x: auto;
+
+  scrollbar-width: none;
+}
+
+.all-tools-primary-filter::-webkit-scrollbar {
+  display: none;
+}
+
+.all-tools-primary-button {
+  position: relative;
+
+  flex: 0 0 auto;
+
+  height: 43px;
+
+  padding: 0 1px;
+
+  border: 0;
+
+  background: transparent;
+
+  color:
+    rgba(255, 255, 255, 0.52);
+
+  font-size: 14px;
+  font-weight: 600;
+
+  line-height: 43px;
+
+  cursor: pointer;
+
+  transition:
+    color 0.18s ease;
+}
+
+.all-tools-primary-button:hover {
+  color:
+    rgba(255, 255, 255, 0.88);
+}
+
+.all-tools-primary-button.is-active {
+  color: #ffffff;
+}
+
+.all-tools-primary-button::after {
+  content: "";
+
+  position: absolute;
+
+  right: 0;
+  bottom: 0;
+  left: 0;
+
+  height: 2px;
+
+  border-radius: 999px;
+
+  background: var(--gold);
+
+  opacity: 0;
+
+  transform:
+    scaleX(0.45);
+
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.all-tools-primary-button.is-active::after {
+  opacity: 1;
+
+  transform:
+    scaleX(1);
+}
+
+/* 二级分类 */
+.all-tools-secondary-filter {
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  margin-top: 9px;
+
+  padding: 0 2px;
+
+  overflow-x: auto;
+
+  scrollbar-width: none;
+}
+
+.all-tools-secondary-filter::-webkit-scrollbar {
+  display: none;
+}
+
+.all-tools-secondary-button {
+  flex: 0 0 auto;
+
+  height: 31px;
+
+  padding:
+    0 15px;
+
+  border:
+    1px solid rgba(255, 255, 255, 0.08);
+
+  border-radius: 999px;
+
+  background:
+    rgba(255, 255, 255, 0.07);
+
+  color:
+    rgba(255, 255, 255, 0.62);
+
+  font-size: 13px;
+  font-weight: 500;
+
+  line-height: 29px;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.all-tools-secondary-button:hover {
+  border-color:
+    rgba(214, 174, 76, 0.42);
+
+  background:
+    rgba(255, 255, 255, 0.1);
+
+  color: #ffffff;
+}
+
+.all-tools-secondary-button.is-active {
+  border-color:
+    rgba(214, 174, 76, 0.72);
+
+  background:
+    rgba(214, 174, 76, 0.12);
+
+  color: #f1cf73;
+}
+
+@media (max-width: 760px) {
+  .all-tools-primary-filter {
+    gap: 22px;
+  }
+
+  .all-tools-primary-button {
+    font-size: 13px;
+  }
+
+  .all-tools-secondary-button {
+    height: 30px;
+
+    padding:
+      0 13px;
+
+    font-size: 12px;
+
+    line-height: 28px;
+  }
+}
+
+.all-tools-empty {
+  grid-column: 1 / -1;
+
+  margin: 0;
+
+  padding:
+    56px 20px;
+
+  border:
+    1px dashed
+    rgba(255, 255, 255, 0.12);
+
+  border-radius: 10px;
+
+  background:
+    rgba(255, 255, 255, 0.025);
+
+  color:
+    rgba(255, 255, 255, 0.52);
+
+  font-size: 14px;
+
+  text-align: center;
+}

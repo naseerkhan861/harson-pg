@@ -63,3 +63,6 @@ out/
 *.msi
 *.zip
 *.7z
+
+# Local AIGC reset backups
+data/aigc-reset-backup-*/
