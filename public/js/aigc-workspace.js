@@ -29,235 +29,235 @@ const ALL_TOOLS = Object.freeze([
     name: "全能图片 pro",
     subtitle: "IMAGE LAB",
     cover:
-      "/images/all-tools/01-quanneng-tupian-pro.png"
+      "/images/all-tools/01-quanneng-tupian-pro.webp"
   },
   {
     name: "Seedream 5.0 Pro",
     subtitle: "DREAM STUDIO",
     cover:
-      "/images/all-tools/02-seedream-5-pro.png"
+      "/images/all-tools/02-seedream-5-pro.webp"
   },
   {
     name: "批量换主体",
     subtitle: "SUBJECT SWAP",
     cover:
-      "/images/all-tools/03-subject-swap.png"
+      "/images/all-tools/03-subject-swap.webp"
   },
   {
     name: "爆款视频复刻",
     subtitle: "VIDEO REMIX",
     cover:
-      "/images/all-tools/04-video-remix.png"
+      "/images/all-tools/04-video-remix.webp"
   },
   {
     name: "image-2",
     subtitle: "IMAGE ENGINE",
     cover:
-      "/images/all-tools/05-image-2.png"
+      "/images/all-tools/05-image-2.webp"
   },
   {
     name: "Seedance 2.0 视频",
     subtitle: "MOTION LAB",
     cover:
-      "/images/all-tools/06-seedance-video.png"
+      "/images/all-tools/06-seedance-video.webp"
   },
   {
     name: "批量换衣",
     subtitle: "OUTFIT SWAP",
     cover:
-      "/images/all-tools/07-outfit-swap.png"
+      "/images/all-tools/07-outfit-swap.webp"
   },
   {
     name: "AI 商品主图",
     subtitle: "PRODUCT HERO",
     cover:
-      "/images/all-tools/08-product-hero.png"
+      "/images/all-tools/08-product-hero.webp"
   },
   {
     name: "智能仿商品图 / 详情图",
     subtitle: "PRODUCT REPLICA",
     cover:
-      "/images/all-tools/09-product-replica.png"
+      "/images/all-tools/09-product-replica.webp"
   },
   {
     name: "AI 商品详情页",
     subtitle: "DETAIL PAGE",
     cover:
-      "/images/all-tools/10-detail-page.png"
+      "/images/all-tools/10-detail-page.webp"
   },
   {
     name: "Seedream 4.5",
     subtitle: "DREAM STUDIO",
     cover:
-      "/images/all-tools/11-seedream-4.5.png"
+      "/images/all-tools/11-seedream-4.5.webp"
   },
   {
     name: "家纺主图裂变",
     subtitle: "HOME TEXTILE",
     cover:
-      "/images/all-tools/12-home-textile.png"
+      "/images/all-tools/12-home-textile.webp"
   },
   {
     name: "高清放大 2.0",
     subtitle: "UPSCALER",
     cover:
-      "/images/all-tools/13-upscaler.png"
+      "/images/all-tools/13-upscaler.webp"
   },
   {
     name: "悠船 MJ V7",
     subtitle: "VISUAL MODEL",
     cover:
-      "/images/all-tools/14-visual-model.png"
+      "/images/all-tools/14-visual-model.webp"
   },
   {
     name: "提取花纹 · 高级版",
     subtitle: "PATTERN EXTRACT",
     cover:
-      "/images/all-tools/15-pattern-extract.png"
+      "/images/all-tools/15-pattern-extract.webp"
   },
   {
     name: "一键同款",
     subtitle: "STYLE MATCH",
     cover:
-      "/images/all-tools/16-style-match.png"
+      "/images/all-tools/16-style-match.webp"
   },
   {
     name: "服装主图裂变",
     subtitle: "FASHION HERO",
     cover:
-      "/images/all-tools/17-fashion-hero.png"
+      "/images/all-tools/17-fashion-hero.webp"
   },
   {
     name: "风格转换",
     subtitle: "STYLE TRANSFER",
     cover:
-      "/images/all-tools/18-style-transfer.png"
+      "/images/all-tools/18-style-transfer.webp"
   },
   {
     name: "服装主图姿势裂变",
     subtitle: "POSE VARIATION",
     cover:
-      "/images/all-tools/19-pose-variation.png"
+      "/images/all-tools/19-pose-variation.webp"
   },
   {
     name: "AI 服装视频（测试版）",
     subtitle: "FASHION VIDEO",
     cover:
-      "/images/all-tools/20-fashion-video.png"
+      "/images/all-tools/20-fashion-video.webp"
   },
   {
     name: "图案接版（四方连续）",
     subtitle: "SEAMLESS TILE",
     cover:
-      "/images/all-tools/21-seamless-tile.png"
+      "/images/all-tools/21-seamless-tile.webp"
   },
   {
     name: "转矢量",
     subtitle: "VECTORIZE",
     cover:
-      "/images/all-tools/22-vectorize.png"
+      "/images/all-tools/22-vectorize.webp"
   },
   {
     name: "去水印",
     subtitle: "CLEAN IMAGE",
     cover:
-      "/images/all-tools/23-clean-image.png"
+      "/images/all-tools/23-clean-image.webp"
   },
   {
     name: "服装详情图裂变",
     subtitle: "DETAIL VARIATION",
     cover:
-      "/images/all-tools/24-detail-variation.png"
+      "/images/all-tools/24-detail-variation.webp"
   },
   {
     name: "抠图移除背景",
     subtitle: "BACKGROUND REMOVE",
     cover:
-      "/images/all-tools/25-background-remove.png"
+      "/images/all-tools/25-background-remove.webp"
   },
   {
     name: "混图",
     subtitle: "IMAGE BLEND",
     cover:
-      "/images/all-tools/26-image-blend.png"
+      "/images/all-tools/26-image-blend.webp"
   },
   {
     name: "FLUX.1 Kontext",
     subtitle: "CONTEXT MODEL",
     cover:
-      "/images/all-tools/27-flux-kontext.png"
+      "/images/all-tools/27-flux-kontext.webp"
   },
   {
     name: "AI 服装视频 · 元素替换",
     subtitle: "ELEMENT SWAP",
     cover:
-      "/images/all-tools/28-element-swap.png"
+      "/images/all-tools/28-element-swap.webp"
   },
   {
     name: "提取线稿",
     subtitle: "LINE ART",
     cover:
-      "/images/all-tools/29-line-art.png"
+      "/images/all-tools/29-line-art.webp"
   },
   {
     name: "风格绘画",
     subtitle: "STYLE PAINT",
     cover:
-      "/images/all-tools/30-style-paint.png"
+      "/images/all-tools/30-style-paint.webp"
   },
   {
     name: "去布纹",
     subtitle: "TEXTURE CLEAN",
     cover:
-      "/images/all-tools/31-texture-clean.png"
+      "/images/all-tools/31-texture-clean.webp"
   },
   {
     name: "图案配色",
     subtitle: "COLOR MATCH",
     cover:
-      "/images/all-tools/32-color-match.png"
+      "/images/all-tools/32-color-match.webp"
   },
   {
     name: "图案接版（跳接）",
     subtitle: "HALF DROP",
     cover:
-      "/images/all-tools/33-half-drop.png"
+      "/images/all-tools/33-half-drop.webp"
   },
   {
     name: "FLUX Krea",
     subtitle: "CREATIVE MODEL",
     cover:
-      "/images/all-tools/34-flux-krea.png"
+      "/images/all-tools/34-flux-krea.webp"
   },
   {
     name: "爱马仕文生图",
     subtitle: "TEXT TO IMAGE",
     cover:
-      "/images/all-tools/35-text-to-image.png"
+      "/images/all-tools/35-text-to-image.webp"
   },
   {
     name: "指定风格造型",
     subtitle: "STYLE SHAPING",
     cover:
-      "/images/all-tools/36-style-shaping.png"
+      "/images/all-tools/36-style-shaping.webp"
   },
   {
     name: "爱马仕图生图",
     subtitle: "IMAGE TO IMAGE",
     cover:
-      "/images/all-tools/37-image-to-image.png"
+      "/images/all-tools/37-image-to-image.webp"
   },
   {
     name: "图片混合",
     subtitle: "IMAGE MIX",
     cover:
-      "/images/all-tools/38-image-mix.png"
+      "/images/all-tools/38-image-mix.webp"
   },
   {
     name: "平面转立体",
     subtitle: "2D TO 3D",
     cover:
-      "/images/all-tools/39-2d-to-3d.png"
+      "/images/all-tools/39-2d-to-3d.webp"
   }
 ]);
 
@@ -807,12 +807,103 @@ function updateAllToolsFilterButtons() {
     });
 }
 
+let allToolsImageObserver = null;
+
+function loadCatalogImage(image) {
+  const source =
+    image.dataset.src;
+
+  if (!source) {
+    return;
+  }
+
+  image.src =
+    source;
+
+  image.removeAttribute(
+    "data-src"
+  );
+}
+
+function observeAllToolsImages(
+  images
+) {
+  if (
+    images.length === 0
+  ) {
+    return;
+  }
+
+  if (
+    !(
+      "IntersectionObserver" in
+      window
+    )
+  ) {
+    images.forEach(
+      loadCatalogImage
+    );
+
+    return;
+  }
+
+  allToolsImageObserver =
+    new IntersectionObserver(
+      (
+        entries,
+        observer
+      ) => {
+        entries.forEach(
+          entry => {
+            if (
+              !entry.isIntersecting
+            ) {
+              return;
+            }
+
+            const image =
+              entry.target;
+
+            loadCatalogImage(
+              image
+            );
+
+            observer.unobserve(
+              image
+            );
+          }
+        );
+      },
+      {
+        root: null,
+        rootMargin:
+          "300px 0px",
+        threshold: 0.01
+      }
+    );
+
+  images.forEach(
+    image => {
+      allToolsImageObserver
+        .observe(
+          image
+        );
+    }
+  );
+}
+
 function renderAllTools() {
   if (
     !elements.allToolsGrid
   ) {
     return;
   }
+
+  allToolsImageObserver
+    ?.disconnect();
+
+  allToolsImageObserver =
+    null;
 
   const visibleTools =
     ALL_TOOLS.filter(
@@ -824,6 +915,8 @@ function renderAllTools() {
 
   const fragment =
     document.createDocumentFragment();
+
+  const lazyImages = [];
 
   if (
     visibleTools.length === 0
@@ -851,91 +944,104 @@ function renderAllTools() {
     return;
   }
 
-  visibleTools.forEach(tool => {
-    const card =
-      document.createElement(
-        "article"
-      );
-
-    card.className =
-      "catalog-card";
-
-    const cover =
-      document.createElement(
-        "div"
-      );
-
-    cover.className =
-      "catalog-cover";
-
-    if (
-      typeof tool.cover ===
-        "string" &&
-      tool.cover.trim() !== ""
-    ) {
-      const image =
+  visibleTools.forEach(
+    tool => {
+      const card =
         document.createElement(
-          "img"
+          "article"
         );
 
-      image.className =
-        "catalog-cover-image";
+      card.className =
+        "catalog-card";
 
-      image.src =
-        tool.cover;
+      const cover =
+        document.createElement(
+          "div"
+        );
 
-      image.alt =
+      cover.className =
+        "catalog-cover";
+
+      if (
+        typeof tool.cover ===
+          "string" &&
+        tool.cover.trim() !== ""
+      ) {
+        const image =
+          document.createElement(
+            "img"
+          );
+
+        image.className =
+          "catalog-cover-image";
+
+        image.dataset.src =
+          tool.cover;
+
+        image.alt =
+          tool.name;
+
+        image.loading =
+          "lazy";
+
+        image.decoding =
+          "async";
+
+        image.addEventListener(
+          "error",
+          () => {
+            image.hidden =
+              true;
+
+            cover.classList.add(
+              "catalog-cover-missing"
+            );
+          },
+          {
+            once: true
+          }
+        );
+
+        cover.append(
+          image
+        );
+
+        lazyImages.push(
+          image
+        );
+      } else {
+        cover.classList.add(
+          "catalog-cover-missing"
+        );
+      }
+
+      const title =
+        document.createElement(
+          "h3"
+        );
+
+      title.textContent =
         tool.name;
 
-      image.loading =
-        "lazy";
-
-      image.addEventListener(
-        "error",
-        () => {
-          image.hidden =
-            true;
-
-          cover.classList.add(
-            "catalog-cover-missing"
-          );
-        },
-        {
-          once: true
-        }
+      card.append(
+        cover,
+        title
       );
 
-      cover.append(
-        image
-      );
-    } else {
-      cover.classList.add(
-        "catalog-cover-missing"
+      fragment.append(
+        card
       );
     }
-
-    const title =
-      document.createElement(
-        "h3"
-      );
-
-    title.textContent =
-      tool.name;
-
-    card.append(
-      cover,
-      title
-    );
-
-    fragment.append(
-      card
-    );
-  });
+  );
 
   elements.allToolsGrid
     .replaceChildren(
       fragment
     );
+
+  observeAllToolsImages(
+    lazyImages
+  );
 }
 
 function handleAllToolsFilterClick(
