@@ -300,6 +300,59 @@ async function getSession(
  * - iframe 通知 token 失效；
  * - 重新读取最新 Token 余额。
  */
+
+/**
+ * GET /api/aigc/session/token-balance
+ *
+ * 使用现有 Workspace Token
+ * 只读查询 YiBai 最新余额。
+ *
+ * 不会重新进行账号密码登录。
+ */
+async function getTokenBalance(
+  req,
+  res
+) {
+  try {
+    const result =
+      await aigcSessionService
+        .getCachedTokenBalanceForUser(
+          req.user.id
+        );
+
+    return res.json({
+      success: true,
+
+      message:
+        result.available
+          ? "AIGC Token 余额读取成功"
+          : result.message,
+
+      result
+    });
+  } catch (error) {
+    console.error(
+      "读取 AIGC Token 余额失败：",
+      error
+    );
+
+    return res
+      .status(
+        getErrorStatus(
+          error
+        )
+      )
+      .json({
+        success: false,
+
+        message:
+          error?.message ||
+          "AIGC Token 余额读取失败"
+      });
+  }
+}
+
+
 async function refreshSession(
   req,
   res
@@ -363,5 +416,6 @@ async function refreshSession(
 
 module.exports = {
   getSession,
-  refreshSession
+  refreshSession,
+  getTokenBalance
 };

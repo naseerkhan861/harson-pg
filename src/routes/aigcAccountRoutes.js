@@ -12,10 +12,22 @@ router.get(
   sessionController.getSession
 );
 
+router.get(
+  "/session/token-balance",
+  requireAuth,
+  sessionController.getTokenBalance
+);
+
 router.post(
   "/session/refresh",
   requireAuth,
   sessionController.refreshSession
+);
+
+router.get(
+  "/my-workspace/recharge-records",
+  requireAuth,
+  controller.getMyRechargeRecords
 );
 
 router.get("/admin/dashboard", requireAuth, requireAdmin, controller.dashboard);
@@ -44,6 +56,20 @@ router.post(
   requireAdmin,
   controller.syncMasterProvider
 );
+router.post(
+  "/admin/master-provider-bindings/:masterAccountId/unbind",
+  requireAuth,
+  requireAdmin,
+  controller.unbindMasterProvider
+);
+
+router.post(
+  "/admin/master-provider-bindings/:masterAccountId/user-data-sync",
+  requireAuth,
+  requireAdmin,
+  controller.syncMasterUserData
+);
+
 router.post("/admin/sub-accounts", requireAuth, requireAdmin, controller.createSubAccount);
 router.post("/admin/sub-accounts/token-settings", requireAuth, requireAdmin, controller.updateSubAccountTokenSettings);
 router.post("/admin/mappings", requireAuth, requireAdmin, controller.createMapping);

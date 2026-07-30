@@ -67,6 +67,48 @@ export class AccountManagementViewModel {
     );
   }
 
+  /**
+   * 管理员明确同步 YiBai 真实创作记录。
+   *
+   * 后端同步完成后会重新建立
+   * Workspace 管理端登录状态。
+   */
+  async syncMasterUserData(
+    masterAccountId
+  ) {
+    const normalizedMasterAccountId =
+      encodeURIComponent(
+        String(
+          masterAccountId || ""
+        ).trim()
+      );
+
+    return this.postJson(
+      `/api/aigc/admin/master-provider-bindings/${normalizedMasterAccountId}/user-data-sync`,
+      {}
+    );
+  }
+
+  /**
+   * 解除 Harson-Base 企业主账号
+   * 与 YiBai 外部账号的绑定。
+   */
+  async unbindMasterProvider(
+    masterAccountId
+  ) {
+    const normalizedMasterAccountId =
+      encodeURIComponent(
+        String(
+          masterAccountId || ""
+        ).trim()
+      );
+
+    return this.postJson(
+      `/api/aigc/admin/master-provider-bindings/${normalizedMasterAccountId}/unbind`,
+      {}
+    );
+  }
+
   async createSubAccount(payload) {
     return this.postJson(
       "/api/aigc/admin/sub-accounts",

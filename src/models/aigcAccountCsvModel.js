@@ -309,6 +309,155 @@ function syncMasterTotalCredits({
   };
 }
 
+
+/**
+ * YiBai 正式解绑后清空该企业的全部点数状态。
+ *
+ * 保留：
+ * - Harson-Base 企业主账号
+ * - Harson-Base 子账号
+ * - 用户映射
+ *
+ * 清空：
+ * - 主账号总点数
+ * - 主账号已使用点数
+ * - 所有子账号 Token 配额
+ * - 旧模拟创作记录
+ */
+function resetMasterTotalCreditsAfterProviderUnbind(
+  masterAccountId
+) {
+  const normalizedMasterAccountId =
+    String(
+      masterAccountId || ""
+    ).trim();
+
+  if (!normalizedMasterAccountId) {
+    throw new Error(
+      "AIGC 企业主账号 ID 不能为空"
+    );
+  }
+
+  const masters =
+    readMasters();
+
+  const master =
+    masters.find(
+      item =>
+        item.id ===
+          normalizedMasterAccountId &&
+        item.status ===
+          "active"
+    );
+
+  if (!master) {
+    throw new Error(
+      "未找到可用的 AIGC 企业主账号"
+    );
+  }
+
+  const previousTotalCredits =
+    toNumber(
+      master.totalCredits,
+      0
+    );
+
+  const previousUsedCredits =
+    toNumber(
+      master.usedCredits,
+      0
+    );
+
+  /*
+   * 解绑后外部余额来源已经不存在，
+   * 主账号点数必须全部归零。
+   */
+  master.totalCredits = "0";
+  master.usedCredits = "0";
+  master.updatedAt = now();
+
+  const subs =
+    readSubs();
+
+  const targetSubAccountIds =
+    new Set();
+
+  let resetSubAccountCount = 0;
+
+  subs.forEach(subAccount => {
+    if (
+      subAccount.masterAccountId !==
+      normalizedMasterAccountId
+    ) {
+      return;
+    }
+
+    targetSubAccountIds.add(
+      subAccount.id
+    );
+
+    subAccount.tokenLimit = "0";
+    subAccount.updatedAt = now();
+
+    resetSubAccountCount += 1;
+  });
+
+  /*
+   * 删除旧模拟创作记录，
+   * 防止管理员页面继续计算出旧的已使用 Token。
+   *
+   * YiBai 真实任务快照会由解绑 Service
+   * 在另一个安全 CSV 中同步删除。
+   */
+  const works =
+    readWorks();
+
+  const remainingWorks =
+    works.filter(
+      work =>
+        !targetSubAccountIds.has(
+          work.aigcSubAccountId
+        ) &&
+        work.clBaseUserId !==
+          normalizedMasterAccountId
+    );
+
+  const removedLegacyWorkCount =
+    works.length -
+    remainingWorks.length;
+
+  writeMasters(
+    masters
+  );
+
+  writeSubs(
+    subs
+  );
+
+  if (
+    removedLegacyWorkCount > 0
+  ) {
+    writeWorks(
+      remainingWorks
+    );
+  }
+
+  return {
+    masterAccountId:
+      normalizedMasterAccountId,
+
+    previousTotalCredits,
+    previousUsedCredits,
+
+    resetTotalCredits: 0,
+    resetUsedCredits: 0,
+
+    resetSubAccountCount,
+    removedLegacyWorkCount
+  };
+}
+
+
 async function createMaster({ enterpriseName, platformName, platformLogin, platformPassword, totalCredits }) {
   const masters = readMasters();
 
@@ -657,6 +806,7 @@ function addMyWork({ clBaseUserId, title, workType, promptSummary, creditCost })
 module.exports = {
   createMaster,
   syncMasterTotalCredits,
+  resetMasterTotalCreditsAfterProviderUnbind,
   createSubAccount,
   updateSubAccountTokenSettings,
   createMapping,
