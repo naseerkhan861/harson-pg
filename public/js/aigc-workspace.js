@@ -1144,11 +1144,18 @@ function updateTokenBalance(
   if (
     elements.tokenBalanceValue
   ) {
+    const formattedBalance =
+      formatTokenBalance(
+        normalizedBalance
+      );
+
     elements.tokenBalanceValue
       .textContent =
-        formatTokenBalance(
-          normalizedBalance
-        );
+        formattedBalance;
+
+    elements.tokenBalanceValue
+      .title =
+        formattedBalance;
   }
 
   try {
