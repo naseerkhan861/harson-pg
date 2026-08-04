@@ -37,6 +37,7 @@ app.use(
         "connect-src": ["'self'"],
         "frame-src": [
           "'self'",
+          "blob:",
           "https://cl-base.yibaiaigc.com",
           "https://yibaiaigc.com"
         ],

@@ -135,7 +135,6 @@ button {
 
 .token-balance-button,
 .refresh-button {
-  width: 150px;
   height: 42px;
 
   border-radius: 6px;
@@ -146,6 +145,12 @@ button {
   align-items: center;
   justify-content: center;
   gap: 8px;
+
+  flex: 0 1 auto;
+
+  width: auto;
+  min-width: 150px;
+  max-width: 260px;
 
   border:
     1px solid transparent;
@@ -163,6 +168,11 @@ button {
     border-color 0.18s ease,
     background-color 0.18s ease,
     color 0.18s ease;
+}
+
+.refresh-button {
+  flex: 0 0 150px;
+  width: 150px;
 }
 
 .token-balance-button:hover {
@@ -228,12 +238,17 @@ button {
 }
 
 #tokenBalanceValue {
-  min-width: 28px;
+  min-width: 0;
+
+  overflow: hidden;
 
   color: var(--gold-light);
   font-size: 15px;
   font-weight: 700;
   text-align: left;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
 
   font-variant-numeric:
     tabular-nums;
@@ -384,7 +399,7 @@ button {
   display: none;
 }
 
-/* 首页 */
+/* 棣栭〉 */
 
 .home-hero {
   display: grid;
@@ -951,7 +966,7 @@ button {
   line-height: 1.6;
 }
 
-/* 全部工具页面 */
+/* 鍏ㄩ儴宸ュ叿椤甸潰 */
 
 .all-tools-page {
   padding: 10px;
@@ -1053,7 +1068,7 @@ button {
 }
 
 .catalog-cover-missing::before {
-  content: "封面待添加";
+  content: "灏侀潰寰呮坊鍔�";
 
   position: absolute;
   inset: 0;
@@ -1095,7 +1110,7 @@ button {
   white-space: nowrap;
 }
 
-/* 工具封面变化 */
+/* 宸ュ叿灏侀潰鍙樺寲 */
 
 .cover-1 {
   background:
@@ -1228,7 +1243,7 @@ button {
     #111;
 }
 
-/* iframe 和状态页面 */
+/* iframe 鍜岀姸鎬侀〉闈� */
 
 .aigc-frame {
   width: 100%;
@@ -1359,7 +1374,7 @@ button {
   }
 }
 
-/* 响应式布局 */
+/* 鍝嶅簲寮忓竷灞€ */
 
 @media (max-width: 1500px) {
   .all-tools-grid {
@@ -1506,8 +1521,8 @@ button {
 }
 
 /* =========================================================
-   全部工具页：图片卡片最终样式
-   目标：接近参考截图中的横向封面 + 底部标题条
+   鍏ㄩ儴宸ュ叿椤碉細鍥剧墖鍗＄墖鏈€缁堟牱寮�
+   鐩爣锛氭帴杩戝弬鑰冩埅鍥句腑鐨勬í鍚戝皝闈� + 搴曢儴鏍囬鏉�
    ========================================================= */
 
 .all-tools-page {
@@ -1529,7 +1544,7 @@ button {
     rgba(255, 255, 255, 0.025);
 }
 
-/* 大屏一行显示 6 张 */
+/* 澶у睆涓€琛屾樉绀� 6 寮� */
 .all-tools-grid {
   display: grid;
 
@@ -1543,7 +1558,7 @@ button {
   padding: 0 0 4px;
 }
 
-/* 完整卡片 */
+/* 瀹屾暣鍗＄墖 */
 .catalog-card {
   min-width: 0;
 
@@ -1579,7 +1594,7 @@ button {
     rgba(0, 0, 0, 0.36);
 }
 
-/* 图片区域改成横向 3:2，不再使用原来的竖长卡片 */
+/* 鍥剧墖鍖哄煙鏀规垚妯悜 3:2锛屼笉鍐嶄娇鐢ㄥ師鏉ョ殑绔栭暱鍗＄墖 */
 .catalog-cover {
   position: relative;
 
@@ -1597,7 +1612,7 @@ button {
   background: #101010;
 }
 
-/* 真实封面图 */
+/* 鐪熷疄灏侀潰鍥� */
 .catalog-cover-image {
   display: block;
 
@@ -1617,7 +1632,7 @@ button {
     scale(1.025);
 }
 
-/* 图片加载失败时的占位背景 */
+/* 鍥剧墖鍔犺浇澶辫触鏃剁殑鍗犱綅鑳屾櫙 */
 .catalog-cover-missing {
   background:
     linear-gradient(
@@ -1628,7 +1643,7 @@ button {
 }
 
 .catalog-cover-missing::before {
-  content: "封面待添加";
+  content: "灏侀潰寰呮坊鍔�";
 
   position: absolute;
   inset: 0;
@@ -1643,14 +1658,14 @@ button {
   font-size: 12px;
 }
 
-/* 永久隐藏旧卡片中的英文和大单字 */
+/* 姘镐箙闅愯棌鏃у崱鐗囦腑鐨勮嫳鏂囧拰澶у崟瀛� */
 .catalog-cover-subtitle,
 .catalog-cover-mark,
 .catalog-cover-line {
   display: none !important;
 }
 
-/* 底部标题条 */
+/* 搴曢儴鏍囬鏉� */
 .catalog-card h3 {
   display: flex;
   align-items: center;
@@ -1679,7 +1694,7 @@ button {
   white-space: nowrap;
 }
 
-/* 响应式列数 */
+/* 鍝嶅簲寮忓垪鏁� */
 @media (max-width: 1500px) {
   .all-tools-grid {
     grid-template-columns:
@@ -1728,11 +1743,11 @@ button {
 
 
 /* =========================================================
-   CL-AIGC 新首页
-   Banner + 热门工具 + 最新工具
+   CL-AIGC 鏂伴椤�
+   Banner + 鐑棬宸ュ叿 + 鏈€鏂板伐鍏�
    ========================================================= */
 
-/* 首页外围边框与全部工具页统一 */
+/* 棣栭〉澶栧洿杈规涓庡叏閮ㄥ伐鍏烽〉缁熶竴 */
 .home-page {
   padding: 10px;
 
@@ -1747,7 +1762,7 @@ button {
 }
 
 /* =========================================================
-   首页 Banner
+   棣栭〉 Banner
    ========================================================= */
 
 .home-banner {
@@ -1816,7 +1831,7 @@ button {
   transform: scale(1.035);
 }
 
-/* 左侧文字区域渐变，保证白字清晰 */
+/* 宸︿晶鏂囧瓧鍖哄煙娓愬彉锛屼繚璇佺櫧瀛楁竻鏅� */
 .home-banner-shade {
   position: absolute;
   inset: 0;
@@ -1918,7 +1933,7 @@ button {
   letter-spacing: 0.04em;
 }
 
-/* Banner 左右箭头 */
+/* Banner 宸﹀彸绠ご */
 .home-banner-arrow {
   position: absolute;
   z-index: 4;
@@ -1983,7 +1998,7 @@ button {
   right: 18px;
 }
 
-/* Banner 底部圆点 */
+/* Banner 搴曢儴鍦嗙偣 */
 .home-banner-dots {
   position: absolute;
   z-index: 4;
@@ -2030,7 +2045,7 @@ button {
 }
 
 /* =========================================================
-   热门与最新工具区域
+   鐑棬涓庢渶鏂板伐鍏峰尯鍩�
    ========================================================= */
 
 .home-showcase-section {
@@ -2076,7 +2091,7 @@ button {
   font-size: 12px;
 }
 
-/* 热门工具：一行四张 */
+/* 鐑棬宸ュ叿锛氫竴琛屽洓寮� */
 .home-hot-grid {
   display: grid;
 
@@ -2085,7 +2100,7 @@ button {
 
   gap: 10px;
 }
-/* 最新工具：一行六张 */
+/* 鏈€鏂板伐鍏凤細涓€琛屽叚寮� */
 .home-latest-grid {
   display: grid;
 
@@ -2097,7 +2112,7 @@ button {
   padding-bottom: 4px;
 }
 
-/* 首页工具卡片 */
+/* 棣栭〉宸ュ叿鍗＄墖 */
 .home-tool-card {
   min-width: 0;
 
@@ -2165,7 +2180,7 @@ button {
     scale(1.035);
 }
 
-/* HOT 和 NEW 标签 */
+/* HOT 鍜� NEW 鏍囩 */
 .home-tool-badge {
   position: absolute;
 
@@ -2201,7 +2216,7 @@ button {
   background: #9bea27;
 }
 
-/* 卡片文字区域 */
+/* 鍗＄墖鏂囧瓧鍖哄煙 */
 .home-tool-body {
   min-height: 94px;
 
@@ -2250,7 +2265,7 @@ button {
 }
 
 
-/* 查看全部工具按钮 */
+/* 鏌ョ湅鍏ㄩ儴宸ュ叿鎸夐挳 */
 .home-all-tools-button {
   display: inline-flex;
   align-items: center;
@@ -2295,7 +2310,7 @@ button {
 }
 
 /* =========================================================
-   首页响应式布局
+   棣栭〉鍝嶅簲寮忓竷灞€
    ========================================================= */
 
 @media (max-width: 1380px) {
@@ -2408,7 +2423,7 @@ button {
   }
 }
 
-/* Banner 图片已经自带文字，不再叠加黑色遮罩和 HTML 文案 */
+/* Banner 鍥剧墖宸茬粡鑷甫鏂囧瓧锛屼笉鍐嶅彔鍔犻粦鑹查伄缃╁拰 HTML 鏂囨 */
 .home-banner-shade {
   display: none !important;
 }
@@ -2417,23 +2432,23 @@ button {
   display: none !important;
 }
 
-/* 保持原图亮度与清晰度 */
+/* 淇濇寔鍘熷浘浜害涓庢竻鏅板害 */
 .home-banner-image {
   filter: none !important;
   opacity: 1 !important;
 }
 
-/* 隐藏页面来源和连接状态，保持所有子菜单顶部一致 */
+/* 闅愯棌椤甸潰鏉ユ簮鍜岃繛鎺ョ姸鎬侊紝淇濇寔鎵€鏈夊瓙鑿滃崟椤堕儴涓€鑷� */
 .connection-status {
   display: none !important;
 }
 
-/* 首页与全部工具中的刷新按钮也保持正常外观 */
+/* 棣栭〉涓庡叏閮ㄥ伐鍏蜂腑鐨勫埛鏂版寜閽篃淇濇寔姝ｅ父澶栬 */
 .refresh-button {
   opacity: 1;
 }
 
-/* 只有真正处于请求过程时才显示禁用状态 */
+/* 鍙湁鐪熸澶勪簬璇锋眰杩囩▼鏃舵墠鏄剧ず绂佺敤鐘舵€� */
 .refresh-button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
@@ -2441,8 +2456,8 @@ button {
 
 
 /* =========================================================
-   全部工具分类筛选栏
-   保留现有页面容器和工具卡片样式
+   鍏ㄩ儴宸ュ叿鍒嗙被绛涢€夋爮
+   淇濈暀鐜版湁椤甸潰瀹瑰櫒鍜屽伐鍏峰崱鐗囨牱寮�
    ========================================================= */
 
 .all-tools-filters {
@@ -2455,7 +2470,7 @@ button {
     1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* 一级分类 */
+/* 涓€绾у垎绫� */
 .all-tools-primary-filter {
   display: flex;
   align-items: center;
@@ -2543,7 +2558,7 @@ button {
     scaleX(1);
 }
 
-/* 二级分类 */
+/* 浜岀骇鍒嗙被 */
 .all-tools-secondary-filter {
   display: flex;
   align-items: center;

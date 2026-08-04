@@ -5,31 +5,36 @@ const DEFAULT_TIMEOUT_MS = 10000;
 
 /**
  * 判断当前是否使用模拟接口。
- *
- * YIBAI_AIGC_MOCK=true：
- * 不请求真实服务器，用于提前测试本地流程。
- *
- * YIBAI_AIGC_MOCK=false：
- * 请求真实的 yibaiaigc 测试环境。
  */
 function isMockEnabled() {
-  return String(process.env.YIBAI_AIGC_MOCK || "false").toLowerCase() === "true";
+  return String(
+    process.env.YIBAI_AIGC_MOCK || "false"
+  ).toLowerCase() === "true";
 }
 
 /**
- * 获取 yibaiaigc 服务地址，并移除地址末尾多余的斜杠。
+ * 获取 YiBai 服务地址。
+ * 正式环境会优先使用 .env 中的 YIBAI_AIGC_HOST。
  */
 function getHost() {
-  return String(process.env.YIBAI_AIGC_HOST || DEFAULT_HOST).replace(/\/+$/, "");
+  return String(
+    process.env.YIBAI_AIGC_HOST ||
+    DEFAULT_HOST
+  ).replace(/\/+$/, "");
 }
 
 /**
  * 获取请求超时时间。
  */
 function getTimeoutMs() {
-  const configuredTimeout = Number(process.env.YIBAI_AIGC_TIMEOUT_MS);
+  const configuredTimeout = Number(
+    process.env.YIBAI_AIGC_TIMEOUT_MS
+  );
 
-  if (Number.isFinite(configuredTimeout) && configuredTimeout > 0) {
+  if (
+    Number.isFinite(configuredTimeout) &&
+    configuredTimeout > 0
+  ) {
     return configuredTimeout;
   }
 
@@ -40,10 +45,14 @@ function getTimeoutMs() {
  * 检查必填字符串参数。
  */
 function requireText(value, fieldName) {
-  const normalizedValue = String(value || "").trim();
+  const normalizedValue = String(
+    value || ""
+  ).trim();
 
   if (!normalizedValue) {
-    throw new Error(`${fieldName}不能为空`);
+    throw new Error(
+      `${fieldName}不能为空`
+    );
   }
 
   return normalizedValue;
@@ -52,7 +61,10 @@ function requireText(value, fieldName) {
 /**
  * 读取 Mock 数值配置。
  */
-function getMockNumber(envKey, fallbackValue) {
+function getMockNumber(
+  envKey,
+  fallbackValue
+) {
   const configuredValue = Number(
     process.env[envKey]
   );
@@ -79,15 +91,15 @@ function buildMockMemberResult({
     token,
     id: 10001,
 
-    memberName:
-      String(memberName || "Mock Member"),
+    memberName: String(
+      memberName || "Mock Member"
+    ),
 
-    companyName:
-      String(
-        process.env
-          .YIBAI_AIGC_MOCK_COMPANY_NAME ||
-          "HARSON Mock Enterprise"
-      ),
+    companyName: String(
+      process.env
+        .YIBAI_AIGC_MOCK_COMPANY_NAME ||
+      "HARSON Mock Enterprise"
+    ),
 
     companyId: getMockNumber(
       "YIBAI_AIGC_MOCK_COMPANY_ID",
@@ -109,14 +121,17 @@ function buildMockMemberResult({
 }
 
 /**
- * 向 yibaiaigc 发送 POST JSON 请求。
+ * 向 YiBai 发送 POST JSON 请求。
  *
  * 注意：
- * - 不在日志中打印密码或 token；
- * - 接口返回 code=400 时仍然返回响应体；
+ * - 不在日志中打印密码或 Token；
+ * - 接口返回业务错误时仍然返回响应体；
  * - 只有网络错误、超时或非法响应才抛出异常。
  */
-async function postJson(pathname, options = {}) {
+async function postJson(
+  pathname,
+  options = {}
+) {
   if (typeof fetch !== "function") {
     throw new Error(
       "当前 Node.js 版本不支持 fetch，请使用 Node.js 18 或更高版本"
@@ -125,25 +140,37 @@ async function postJson(pathname, options = {}) {
 
   const host = getHost();
   const timeoutMs = getTimeoutMs();
-  const controller = new AbortController();
+  const controller =
+    new AbortController();
 
   const timeoutId = setTimeout(() => {
     controller.abort();
   }, timeoutMs);
 
   try {
-    const response = await fetch(`${host}${pathname}`, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        ...(options.headers || {})
-      },
-      body: JSON.stringify(options.body || {}),
-      signal: controller.signal
-    });
+    const response = await fetch(
+      `${host}${pathname}`,
+      {
+        method: "POST",
 
-    const responseText = await response.text();
+        headers: {
+          Accept: "application/json",
+          "Content-Type":
+            "application/json",
+
+          ...(options.headers || {})
+        },
+
+        body: JSON.stringify(
+          options.body || {}
+        ),
+
+        signal: controller.signal
+      }
+    );
+
+    const responseText =
+      await response.text();
 
     let responseBody;
 
@@ -163,17 +190,25 @@ async function postJson(pathname, options = {}) {
     };
   } catch (error) {
     if (error.name === "AbortError") {
-      throw new Error(`连接 yibaiaigc 超时，超过 ${timeoutMs} 毫秒`);
+      throw new Error(
+        `连接 yibaiaigc 超时，超过 ${timeoutMs} 毫秒`
+      );
     }
 
     if (
-      error.message.includes("无法解析") ||
-      error.message.includes("不支持 fetch")
+      error.message.includes(
+        "无法解析"
+      ) ||
+      error.message.includes(
+        "不支持 fetch"
+      )
     ) {
       throw error;
     }
 
-    throw new Error("无法连接 yibaiaigc 服务");
+    throw new Error(
+      "无法连接 yibaiaigc 服务"
+    );
   } finally {
     clearTimeout(timeoutId);
   }
@@ -201,12 +236,15 @@ function mockLogin(account) {
 }
 
 /**
- * 模拟 token 验证。
+ * 模拟 Token 验证。
  *
- * 使用 mock-expired-token 可以模拟 token 失效。
+ * 使用 mock-expired-token
+ * 可以模拟 Token 失效。
  */
 function mockLoginByToken(token) {
-  if (token === "mock-expired-token") {
+  if (
+    token === "mock-expired-token"
+  ) {
     return {
       code: 400,
       success: false,
@@ -244,61 +282,179 @@ function mockLogout() {
 }
 
 /**
- * 使用 yibaiaigc 账号密码登录。
+ * 模拟可嵌入的 YiBai 一级菜单。
  */
-async function login(account, password) {
-  const normalizedAccount = requireText(account, "AIGC账号");
-  const normalizedPassword = requireText(password, "AIGC密码");
+function mockSelectAllEmbedMenu() {
+  return {
+    code: 200,
+    success: true,
+    message: "模拟菜单读取成功",
 
-  if (isMockEnabled()) {
-    return mockLogin(normalizedAccount);
-  }
+    result: [
+      {
+        id: 1,
+        name: "图片创作",
+        routerUrl:
+          "/aigc/image-generator"
+      },
+      {
+        id: 2,
+        name: "高清放大",
+        routerUrl:
+          "/aigc/upscaler"
+      },
+      {
+        id: 3,
+        name: "视频创作",
+        routerUrl:
+          "/aigc/video-generator"
+      },
+      {
+        id: 4,
+        name: "AI图案设计",
+        routerUrl:
+          "/aigc/pattern-design"
+      },
+      {
+        id: 5,
+        name: "提示词生成",
+        routerUrl:
+          "/aigc/prompt-generator"
+      },
+      {
+        id: 6,
+        name: "AI服装",
+        routerUrl:
+          "/aigc/clothing"
+      },
+      {
+        id: 7,
+        name: "AI电商",
+        routerUrl:
+          "/aigc/e-commerce"
+      }
+    ],
 
-  return postJson("/api/member/login", {
-    body: {
-      account: normalizedAccount,
-      password: normalizedPassword
-    }
-  });
+    httpStatus: 200
+  };
 }
 
 /**
- * 验证已有的 yibaiaigc token。
+ * 使用 YiBai 账号密码登录。
+ */
+async function login(
+  account,
+  password
+) {
+  const normalizedAccount =
+    requireText(
+      account,
+      "AIGC账号"
+    );
+
+  const normalizedPassword =
+    requireText(
+      password,
+      "AIGC密码"
+    );
+
+  if (isMockEnabled()) {
+    return mockLogin(
+      normalizedAccount
+    );
+  }
+
+  return postJson(
+    "/api/member/login",
+    {
+      body: {
+        account:
+          normalizedAccount,
+
+        password:
+          normalizedPassword
+      }
+    }
+  );
+}
+
+/**
+ * 验证已有的 YiBai Token。
  */
 async function loginByToken(token) {
-  const normalizedToken = requireText(token, "AIGC token");
+  const normalizedToken =
+    requireText(
+      token,
+      "AIGC token"
+    );
 
   if (isMockEnabled()) {
-    return mockLoginByToken(normalizedToken);
+    return mockLoginByToken(
+      normalizedToken
+    );
   }
 
-  return postJson("/api/member/loginByToken", {
-    body: {
-      token: normalizedToken
+  return postJson(
+    "/api/member/loginByToken",
+    {
+      body: {
+        token: normalizedToken
+      }
     }
-  });
+  );
 }
 
 /**
- * 注销 yibaiaigc token。
+ * 注销 YiBai Token。
  */
 async function logout(token) {
-  const normalizedToken = requireText(token, "AIGC token");
+  const normalizedToken =
+    requireText(
+      token,
+      "AIGC token"
+    );
 
   if (isMockEnabled()) {
     return mockLogout();
   }
 
-  return postJson("/api/member/logout", {
-    headers: {
-      "Access-Token-Api": normalizedToken
-    },
-    body: {}
-  });
+  return postJson(
+    "/api/member/logout",
+    {
+      headers: {
+        "Access-Token-Api":
+          normalizedToken
+      },
+
+      body: {}
+    }
+  );
+}
+
+/**
+ * 获取当前可嵌入 Harson-Base 的
+ * YiBai 一级菜单。
+ *
+ * 文档规定：
+ * - 不需要认证；
+ * - 不需要请求参数。
+ */
+async function selectAllEmbedMenu() {
+  if (isMockEnabled()) {
+    return mockSelectAllEmbedMenu();
+  }
+
+  return postJson(
+    "/api/menu/selectAllEmbedMenu",
+    {
+      body: {}
+    }
+  );
 }
 
 module.exports = {
   login,
   loginByToken,
-  logout
+  logout,
+  selectAllEmbedMenu
 };

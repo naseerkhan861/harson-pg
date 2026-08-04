@@ -4,30 +4,41 @@ const aigcSessionService = require(
   "../services/aigcSessionService"
 );
 
+const yibaiAigcClient = require(
+  "../services/yibaiAigcClient"
+);
+
 const DEFAULT_HOST =
   "https://cl-base.yibaiaigc.com";
 
-const MODULE_PATHS = Object.freeze({
-  "image-generator":
-    "/aigc/image-generator",
+const MODULE_DEFINITIONS = Object.freeze({
+  "image-generator": {
+    menuName: "图片创作"
+  },
 
-  upscaler:
-    "/aigc/upscaler",
+  upscaler: {
+    menuName: "高清放大"
+  },
 
-  "video-generator":
-    "/aigc/video-generator",
+  "video-generator": {
+    menuName: "视频创作"
+  },
 
-  "pattern-design":
-    "/aigc/pattern-design",
+  "pattern-design": {
+    menuName: "AI图案设计"
+  },
 
-  "prompt-generator":
-    "/aigc/prompt-generator",
+  "prompt-generator": {
+    menuName: "提示词生成"
+  },
 
-  clothing:
-    "/aigc/clothing",
+  clothing: {
+    menuName: "AI服装"
+  },
 
-  "e-commerce":
-    "/aigc/e-commerce"
+  "e-commerce": {
+    menuName: "AI电商"
+  }
 });
 
 function getHost() {
@@ -60,7 +71,7 @@ function resolveModule(
     ).trim();
 
   if (
-    !MODULE_PATHS[
+    !MODULE_DEFINITIONS[
       normalizedModule
     ]
   ) {
@@ -72,28 +83,156 @@ function resolveModule(
   return normalizedModule;
 }
 
+function normalizeMenuName(
+  value
+) {
+  return String(
+    value || ""
+  ).replace(
+    /\s+/g,
+    ""
+  );
+}
+
+function isSuccessfulResponse(
+  response
+) {
+  return Boolean(
+    response &&
+    response.success === true &&
+    Number(response.code) === 200
+  );
+}
+
 /**
- * 生成 YiBai iframe 地址。
+ * 根据 YiBai 当前菜单列表解析模块入口。
  *
- * token 只放在 iframe URL 中，
- * 不作为独立字段返回给前端。
+ * 按菜单名称匹配而不是继续使用写死的路径，
+ * 因此 YiBai 调整 routerUrl 后 Harson 无需同步改路径。
  */
-function buildFrameUrl({
-  moduleName,
-  token
-}) {
+async function resolveModuleRouterUrl(
+  moduleName
+) {
   const normalizedModule =
     resolveModule(
       moduleName
     );
 
-  const url =
+  const definition =
+    MODULE_DEFINITIONS[
+      normalizedModule
+    ];
+
+  const menuResponse =
+    await yibaiAigcClient
+      .selectAllEmbedMenu();
+
+  if (
+    !isSuccessfulResponse(
+      menuResponse
+    )
+  ) {
+    throw new Error(
+      `YiBai AIGC 菜单读取失败：${String(
+        menuResponse?.message ||
+        "未知错误"
+      )}`
+    );
+  }
+
+  if (
+    !Array.isArray(
+      menuResponse.result
+    )
+  ) {
+    throw new Error(
+      "YiBai AIGC 菜单返回格式无效"
+    );
+  }
+
+  const expectedMenuName =
+    normalizeMenuName(
+      definition.menuName
+    );
+
+  const matchedMenu =
+    menuResponse.result.find(
+      menu =>
+        normalizeMenuName(
+          menu?.name
+        ) ===
+        expectedMenuName
+    );
+
+  const routerUrl =
+    String(
+      matchedMenu?.routerUrl ||
+      ""
+    ).trim();
+
+  if (!routerUrl) {
+    throw new Error(
+      `“${definition.menuName}”入口暂不可用，请稍后再试或联系管理员`
+    );
+  }
+
+  return {
+    moduleName:
+      normalizedModule,
+
+    menuName:
+      definition.menuName,
+
+    routerUrl
+  };
+}
+
+/**
+ * 生成 YiBai iframe 地址，并限制入口必须属于配置的 YiBai 域名。
+ *
+ * token 只放在 iframe URL 中，
+ * 不作为独立字段返回给前端。
+ */
+async function buildFrameUrl({
+  moduleName,
+  token
+}) {
+  const moduleRoute =
+    await resolveModuleRouterUrl(
+      moduleName
+    );
+
+  const hostUrl =
     new URL(
-      MODULE_PATHS[
-        normalizedModule
-      ],
       `${getHost()}/`
     );
+
+  const routerUrl =
+    moduleRoute.routerUrl;
+
+  if (
+    !routerUrl.startsWith("/") ||
+    routerUrl.startsWith("//")
+  ) {
+    throw new Error(
+      `“${moduleRoute.menuName}”入口地址无效，请联系管理员`
+    );
+  }
+
+  const url =
+    new URL(
+      routerUrl,
+      hostUrl
+    );
+
+  if (
+    url.origin !==
+    hostUrl.origin
+  ) {
+    throw new Error(
+      `“${moduleRoute.menuName}”入口地址无效，请联系管理员`
+    );
+  }
 
   url.searchParams.set(
     "embed",
@@ -107,7 +246,7 @@ function buildFrameUrl({
 
   return {
     moduleName:
-      normalizedModule,
+      moduleRoute.moduleName,
 
     frameUrl:
       url.toString()
@@ -219,9 +358,29 @@ function getErrorStatus(
     ) ||
     message.includes(
       "yibaiaigc 登录失败"
+    ) ||
+    message.includes(
+      "菜单读取失败"
+    ) ||
+    message.includes(
+      "菜单返回格式无效"
+    ) ||
+    message.includes(
+      "入口地址无效"
+    ) ||
+    message.includes(
+      "无法解析"
     )
   ) {
     return 502;
+  }
+
+  if (
+    message.includes(
+      "入口暂不可用"
+    )
+  ) {
+    return 503;
   }
 
   return 400;
@@ -249,7 +408,7 @@ async function getSession(
         );
 
     const frameData =
-      buildFrameUrl({
+      await buildFrameUrl({
         moduleName,
 
         token:
@@ -291,15 +450,6 @@ async function getSession(
       });
   }
 }
-
-/**
- * POST /api/aigc/session/refresh
- *
- * 用于：
- * - 用户手动点击刷新登录状态；
- * - iframe 通知 token 失效；
- * - 重新读取最新 Token 余额。
- */
 
 /**
  * GET /api/aigc/session/token-balance
@@ -352,7 +502,14 @@ async function getTokenBalance(
   }
 }
 
-
+/**
+ * POST /api/aigc/session/refresh
+ *
+ * 用于：
+ * - 用户手动点击刷新登录状态；
+ * - iframe 通知 token 失效；
+ * - 重新读取最新 Token 余额。
+ */
 async function refreshSession(
   req,
   res
@@ -371,7 +528,7 @@ async function refreshSession(
         );
 
     const frameData =
-      buildFrameUrl({
+      await buildFrameUrl({
         moduleName,
 
         token:
