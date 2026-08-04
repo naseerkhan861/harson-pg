@@ -96,6 +96,16 @@ function readTokenBalance(
       ""
     ).trim();
 
+    console.log("YiBai 余额字段检查：", {
+  balance: memberResult?.balance,
+  rightBalance: memberResult?.rightBalance,
+  totalBalance: memberResult?.totalBalance,
+  companyBalance: memberResult?.companyBalance,
+  mpoint: memberResult?.mpoint,
+  companyMpoint: memberResult?.companyMpoint,
+  configuredField
+});
+
   const candidates = [
     {
       field: "balance",
@@ -171,14 +181,53 @@ function readTokenBalance(
     };
   }
 
-  return {
+    const selectedField =
+    selectedBalance.field;
+
+  const baseBalance =
+    Number(
+      selectedBalance.value
+    );
+
+  const rawRightBalance =
+    memberResult?.rightBalance;
+
+  const rightBalance =
+    rawRightBalance === null ||
+    rawRightBalance === undefined ||
+    rawRightBalance === ""
+      ? 0
+      : Number(rawRightBalance);
+
+  const includesRightBalance =
+    (
+      selectedField === "balance" ||
+      selectedField === "companyBalance"
+    ) &&
+    Number.isFinite(rightBalance) &&
+    rightBalance >= 0;
+
+    return {
     pointsField:
-      selectedBalance.field,
+      includesRightBalance
+        ? `${selectedField}+rightBalance`
+        : selectedField,
 
     tokenBalance:
-      Number(
-        selectedBalance.value
-      )
+      baseBalance +
+      (
+        includesRightBalance
+          ? rightBalance
+          : 0
+      ),
+
+    accountTokenBalance:
+      baseBalance,
+
+    bonusTokenBalance:
+      includesRightBalance
+        ? rightBalance
+        : 0
   };
 }
 
@@ -830,12 +879,18 @@ async function getCachedTokenBalanceForUser(
             .providerConfig
         );
 
-      return {
+        return {
         success: true,
         available: true,
 
         tokenBalance:
           balanceData.tokenBalance,
+
+        accountTokenBalance:
+          balanceData.accountTokenBalance,
+
+        bonusTokenBalance:
+          balanceData.bonusTokenBalance,
 
         pointsField:
           balanceData.pointsField,

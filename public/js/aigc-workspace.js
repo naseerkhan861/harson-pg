@@ -1144,11 +1144,18 @@ function updateTokenBalance(
   if (
     elements.tokenBalanceValue
   ) {
+    const formattedBalance =
+      formatTokenBalance(
+        normalizedBalance
+      );
+
     elements.tokenBalanceValue
       .textContent =
-        formatTokenBalance(
-          normalizedBalance
-        );
+        formattedBalance;
+
+    elements.tokenBalanceValue
+      .title =
+        formattedBalance;
   }
 
   try {
@@ -2221,15 +2228,12 @@ function handleMemberInfo(
     return;
   }
 
-  const updated =
-    updateTokenBalance(
-      Number(
-        validBalance
-      )
-    );
-
+    /*
+   * 最新余额由 Harson-Base 后端提供。
+   * MEMBER_INFO 只用于确认 iframe 会话，
+   * 不再覆盖后端计算的余额。
+   */
   if (
-    updated &&
     state.awaitingMemberInfo
   ) {
     finishBackgroundTokenSync(

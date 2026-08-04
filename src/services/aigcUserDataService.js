@@ -654,11 +654,18 @@ async function getRechargeRecords(
     );
   }
 
+
+
+
   const rawRecords =
-    Array.isArray(
-      rechargeResponse.result
-    )
-      ? rechargeResponse.result
+  Array.isArray(
+    rechargeResponse.result
+  )
+    ? rechargeResponse.result
+    : Array.isArray(
+        rechargeResponse.result?.data
+      )
+      ? rechargeResponse.result.data
       : [];
 
   const records =
