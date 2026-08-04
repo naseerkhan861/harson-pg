@@ -507,37 +507,56 @@ function showTab(tabName) {
   );
 }
 
-function updateBalance(balance) {
+function updateBalance(
+  balance,
+  accountBalance = balance,
+  bonusBalance = 0
+) {
   const normalizedBalance =
     Number(balance);
+
+  const normalizedAccountBalance =
+    Number(accountBalance);
+
+  const normalizedBonusBalance =
+    Number(bonusBalance);
 
   if (
     !Number.isFinite(
       normalizedBalance
     ) ||
-    normalizedBalance < 0
+    normalizedBalance < 0 ||
+    !Number.isFinite(
+      normalizedAccountBalance
+    ) ||
+    normalizedAccountBalance < 0 ||
+    !Number.isFinite(
+      normalizedBonusBalance
+    ) ||
+    normalizedBonusBalance < 0
   ) {
     return false;
   }
 
-  const formattedBalance =
-    formatNumber(
-      normalizedBalance
-    );
-
   if (elements.currentBalance) {
     elements.currentBalance.textContent =
-      formattedBalance;
+      formatNumber(
+        normalizedBalance
+      );
   }
 
   if (elements.accountBalance) {
     elements.accountBalance.textContent =
-      formattedBalance;
+      formatNumber(
+        normalizedAccountBalance
+      );
   }
 
   if (elements.bonusBalance) {
     elements.bonusBalance.textContent =
-      "0";
+      formatNumber(
+        normalizedBonusBalance
+      );
   }
 
   try {
@@ -679,7 +698,9 @@ async function fetchLatestBalance() {
     }
 
     updateBalance(
-      data.result.tokenBalance
+    data.result.tokenBalance,
+    data.result.accountTokenBalance,
+    data.result.bonusTokenBalance
     );
   } catch (error) {
     console.warn(
