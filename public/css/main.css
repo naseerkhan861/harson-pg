@@ -1202,12 +1202,19 @@ body[data-page="auth"]::before {
   transform-origin: center;
   transition: opacity 0.24s ease;
 
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
+ -webkit-mask:
+  linear-gradient(#000 0 0) content-box,
+  linear-gradient(#000 0 0);
+
+mask:
+  linear-gradient(#000 0 0) content-box,
+  linear-gradient(#000 0 0);
+
+-webkit-mask-composite: xor;
+mask-composite: exclude;
 }
+
+
 
 .auth-form:hover {
   transform: translateY(-3px);

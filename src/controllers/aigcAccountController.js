@@ -11,6 +11,9 @@ const aigcMasterProviderService = require(
 const aigcUserDataService = require(
   "../services/aigcUserDataService"
 );
+const aigcSessionService = require(
+  "../services/aigcSessionService"
+);
 
 async function dashboard(req, res) {
   try {
@@ -203,6 +206,50 @@ async function createMapping(req, res) {
     });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
+  }
+}
+
+async function unbindMapping(req, res) {
+  try {
+    const mapping =
+      aigcAccountModel.unbindMapping(
+        req.params.mappingId
+      );
+
+    let sessionCleanup = null;
+
+    try {
+      sessionCleanup =
+        await aigcSessionService
+          .logoutUserAigcSession(
+            mapping.clBaseUserId
+          );
+    } catch (error) {
+      console.warn(
+        "解除账号映射后的 AIGC 会话清理失败：",
+        error.message
+      );
+    }
+
+    const sessionWarning =
+      sessionCleanup &&
+      sessionCleanup.success === false
+        ? "，但 YiBai 外部注销未完成，请稍后检查共享 Session"
+        : sessionCleanup
+          ? ""
+          : "，但 AIGC 会话清理未完成，请稍后检查共享 Session";
+
+    return res.json({
+      success: true,
+      message:
+        `Harson-Base 与 AIGC 子账号映射已解除${sessionWarning}`,
+      data: mapping
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message
+    });
   }
 }
 
@@ -1096,6 +1143,7 @@ module.exports = {
   syncMasterUserData,
 
   createMapping,
+  unbindMapping,
   listClBaseUsers,
   myAigcWorkspace,
   addMyWork,

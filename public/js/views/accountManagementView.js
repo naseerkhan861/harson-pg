@@ -113,7 +113,11 @@ export class AccountManagementView {
 
         ${this.metricCard(
           "账号映射",
-          data.mappings.length
+          data.mappings.filter(
+            mapping =>
+              mapping.mappingStatus ===
+              "active"
+          ).length
         )}
       </section>
 
@@ -380,7 +384,8 @@ export class AccountManagementView {
         <p>
           每个 Harson-Base 用户只能绑定一个
           AIGC 子账号；同一个 AIGC 子账号可以
-          绑定多个 Harson-Base 用户
+          绑定多个 Harson-Base 用户。已建立的
+          映射可在页面下方总览中解除
         </p>
 
         <div
@@ -743,6 +748,7 @@ export class AccountManagementView {
     this.bindProviderSyncButtons();
     this.bindUserDataSyncButtons();
     this.bindProviderUnbindButtons();
+    this.bindMappingUnbindButtons();
   }
 
   bindProviderSyncButtons() {
@@ -907,7 +913,7 @@ export class AccountManagementView {
 
             const confirmed =
               window.confirm(
-                "解绑后，当前企业的 YiBai 登录状态、真实任务快照、主账号点数和所有子账号 Token 配额都会清零。Harson-Base 账号与用户映射会保留。确定继续吗？"
+                "解绑后，当前企业的 YiBai 登录状态、真实任务快照、主账号点数和所有子账号 Token 配额都会清零。Harson-Base 账号映射不会自动解除；如不再使用，请在下方映射总览中手动解除。确定继续吗？"
               );
 
             if (!confirmed) {
@@ -938,6 +944,78 @@ export class AccountManagementView {
 
             this.showLocalMessage(
               "providerBindingMessage",
+              result.message,
+              result.success
+            );
+
+            if (result.success) {
+              setTimeout(
+                async () => {
+                  await this.load();
+                },
+                800
+              );
+
+              return;
+            }
+
+            button.disabled = false;
+            button.textContent =
+              originalText;
+          }
+        );
+      });
+  }
+
+  bindMappingUnbindButtons() {
+    document
+      .querySelectorAll(
+        ".unbind-mapping-btn"
+      )
+      .forEach(button => {
+        button.addEventListener(
+          "click",
+          async () => {
+            const mappingId =
+              String(
+                button.dataset.mappingId ||
+                ""
+              ).trim();
+
+            if (!mappingId) {
+              this.showLocalMessage(
+                "mappingMessage",
+                "缺少账号映射 ID",
+                false
+              );
+
+              return;
+            }
+
+            const confirmed =
+              window.confirm(
+                "解除后，该 Harson-Base 用户将无法继续通过此映射访问 AIGC 子账号，但企业主账号、AIGC 子账号和历史创作记录不会被删除。确定解除映射吗？"
+              );
+
+            if (!confirmed) {
+              return;
+            }
+
+            const originalText =
+              button.textContent;
+
+            button.disabled = true;
+            button.textContent =
+              "解绑中...";
+
+            const result =
+              await this.vm
+                .unbindMapping(
+                  mappingId
+                );
+
+            this.showLocalMessage(
+              "mappingMessage",
               result.message,
               result.success
             );
@@ -1168,12 +1246,37 @@ export class AccountManagementView {
         item => item.role !== "admin"
       );
 
+    const activeMappedUserIds =
+      new Set(
+        (
+          this.state.dashboard
+            ?.mappings || []
+        )
+          .filter(
+            mapping =>
+              mapping.mappingStatus ===
+              "active"
+          )
+          .map(
+            mapping =>
+              mapping.clBaseUserId
+          )
+      );
+
+    const availableUsers =
+      normalUsers.filter(
+        item =>
+          !activeMappedUserIds.has(
+            item.id
+          )
+      );
+
     return [
       `<option value="">
         选择 Harson-Base 用户
       </option>`,
 
-      ...normalUsers.map(item => {
+      ...availableUsers.map(item => {
         const userName =
           item.name || "未命名用户";
 
@@ -1302,81 +1405,80 @@ export class AccountManagementView {
       data.creditSummary || [];
 
     const mappingRows =
-      mappings.map(mapping => {
-        const harsonUser =
-          users.find(
-            user =>
-              user.id ===
-              mapping.clBaseUserId
-          ) ||
-          users.find(
-            user =>
-              user.email ===
-              mapping.clBaseEmail
-          );
+      mappings
+        .filter(
+          mapping =>
+            mapping.mappingStatus ===
+            "active"
+        )
+        .map(mapping => {
+          const harsonUser =
+            users.find(
+              user =>
+                user.id ===
+                mapping.clBaseUserId
+            ) ||
+            users.find(
+              user =>
+                user.email ===
+                mapping.clBaseEmail
+            );
 
-        const subAccount =
-          subs.find(
-            sub =>
-              sub.id ===
-              mapping.aigcSubAccountId
-          );
+          const subAccount =
+            subs.find(
+              sub =>
+                sub.id ===
+                mapping.aigcSubAccountId
+            );
 
-        const masterAccountId =
-          subAccount?.masterAccountId ||
-          mapping.masterAccountId;
+          const masterAccountId =
+            subAccount?.masterAccountId ||
+            mapping.masterAccountId;
 
-        const masterAccount =
-          masters.find(
-            master =>
-              master.id ===
-              masterAccountId
-          );
+          const masterAccount =
+            masters.find(
+              master =>
+                master.id ===
+                masterAccountId
+            );
 
-        let mappingStatus =
-          "状态未知";
+          return [
+            harsonUser?.name ||
+              "未命名用户",
 
-        if (
-          mapping.mappingStatus ===
-          "active"
-        ) {
-          mappingStatus = "已绑定";
-        }
+            mapping.clBaseEmail ||
+              harsonUser?.email ||
+              "-",
 
-        if (
-          mapping.mappingStatus ===
-          "disabled"
-        ) {
-          mappingStatus = "已停用";
-        }
+            subAccount?.subAccountName ||
+              "未找到对应子账号",
 
-        return [
-          harsonUser?.name ||
-            "未命名用户",
+            subAccount?.platformLogin ||
+              "-",
 
-          mapping.clBaseEmail ||
-            harsonUser?.email ||
-            "-",
+            masterAccount
+              ? `${masterAccount.enterpriseName} / ${masterAccount.platformName}`
+              : "未找到所属企业",
 
-          subAccount?.subAccountName ||
-            "未找到对应子账号",
+            subAccount?.tokenLimit ??
+              "-",
 
-          subAccount?.platformLogin ||
-            "-",
+            subAccount?.remainingTokens ??
+              "-",
 
-          masterAccount
-            ? `${masterAccount.enterpriseName} / ${masterAccount.platformName}`
-            : "未找到所属企业",
+            "已绑定",
 
-          subAccount?.tokenLimit ??
-            "-",
-
-          subAccount?.remainingTokens ??
-            "-",
-
-          mappingStatus
-        ];
-      });
+            `
+              <button
+                type="button"
+                class="btn-outline unbind-mapping-btn"
+                data-mapping-id="${mapping.id}"
+              >
+                解除映射
+              </button>
+            `
+          ];
+        });
 
     return `
       <h3>
@@ -1462,7 +1564,8 @@ export class AccountManagementView {
                   "所属企业 / 平台",
                   "Token 配额",
                   "剩余 Token",
-                  "绑定状态"
+                  "绑定状态",
+                  "操作"
                 ],
                 mappingRows
               )}

@@ -73,6 +73,12 @@ router.post(
 router.post("/admin/sub-accounts", requireAuth, requireAdmin, controller.createSubAccount);
 router.post("/admin/sub-accounts/token-settings", requireAuth, requireAdmin, controller.updateSubAccountTokenSettings);
 router.post("/admin/mappings", requireAuth, requireAdmin, controller.createMapping);
+router.post(
+  "/admin/mappings/:mappingId/unbind",
+  requireAuth,
+  requireAdmin,
+  controller.unbindMapping
+);
 
 router.get("/my-workspace", requireAuth, controller.myAigcWorkspace);
 router.post("/my-workspace/works", requireAuth, controller.addMyWork);

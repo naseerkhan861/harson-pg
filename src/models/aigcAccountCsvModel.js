@@ -623,6 +623,36 @@ function createMapping({ clBaseUserId, clBaseEmail, aigcSubAccountId }) {
   return record;
 }
 
+function unbindMapping(mappingId) {
+  const normalizedMappingId =
+    String(mappingId || "").trim();
+
+  if (!normalizedMappingId) {
+    throw new Error("账号映射 ID 不能为空");
+  }
+
+  const mappings = readMappings();
+
+  const mapping = mappings.find(
+    item =>
+      item.id === normalizedMappingId &&
+      item.mappingStatus === "active"
+  );
+
+  if (!mapping) {
+    throw new Error("未找到有效的 Harson-Base 账号映射");
+  }
+
+  mapping.mappingStatus = "disabled";
+  mapping.updatedAt = now();
+
+  writeMappings(mappings);
+
+  return {
+    ...mapping
+  };
+}
+
 function listAdminData() {
   const masters = readMasters().map(withoutPassword);
   const works = readWorks();
@@ -810,6 +840,7 @@ module.exports = {
   createSubAccount,
   updateSubAccountTokenSettings,
   createMapping,
+  unbindMapping,
   listAdminData,
   listAigcCenterData,
   purchaseTokens,

@@ -132,6 +132,18 @@ export class AccountManagementViewModel {
     );
   }
 
+  async unbindMapping(mappingId) {
+    const normalizedMappingId =
+      encodeURIComponent(
+        String(mappingId || "").trim()
+      );
+
+    return this.postJson(
+      `/api/aigc/admin/mappings/${normalizedMappingId}/unbind`,
+      {}
+    );
+  }
+
   async addWork(payload) {
     return this.postJson(
       "/api/aigc/my-workspace/works",
