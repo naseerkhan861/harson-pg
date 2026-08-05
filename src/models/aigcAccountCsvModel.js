@@ -668,6 +668,32 @@ function listAdminData() {
   };
 }
 
+function getMasterAccountById(
+  masterAccountId
+) {
+  const normalizedMasterAccountId =
+    String(
+      masterAccountId || ""
+    ).trim();
+
+  if (!normalizedMasterAccountId) {
+    return null;
+  }
+
+  const masterAccount =
+    readMasters().find(
+      item =>
+        item.id ===
+        normalizedMasterAccountId
+    );
+
+  return masterAccount
+    ? withoutPassword(
+        masterAccount
+      )
+    : null;
+}
+
 function listAigcCenterData() {
   const masters = readMasters().map(withoutPassword);
   const works = readWorks();
@@ -842,6 +868,7 @@ module.exports = {
   createMapping,
   unbindMapping,
   listAdminData,
+  getMasterAccountById,
   listAigcCenterData,
   purchaseTokens,
   getMyMapping,

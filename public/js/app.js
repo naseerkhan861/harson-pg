@@ -42,10 +42,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (document.body.dataset.page === "dashboard") {
-    initDashboardMenu();
     initAppActionButtons();
     initAigcLaunchCard();
-    initBossAnalytics();
+    initEnterpriseDashboardAnalytics();
   }
 
   if (document.body.dataset.page === "aigc") {
@@ -290,33 +289,6 @@ function injectScrollRevealStyles() {
   document.head.appendChild(style);
 }
 
-function initDashboardMenu() {
-  const menuItems = document.querySelectorAll(".menu-item");
-
-  if (!menuItems.length) {
-    return;
-  }
-
-  menuItems.forEach((item) => {
-    item.addEventListener("click", function () {
-      menuItems.forEach((menuItem) => menuItem.classList.remove("active"));
-      this.classList.add("active");
-
-      const pageMap = {
-        home: "首页",
-        market: "应用市场",
-        myapps: "我的应用",
-        analytics: "经营分析",
-        messages: "消息中心",
-        settings: "设置"
-      };
-
-      const pageName = pageMap[this.dataset.page] || "首页";
-      showToast(`已切换到${pageName}`);
-    });
-  });
-}
-
 function initAppActionButtons() {
   const actionButtons = document.querySelectorAll(".app-action-btn");
 
@@ -371,358 +343,1233 @@ function initAigcLaunchCard() {
   });
 }
 
-function initBossAnalytics() {
-  const globalPeriodSelect = document.getElementById("globalPeriodSelect");
-  const localUserSelect = document.getElementById("localUserSelect");
-  const localPeriodSelect = document.getElementById("localPeriodSelect");
+async function initEnterpriseDashboardAnalytics() {
+  const masterSelect =
+    document.getElementById(
+      "dashboardMasterSelect"
+    );
 
-  const globalData = {
-    daily: {
-      aigcTokenPurchased: "120,000",
-      aigcTokenConsumed: "82,000",
-      aigcTokenRemaining: "38,000",
-      aigcTokenMoney: "¥26,800",
-      activeAppsUsed: "4"
-    },
-    weekly: {
-      aigcTokenPurchased: "420,000",
-      aigcTokenConsumed: "286,000",
-      aigcTokenRemaining: "134,000",
-      aigcTokenMoney: "¥92,500",
-      activeAppsUsed: "4"
-    },
-    monthly: {
-      aigcTokenPurchased: "1,250,000",
-      aigcTokenConsumed: "860,000",
-      aigcTokenRemaining: "390,000",
-      aigcTokenMoney: "¥268,000",
-      activeAppsUsed: "4"
-    },
-    threeMonths: {
-      aigcTokenPurchased: "3,820,000",
-      aigcTokenConsumed: "2,610,000",
-      aigcTokenRemaining: "1,210,000",
-      aigcTokenMoney: "¥806,000",
-      activeAppsUsed: "4"
-    },
-    sixMonths: {
-      aigcTokenPurchased: "7,460,000",
-      aigcTokenConsumed: "5,080,000",
-      aigcTokenRemaining: "2,380,000",
-      aigcTokenMoney: "¥1,586,000",
-      activeAppsUsed: "4"
+  const accountSelect =
+    document.getElementById(
+      "localUserSelect"
+    );
+
+  const syncStatus =
+    document.getElementById(
+      "dashboardSyncStatus"
+    );
+
+  const numberFormatter =
+    new Intl.NumberFormat(
+      "zh-CN",
+      {
+        maximumFractionDigits: 2
+      }
+    );
+
+  const chartColors = [
+    "var(--primary)",
+    "#4caf50",
+    "#2196f3",
+    "#9c27b0",
+    "#ff7043",
+    "#26a69a"
+  ];
+
+  let currentData = null;
+  let syncRequestId = 0;
+
+  function formatNumber(value) {
+    const numericValue =
+      Number(value);
+
+    return numberFormatter.format(
+      Number.isFinite(
+        numericValue
+      )
+        ? numericValue
+        : 0
+    );
+  }
+
+  function formatCompactNumber(value) {
+    const numericValue =
+      Number(value || 0);
+
+    if (numericValue >= 1000000) {
+      return `${(
+        numericValue / 1000000
+      ).toFixed(1)}M`;
     }
-  };
 
-  const localData = {
-    zhangchen: {
-      daily: {
-        aigcTokenPurchased: "18,000",
-        aigcTokenConsumed: "12,600",
-        aigcTokenRemaining: "5,400",
-        aigcTokenMoney: "¥3,600",
-        appsUsed: "3",
-        topApp: "CL-AIGC",
-        usedPercent: 70
-      },
-      weekly: {
-        aigcTokenPurchased: "72,000",
-        aigcTokenConsumed: "49,000",
-        aigcTokenRemaining: "23,000",
-        aigcTokenMoney: "¥14,400",
-        appsUsed: "4",
-        topApp: "CL-AIGC",
-        usedPercent: 68
-      },
-      monthly: {
-        aigcTokenPurchased: "180,000",
-        aigcTokenConsumed: "126,000",
-        aigcTokenRemaining: "54,000",
-        aigcTokenMoney: "¥36,000",
-        appsUsed: "4",
-        topApp: "CL-AIGC",
-        usedPercent: 70
-      },
-      threeMonths: {
-        aigcTokenPurchased: "520,000",
-        aigcTokenConsumed: "366,000",
-        aigcTokenRemaining: "154,000",
-        aigcTokenMoney: "¥104,000",
-        appsUsed: "4",
-        topApp: "CL-AIGC",
-        usedPercent: 70
-      },
-      sixMonths: {
-        aigcTokenPurchased: "980,000",
-        aigcTokenConsumed: "705,000",
-        aigcTokenRemaining: "275,000",
-        aigcTokenMoney: "¥196,000",
-        appsUsed: "4",
-        topApp: "CL-AIGC",
-        usedPercent: 72
-      }
-    },
-
-    liwen: {
-      daily: {
-        aigcTokenPurchased: "22,000",
-        aigcTokenConsumed: "16,000",
-        aigcTokenRemaining: "6,000",
-        aigcTokenMoney: "¥4,400",
-        appsUsed: "3",
-        topApp: "CL-iStore",
-        usedPercent: 73
-      },
-      weekly: {
-        aigcTokenPurchased: "88,000",
-        aigcTokenConsumed: "62,000",
-        aigcTokenRemaining: "26,000",
-        aigcTokenMoney: "¥17,600",
-        appsUsed: "4",
-        topApp: "CL-iStore",
-        usedPercent: 70
-      },
-      monthly: {
-        aigcTokenPurchased: "220,000",
-        aigcTokenConsumed: "160,000",
-        aigcTokenRemaining: "60,000",
-        aigcTokenMoney: "¥44,000",
-        appsUsed: "4",
-        topApp: "CL-iStore",
-        usedPercent: 73
-      },
-      threeMonths: {
-        aigcTokenPurchased: "640,000",
-        aigcTokenConsumed: "458,000",
-        aigcTokenRemaining: "182,000",
-        aigcTokenMoney: "¥128,000",
-        appsUsed: "4",
-        topApp: "CL-iStore",
-        usedPercent: 72
-      },
-      sixMonths: {
-        aigcTokenPurchased: "1,180,000",
-        aigcTokenConsumed: "860,000",
-        aigcTokenRemaining: "320,000",
-        aigcTokenMoney: "¥236,000",
-        appsUsed: "4",
-        topApp: "CL-iStore",
-        usedPercent: 73
-      }
-    },
-
-    wanglei: {
-      daily: {
-        aigcTokenPurchased: "14,500",
-        aigcTokenConsumed: "9,100",
-        aigcTokenRemaining: "5,400",
-        aigcTokenMoney: "¥2,900",
-        appsUsed: "2",
-        topApp: "CL-SCM",
-        usedPercent: 63
-      },
-      weekly: {
-        aigcTokenPurchased: "58,000",
-        aigcTokenConsumed: "36,500",
-        aigcTokenRemaining: "21,500",
-        aigcTokenMoney: "¥11,600",
-        appsUsed: "3",
-        topApp: "CL-SCM",
-        usedPercent: 63
-      },
-      monthly: {
-        aigcTokenPurchased: "145,000",
-        aigcTokenConsumed: "91,000",
-        aigcTokenRemaining: "54,000",
-        aigcTokenMoney: "¥29,000",
-        appsUsed: "4",
-        topApp: "CL-SCM",
-        usedPercent: 63
-      },
-      threeMonths: {
-        aigcTokenPurchased: "390,000",
-        aigcTokenConsumed: "254,000",
-        aigcTokenRemaining: "136,000",
-        aigcTokenMoney: "¥78,000",
-        appsUsed: "4",
-        topApp: "CL-SCM",
-        usedPercent: 65
-      },
-      sixMonths: {
-        aigcTokenPurchased: "720,000",
-        aigcTokenConsumed: "482,000",
-        aigcTokenRemaining: "238,000",
-        aigcTokenMoney: "¥144,000",
-        appsUsed: "4",
-        topApp: "CL-SCM",
-        usedPercent: 67
-      }
-    },
-
-    chenyu: {
-      daily: {
-        aigcTokenPurchased: "9,600",
-        aigcTokenConsumed: "7,200",
-        aigcTokenRemaining: "2,400",
-        aigcTokenMoney: "¥1,920",
-        appsUsed: "2",
-        topApp: "CL-iRobot",
-        usedPercent: 75
-      },
-      weekly: {
-        aigcTokenPurchased: "38,000",
-        aigcTokenConsumed: "28,000",
-        aigcTokenRemaining: "10,000",
-        aigcTokenMoney: "¥7,600",
-        appsUsed: "3",
-        topApp: "CL-iRobot",
-        usedPercent: 74
-      },
-      monthly: {
-        aigcTokenPurchased: "96,000",
-        aigcTokenConsumed: "72,000",
-        aigcTokenRemaining: "24,000",
-        aigcTokenMoney: "¥19,200",
-        appsUsed: "3",
-        topApp: "CL-iRobot",
-        usedPercent: 75
-      },
-      threeMonths: {
-        aigcTokenPurchased: "260,000",
-        aigcTokenConsumed: "192,000",
-        aigcTokenRemaining: "68,000",
-        aigcTokenMoney: "¥52,000",
-        appsUsed: "4",
-        topApp: "CL-iRobot",
-        usedPercent: 74
-      },
-      sixMonths: {
-        aigcTokenPurchased: "510,000",
-        aigcTokenConsumed: "382,000",
-        aigcTokenRemaining: "128,000",
-        aigcTokenMoney: "¥102,000",
-        appsUsed: "4",
-        topApp: "CL-iRobot",
-        usedPercent: 75
-      }
+    if (numericValue >= 1000) {
+      return `${(
+        numericValue / 1000
+      ).toFixed(1)}K`;
     }
-  };
 
-  const periodLabelMap = {
-    daily: "今日",
-    weekly: "本周",
-    monthly: "本月",
-    threeMonths: "近三个月",
-    sixMonths: "近六个月"
-  };
+    return formatNumber(
+      numericValue
+    );
+  }
 
-  function updateGlobal(period) {
-    const data = globalData[period];
+  function formatDateTime(value) {
+    if (!value) {
+      return "暂无同步";
+    }
 
-    if (!data) {
+    const date = new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return String(value);
+    }
+
+    return date.toLocaleString(
+      "zh-CN",
+      {
+        hour12: false
+      }
+    );
+  }
+
+  function setText(id, value) {
+    const element =
+      document.getElementById(id);
+
+    if (element) {
+      element.textContent =
+        String(value);
+    }
+  }
+
+  function setTokenValue(
+    id,
+    value
+  ) {
+    const element =
+      document.getElementById(id);
+
+    if (!element) {
       return;
     }
 
-    const purchasedEl = document.getElementById("globalPurchased");
-    const consumedEl = document.getElementById("globalConsumed");
-    const remainingEl = document.getElementById("globalRemaining");
-    const moneyEl = document.getElementById("globalMoney");
-    const appsUsedEl = document.getElementById("globalAppsUsed");
+    const suffix =
+      document.createElement(
+        "span"
+      );
 
-    if (purchasedEl) {
-      purchasedEl.innerHTML = `${data.aigcTokenPurchased} <span>tokens</span>`;
-    }
+    suffix.textContent = " tokens";
 
-    if (consumedEl) {
-      consumedEl.innerHTML = `${data.aigcTokenConsumed} <span>tokens</span>`;
-    }
-
-    if (remainingEl) {
-      remainingEl.innerHTML = `${data.aigcTokenRemaining} <span>tokens</span>`;
-    }
-
-    if (moneyEl) {
-      moneyEl.textContent = data.aigcTokenMoney;
-    }
-
-    if (appsUsedEl) {
-      appsUsedEl.innerHTML = `${data.activeAppsUsed} <span>个应用</span>`;
-    }
+    element.replaceChildren(
+      document.createTextNode(
+        formatNumber(value)
+      ),
+      suffix
+    );
   }
 
-  function updateLocal(userKey, period) {
-    const user = localData[userKey]?.[period];
+  function showDataMessage(
+    message,
+    isError = false
+  ) {
+    const messageElement =
+      document.getElementById(
+        "dashboardDataMessage"
+      );
 
-    if (!user) {
+    if (!messageElement) {
       return;
     }
 
-    const purchasedEl = document.getElementById("localPurchased");
-    const consumedEl = document.getElementById("localConsumed");
-    const remainingEl = document.getElementById("localRemaining");
-    const moneyEl = document.getElementById("localMoney");
-    const appsUsedEl = document.getElementById("localAppsUsed");
-    const topAppEl = document.getElementById("localTopApp");
-    const periodLabelEl = document.getElementById("localPeriodLabel");
-    const pieEl = document.getElementById("localConsumptionPie");
+    messageElement.textContent =
+      message;
 
-    if (purchasedEl) {
-      purchasedEl.innerHTML = `${user.aigcTokenPurchased} <span>tokens</span>`;
+    messageElement.classList.toggle(
+      "error",
+      isError
+    );
+  }
+
+  function setSyncStatus(
+    message,
+    state = ""
+  ) {
+    if (!syncStatus) {
+      return;
     }
 
-    if (consumedEl) {
-      consumedEl.innerHTML = `${user.aigcTokenConsumed} <span>tokens</span>`;
-    }
+    syncStatus.textContent =
+      message;
 
-    if (remainingEl) {
-      remainingEl.innerHTML = `${user.aigcTokenRemaining} <span>tokens</span>`;
-    }
+    syncStatus.classList.remove(
+      "is-loading",
+      "is-success",
+      "is-error"
+    );
 
-    if (moneyEl) {
-      moneyEl.textContent = user.aigcTokenMoney;
-    }
-
-    if (appsUsedEl) {
-      appsUsedEl.innerHTML = `${user.appsUsed} <span>个应用</span>`;
-    }
-
-    if (topAppEl) {
-      topAppEl.textContent = user.topApp;
-    }
-
-    if (periodLabelEl) {
-      periodLabelEl.textContent = periodLabelMap[period] || "今日";
-    }
-
-    if (pieEl) {
-      pieEl.style.background = `conic-gradient(
-        var(--primary) 0 ${user.usedPercent}%,
-        #4ECDC4 ${user.usedPercent}% 100%
-      )`;
+    if (state) {
+      syncStatus.classList.add(
+        `is-${state}`
+      );
     }
   }
 
-  if (globalPeriodSelect) {
-    updateGlobal(globalPeriodSelect.value);
+  function createEmptyState(
+    message
+  ) {
+    const element =
+      document.createElement("p");
 
-    globalPeriodSelect.addEventListener("change", () => {
-      updateGlobal(globalPeriodSelect.value);
+    element.className =
+      "dashboard-empty-state";
+
+    element.textContent = message;
+
+    return element;
+  }
+
+  function renderMasterSelect(data) {
+    if (!masterSelect) {
+      return;
+    }
+
+    const selectedIds =
+      data.selectedMasterAccountIds ||
+      [];
+
+    masterSelect.replaceChildren();
+
+    if (
+      data.scope === "admin" &&
+      data.masters.length > 1
+    ) {
+      const allOption =
+        document.createElement(
+          "option"
+        );
+
+      allOption.value = "";
+      allOption.textContent =
+        "全部企业";
+
+      masterSelect.append(
+        allOption
+      );
+    }
+
+    data.masters.forEach(master => {
+      const option =
+        document.createElement(
+          "option"
+        );
+
+      option.value = master.id;
+      option.textContent =
+        master.enterpriseName;
+
+      masterSelect.append(option);
+    });
+
+    if (selectedIds.length === 1) {
+      masterSelect.value =
+        selectedIds[0];
+    } else {
+      masterSelect.value = "";
+    }
+
+    masterSelect.disabled =
+      data.scope !== "admin" ||
+      data.masters.length <= 1;
+  }
+
+  function renderOverview(data) {
+    const summary =
+      data.summary || {};
+
+    setText(
+      "overviewEnterprise",
+      data.enterpriseName
+    );
+
+    setText(
+      "overviewSubAccounts",
+      `${summary.activeSubAccounts || 0} 个`
+    );
+
+    setText(
+      "overviewTasks",
+      `${formatNumber(
+        summary.totalTasks
+      )} 次`
+    );
+
+    setText(
+      "overviewSync",
+      formatDateTime(
+        data.latestSyncedAt
+      )
+    );
+
+    setText(
+      "enterpriseAnalyticsTitle",
+      `${data.enterpriseName} · CL-AIGC Token 分析`
+    );
+
+    setTokenValue(
+      "globalBalance",
+      summary.currentBalance
+    );
+
+    setTokenValue(
+      "globalAllocated",
+      summary.allocatedTokens
+    );
+
+    setTokenValue(
+      "globalConsumed",
+      summary.netUsedTokens
+    );
+
+    setTokenValue(
+      "globalRemaining",
+      summary.remainingTokens
+    );
+
+    setText(
+      "globalTasks",
+      `${formatNumber(
+        summary.totalTasks
+      )} 次`
+    );
+
+    showDataMessage(
+      data.latestSyncedAt
+        ? `当前图表来自 YiBai 真实任务快照，最近同步：${formatDateTime(
+            data.latestSyncedAt
+          )}`
+        : "当前企业还没有同步 YiBai 真实任务记录，Token 消耗暂显示为 0。"
+    );
+  }
+
+  function renderUsageBars(
+    accounts
+  ) {
+    const container =
+      document.getElementById(
+        "subAccountUsageChart"
+      );
+
+    if (!container) {
+      return;
+    }
+
+    container.replaceChildren();
+
+    if (!accounts.length) {
+      container.append(
+        createEmptyState(
+          "当前企业暂无可用子账号"
+        )
+      );
+
+      return;
+    }
+
+    const maximumUsage =
+      Math.max(
+        ...accounts.map(account =>
+          Number(
+            account.netUsedTokens || 0
+          )
+        ),
+        0
+      );
+
+    accounts.forEach(account => {
+      const row =
+        document.createElement("div");
+
+      row.className = "bar-row";
+
+      const label =
+        document.createElement("span");
+
+      label.textContent = account.name;
+      label.title = account.name;
+
+      const track =
+        document.createElement("div");
+
+      track.className = "bar-track";
+
+      const fill =
+        document.createElement("div");
+
+      fill.className =
+        "bar-fill aigc-bar";
+
+      fill.style.width =
+        maximumUsage > 0
+          ? `${Math.max(
+              account.netUsedTokens /
+              maximumUsage *
+              100,
+              account.netUsedTokens > 0
+                ? 2
+                : 0
+            )}%`
+          : "0%";
+
+      track.append(fill);
+
+      const value =
+        document.createElement("strong");
+
+      value.textContent =
+        formatCompactNumber(
+          account.netUsedTokens
+        );
+
+      row.append(
+        label,
+        track,
+        value
+      );
+
+      container.append(row);
     });
   }
 
-  if (localUserSelect && localPeriodSelect) {
-    updateLocal(localUserSelect.value, localPeriodSelect.value);
+  function renderUsageShare(
+    accounts
+  ) {
+    const pie =
+      document.getElementById(
+        "subAccountSharePie"
+      );
 
-    localUserSelect.addEventListener("change", () => {
-      updateLocal(localUserSelect.value, localPeriodSelect.value);
-    });
+    const legend =
+      document.getElementById(
+        "subAccountShareLegend"
+      );
 
-    localPeriodSelect.addEventListener("change", () => {
-      updateLocal(localUserSelect.value, localPeriodSelect.value);
+    if (!pie || !legend) {
+      return;
+    }
+
+    legend.replaceChildren();
+
+    const usedAccounts =
+      accounts.filter(account =>
+        account.netUsedTokens > 0
+      );
+
+    if (!usedAccounts.length) {
+      pie.style.background =
+        "rgba(255, 255, 255, 0.08)";
+
+      legend.append(
+        createEmptyState(
+          "暂无可计算的 Token 消耗占比"
+        )
+      );
+
+      return;
+    }
+
+    let start = 0;
+
+    const segments =
+      usedAccounts.map(
+        (account, index) => {
+          const end =
+            index ===
+              usedAccounts.length - 1
+              ? 100
+              : start +
+                account.sharePercent;
+
+          const segment =
+            `${chartColors[
+              index %
+              chartColors.length
+            ]} ${start}% ${end}%`;
+
+          start = end;
+
+          return segment;
+        }
+      );
+
+    pie.style.background =
+      `conic-gradient(${segments.join(
+        ", "
+      )})`;
+
+    usedAccounts.forEach(
+      (account, index) => {
+        const item =
+          document.createElement(
+            "div"
+          );
+
+        const dot =
+          document.createElement(
+            "span"
+          );
+
+        dot.className = "dot";
+        dot.style.background =
+          chartColors[
+            index %
+            chartColors.length
+          ];
+
+        item.append(
+          dot,
+          document.createTextNode(
+            `${account.name}：${account.sharePercent}%`
+          )
+        );
+
+        legend.append(item);
+      }
+    );
+  }
+
+  function renderWeeklyTrend(days) {
+    const container =
+      document.getElementById(
+        "weeklyTokenChart"
+      );
+
+    if (!container) {
+      return;
+    }
+
+    container.replaceChildren();
+
+    const maximumUsage =
+      Math.max(
+        ...days.map(day =>
+          Number(day.tokens || 0)
+        ),
+        0
+      );
+
+    days.forEach(day => {
+      const bar =
+        document.createElement("div");
+
+      bar.className = "week-bar";
+      bar.style.height =
+        maximumUsage > 0
+          ? `${Math.max(
+              day.tokens /
+              maximumUsage *
+              100,
+              day.tokens > 0
+                ? 8
+                : 2
+            )}%`
+          : "2%";
+
+      const label =
+        document.createElement("span");
+
+      label.textContent = day.label;
+
+      const value =
+        document.createElement("strong");
+
+      value.textContent =
+        formatCompactNumber(
+          day.tokens
+        );
+
+      bar.append(label, value);
+      container.append(bar);
     });
   }
+
+  function accountStatusLabel(status) {
+    const labels = {
+      resolved:
+        "已匹配 YiBai 成员",
+      member_unresolved:
+        "暂无可识别任务",
+      member_ambiguous:
+        "成员匹配冲突",
+      identity_missing:
+        "缺少账号标识"
+    };
+
+    return labels[status] ||
+      "等待同步";
+  }
+
+  function taskStatusLabel(status) {
+    const labels = {
+      O: "已完成",
+      R: "失败",
+      P: "处理中",
+      W: "等待中"
+    };
+
+    return labels[status] ||
+      "处理中";
+  }
+
+  function renderTaskRecords(
+    tasks,
+    bodyId,
+    countId
+  ) {
+    const body =
+      document.getElementById(
+        bodyId
+      );
+
+    const safeTasks =
+      Array.isArray(tasks)
+        ? tasks
+        : [];
+
+    setText(
+      countId,
+      `${safeTasks.length} 条`
+    );
+
+    if (!body) {
+      return;
+    }
+
+    body.replaceChildren();
+
+    if (!safeTasks.length) {
+      const row =
+        document.createElement("tr");
+
+      const cell =
+        document.createElement("td");
+
+      cell.colSpan = 5;
+      cell.className =
+        "task-empty-cell";
+      cell.textContent =
+        "当前账号暂无创作记录";
+
+      row.append(cell);
+      body.append(row);
+
+      return;
+    }
+
+    safeTasks.forEach(task => {
+      const row =
+        document.createElement("tr");
+
+      const titleCell =
+        document.createElement("td");
+
+      const title =
+        document.createElement("strong");
+
+      title.textContent =
+        task.title ||
+        "AIGC 创作任务";
+
+      const taskId =
+        document.createElement("span");
+
+      taskId.textContent =
+        task.id
+          ? `任务 ${task.id}`
+          : "YiBai 任务";
+
+      titleCell.append(
+        title,
+        taskId
+      );
+
+      const statusCell =
+        document.createElement("td");
+
+      const status =
+        document.createElement("span");
+
+      status.className =
+        `task-status task-status-${String(
+          task.status || "processing"
+        ).toLowerCase()}`;
+
+      status.textContent =
+        taskStatusLabel(
+          task.status
+        );
+
+      statusCell.append(status);
+
+      const pointCell =
+        document.createElement("td");
+
+      pointCell.textContent =
+        `${formatNumber(
+          task.deductedTokens
+        )} / ${formatNumber(
+          task.refundedTokens
+        )}`;
+
+      const netCell =
+        document.createElement("td");
+
+      netCell.textContent =
+        formatNumber(
+          task.netUsedTokens
+        );
+
+      const timeCell =
+        document.createElement("td");
+
+      timeCell.textContent =
+        formatDateTime(
+          task.completedAt ||
+          task.createdAt
+        );
+
+      row.append(
+        titleCell,
+        statusCell,
+        pointCell,
+        netCell,
+        timeCell
+      );
+
+      body.append(row);
+    });
+  }
+
+  function renderMasterDetails(
+    account
+  ) {
+    if (!account) {
+      setText(
+        "masterTaskCount",
+        "0 次"
+      );
+      setText("masterDeducted", "0");
+      setText("masterRefunded", "0");
+      setText("masterConsumed", "0");
+      setText(
+        "masterSuccessRate",
+        "0%"
+      );
+      setText(
+        "masterResolutionStatus",
+        "暂无主账号数据"
+      );
+      setText(
+        "masterAccountStatus",
+        "暂无数据"
+      );
+
+      renderTaskRecords(
+        [],
+        "masterTaskRecords",
+        "masterTaskRecordCount"
+      );
+
+      return;
+    }
+
+    setText(
+      "masterTaskCount",
+      `${formatNumber(
+        account.totalTasks
+      )} 次`
+    );
+    setText(
+      "masterDeducted",
+      formatNumber(
+        account.deductedTokens
+      )
+    );
+    setText(
+      "masterRefunded",
+      formatNumber(
+        account.refundedTokens
+      )
+    );
+    setText(
+      "masterConsumed",
+      formatNumber(
+        account.netUsedTokens
+      )
+    );
+    setText(
+      "masterSuccessRate",
+      account.totalTasks > 0
+        ? `${Number(
+            account.successfulTasks /
+            account.totalTasks *
+            100
+          ).toFixed(1)}%`
+        : "0%"
+    );
+    setText(
+      "masterResolutionStatus",
+      accountStatusLabel(
+        account.status
+      )
+    );
+    setText(
+      "masterAccountStatus",
+      account.totalTasks > 0
+        ? "已读取真实记录"
+        : "暂无创作记录"
+    );
+
+    renderTaskRecords(
+      account.tasks,
+      "masterTaskRecords",
+      "masterTaskRecordCount"
+    );
+  }
+
+  function renderAccountDetails(
+    accountId
+  ) {
+    const accounts =
+      currentData?.accounts || [];
+
+    const account =
+      accounts.find(item =>
+        String(item.id) ===
+        String(accountId)
+      ) || accounts[0];
+
+    if (!account) {
+      [
+        "localLimit",
+        "localDeducted",
+        "localRefunded",
+        "localConsumed",
+        "localRemaining"
+      ].forEach(id =>
+        setTokenValue(id, 0)
+      );
+
+      setText(
+        "localTaskCount",
+        "0 次"
+      );
+
+      setText(
+        "localSuccessRate",
+        "0%"
+      );
+
+      setText(
+        "localResolutionStatus",
+        "暂无子账号"
+      );
+
+      renderTaskRecords(
+        [],
+        "subTaskRecords",
+        "subTaskRecordCount"
+      );
+
+      return;
+    }
+
+    setTokenValue(
+      "localLimit",
+      account.tokenLimit
+    );
+
+    setTokenValue(
+      "localDeducted",
+      account.deductedTokens
+    );
+
+    setTokenValue(
+      "localRefunded",
+      account.refundedTokens
+    );
+
+    setTokenValue(
+      "localConsumed",
+      account.netUsedTokens
+    );
+
+    setTokenValue(
+      "localRemaining",
+      account.remainingTokens
+    );
+
+    setText(
+      "localTaskCount",
+      `${formatNumber(
+        account.totalTasks
+      )} 次`
+    );
+
+    setText(
+      "localSuccessRate",
+      account.totalTasks > 0
+        ? `${Number(
+            account.successfulTasks /
+            account.totalTasks *
+            100
+          ).toFixed(1)}%`
+        : "0%"
+    );
+
+    setText(
+      "localResolutionStatus",
+      accountStatusLabel(
+        account.status
+      )
+    );
+
+    renderTaskRecords(
+      account.tasks,
+      "subTaskRecords",
+      "subTaskRecordCount"
+    );
+
+    const pie =
+      document.getElementById(
+        "localConsumptionPie"
+      );
+
+    if (pie) {
+      const usageRate =
+        Math.min(
+          Math.max(
+            Number(
+              account.usageRate || 0
+            ),
+            0
+          ),
+          100
+        );
+
+      pie.style.background =
+        `conic-gradient(
+          var(--primary) 0 ${usageRate}%,
+          rgba(255, 255, 255, 0.08) ${usageRate}% 100%
+        )`;
+    }
+  }
+
+  function renderAccountSelect(
+    accounts
+  ) {
+    if (!accountSelect) {
+      return;
+    }
+
+    const previousValue =
+      accountSelect.value;
+
+    accountSelect.replaceChildren();
+
+    if (!accounts.length) {
+      const option =
+        document.createElement(
+          "option"
+        );
+
+      option.value = "";
+      option.textContent =
+        "暂无子账号";
+
+      accountSelect.append(option);
+      accountSelect.disabled = true;
+
+      renderAccountDetails("");
+
+      return;
+    }
+
+    accounts.forEach(account => {
+      const option =
+        document.createElement(
+          "option"
+        );
+
+      option.value = account.id;
+      option.textContent =
+        account.name;
+
+      accountSelect.append(option);
+    });
+
+    accountSelect.disabled = false;
+
+    const nextValue =
+      accounts.some(account =>
+        String(account.id) ===
+        String(previousValue)
+      )
+        ? previousValue
+        : accounts[0].id;
+
+    accountSelect.value =
+      nextValue;
+
+    renderAccountDetails(
+      nextValue
+    );
+  }
+
+  function render(data) {
+    currentData = data;
+
+    renderMasterSelect(data);
+    renderOverview(data);
+    renderUsageBars(
+      data.comparisonAccounts || []
+    );
+    renderUsageShare(
+      data.comparisonAccounts || []
+    );
+    renderWeeklyTrend(
+      data.weeklyTrend || []
+    );
+    renderAccountSelect(
+      data.accounts || []
+    );
+    renderMasterDetails(
+      data.masterAccount
+    );
+  }
+
+  async function load(
+    masterAccountId = ""
+  ) {
+    showDataMessage(
+      "正在读取真实 Token 数据..."
+    );
+
+    const query =
+      masterAccountId
+        ? `?masterAccountId=${encodeURIComponent(
+            masterAccountId
+          )}`
+        : "";
+
+    try {
+      const response = await fetch(
+        `/api/aigc/dashboard/analytics${query}`,
+        {
+          credentials: "include"
+        }
+      );
+
+      if (response.status === 401) {
+        window.location.href =
+          "/login";
+
+        return;
+      }
+
+      const result =
+        await response.json();
+
+      if (
+        !response.ok ||
+        !result.success
+      ) {
+        throw new Error(
+          result.message ||
+          "仪表盘数据读取失败"
+        );
+      }
+
+      render(result.data);
+
+      return result.data;
+    } catch (error) {
+      showDataMessage(
+        error.message ||
+        "仪表盘数据读取失败",
+        true
+      );
+
+      return null;
+    }
+  }
+
+  async function syncAndReload(data) {
+    const masterAccountIds =
+      data?.selectedMasterAccountIds ||
+      [];
+
+    if (masterAccountIds.length !== 1) {
+      setSyncStatus(
+        "请选择单个企业",
+        ""
+      );
+
+      return;
+    }
+
+    const masterAccountId =
+      masterAccountIds[0];
+
+    const requestId =
+      ++syncRequestId;
+
+    setSyncStatus(
+      "正在自动同步",
+      "loading"
+    );
+
+    showDataMessage(
+      "已显示上次数据，正在后台自动同步 YiBai 最新创作记录..."
+    );
+
+    try {
+      const response = await fetch(
+        "/api/aigc/dashboard/sync",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            masterAccountId
+          })
+        }
+      );
+
+      if (response.status === 401) {
+        window.location.href =
+          "/login";
+
+        return;
+      }
+
+      const result =
+        await response.json();
+
+      if (
+        !response.ok ||
+        !result.success
+      ) {
+        throw new Error(
+          result.message ||
+          "自动同步失败"
+        );
+      }
+
+      if (requestId !== syncRequestId) {
+        return;
+      }
+
+      const refreshedData =
+        await load(
+          masterAccountId
+        );
+
+      if (!refreshedData) {
+        throw new Error(
+          "同步成功，但最新仪表盘数据读取失败"
+        );
+      }
+
+      const durationMs =
+        Number(
+          result.data?.timing
+            ?.totalMs || 0
+        );
+
+      setSyncStatus(
+        durationMs > 0
+          ? `自动同步完成 · ${(durationMs / 1000).toFixed(1)} 秒`
+          : "自动同步完成",
+        "success"
+      );
+
+      showDataMessage(
+        refreshedData.summary
+          ?.totalTasks > 0
+          ? `已自动同步 YiBai 最新创作记录，更新时间：${formatDateTime(
+              refreshedData
+                .latestSyncedAt
+            )}`
+          : "自动同步完成，当前企业暂无创作记录。"
+      );
+    } catch (error) {
+      if (requestId !== syncRequestId) {
+        return;
+      }
+
+      setSyncStatus(
+        "自动同步失败",
+        "error"
+      );
+
+      showDataMessage(
+        `自动同步失败，当前仍显示上次保存的数据：${error.message || "请稍后重试"}`,
+        true
+      );
+    }
+  }
+
+  async function loadAndSync(
+    masterAccountId = ""
+  ) {
+    const data =
+      await load(
+        masterAccountId
+      );
+
+    if (data) {
+      await syncAndReload(data);
+    }
+  }
+
+  if (masterSelect) {
+    masterSelect.addEventListener(
+      "change",
+      () => {
+        loadAndSync(
+          masterSelect.value
+        );
+      }
+    );
+  }
+
+  if (accountSelect) {
+    accountSelect.addEventListener(
+      "change",
+      () => {
+        renderAccountDetails(
+          accountSelect.value
+        );
+      }
+    );
+  }
+
+  await loadAndSync();
 }
 
+/*
+ * 保留旧方法名称，方便历史版本对照。
+ * 当前仪表盘已经改由
+ * initEnterpriseDashboardAnalytics()
+ * 读取真实接口数据。
+ */
 async function initAigcPurchasePage() {
   const app = document.getElementById("aigcApp");
   const globalMessageBox = document.getElementById("aigcMessage");
@@ -1223,8 +2070,20 @@ async function initAccountAvatar() {
     currentUser = null;
   }
 
-  const isAdmin = currentUser && currentUser.role === "admin";
-  setDashboardNavVisibility(isAdmin);
+  const canViewDashboard =
+    Boolean(
+      currentUser
+        ?.dashboardAccess
+        ?.allowed
+    );
+
+  setDashboardNavVisibility(
+    canViewDashboard
+  );
+
+  configureDashboardAigcEntry(
+    currentUser
+  );
 
   if (!avatarButton || !avatarText) {
     return;
@@ -1269,6 +2128,64 @@ function setDashboardNavVisibility(visible) {
     const navItem = link.closest("li") || link;
     navItem.style.display = visible ? "" : "none";
   });
+}
+
+function configureDashboardAigcEntry(
+  currentUser
+) {
+  if (
+    document.body.dataset.page !==
+    "dashboard"
+  ) {
+    return;
+  }
+
+  const card =
+    document.querySelector(
+      ".aigc-launch-card"
+    );
+
+  const topbarLink =
+    document.querySelector(
+      "[data-dashboard-aigc-entry]"
+    );
+
+  if (!card && !topbarLink) {
+    return;
+  }
+
+  const isMasterOwner =
+    currentUser
+      ?.dashboardAccess
+      ?.scope ===
+    "master_owner";
+
+  if (isMasterOwner) {
+    if (card) {
+      card.dataset.openUrl =
+        "/aigc-workspace";
+
+      card.title =
+        "点击进入 CL-AIGC Workspace";
+    }
+
+    if (topbarLink) {
+      topbarLink.href =
+        "/aigc-workspace";
+    }
+
+    return;
+  }
+
+  if (card) {
+    card.dataset.openUrl =
+      "/aigc";
+  }
+
+  if (topbarLink) {
+    topbarLink.href =
+      "/aigc";
+  }
 }
 
 function getUserInitial(value) {

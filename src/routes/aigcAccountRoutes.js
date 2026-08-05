@@ -30,6 +30,30 @@ router.get(
   controller.getMyRechargeRecords
 );
 
+router.get(
+  "/my-enterprise/sub-accounts",
+  requireAuth,
+  controller.getMyEnterpriseSubAccounts
+);
+
+router.post(
+  "/my-workspace/sync",
+  requireAuth,
+  controller.syncMyWorkspaceUserData
+);
+
+router.get(
+  "/dashboard/analytics",
+  requireAuth,
+  controller.getDashboardAnalytics
+);
+
+router.post(
+  "/dashboard/sync",
+  requireAuth,
+  controller.syncDashboardUserData
+);
+
 router.get("/admin/dashboard", requireAuth, requireAdmin, controller.dashboard);
 router.get("/admin/aigc-center", requireAuth, requireAdmin, controller.aigcCenter);
 router.post("/admin/token-purchases", requireAuth, requireAdmin, controller.purchaseTokens);
@@ -73,6 +97,18 @@ router.post(
 router.post("/admin/sub-accounts", requireAuth, requireAdmin, controller.createSubAccount);
 router.post("/admin/sub-accounts/token-settings", requireAuth, requireAdmin, controller.updateSubAccountTokenSettings);
 router.post("/admin/mappings", requireAuth, requireAdmin, controller.createMapping);
+router.post(
+  "/admin/master-owner-mappings",
+  requireAuth,
+  requireAdmin,
+  controller.createMasterOwnerMapping
+);
+router.post(
+  "/admin/master-owner-mappings/:mappingId/unbind",
+  requireAuth,
+  requireAdmin,
+  controller.unbindMasterOwnerMapping
+);
 router.post(
   "/admin/mappings/:mappingId/unbind",
   requireAuth,

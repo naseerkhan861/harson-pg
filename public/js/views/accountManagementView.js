@@ -15,6 +15,8 @@ export class AccountManagementView {
   }
 
   async load() {
+    this.renderLoadingState();
+
     const dashboardResult =
       await this.vm.getAdminDashboard();
 
@@ -45,18 +47,117 @@ export class AccountManagementView {
       return;
     }
 
+    const ownerResult =
+      await this.vm
+        .getMyEnterpriseSubAccounts();
+
+    if (ownerResult.success) {
+      this.renderOwnerSubAccountManagement(
+        ownerResult.data
+      );
+
+      return;
+    }
+
     const workspaceResult =
       await this.vm.getMyWorkspace();
 
     if (workspaceResult.success) {
+      const mappingReady =
+        Boolean(
+          workspaceResult.data
+            ?.mapping
+            ?.aigcSubAccount &&
+          workspaceResult.data
+            ?.mapping
+            ?.masterAccount
+        );
+
+      if (!mappingReady) {
+        this.renderUnboundUser(
+          workspaceResult.data
+        );
+
+        return;
+      }
+
       this.renderUserWorkspace(
-        workspaceResult.data
+        workspaceResult.data,
+        {
+          isLoading: true
+        }
+      );
+
+      const syncResult =
+        await this.vm
+          .syncMyWorkspace();
+
+      const refreshedWorkspaceResult =
+        await this.vm
+          .getMyWorkspace();
+
+      const tokenBalanceResult =
+        await this.vm
+          .getMyTokenBalance();
+
+      const displaySyncResult =
+        syncResult.success &&
+        !refreshedWorkspaceResult.success
+          ? {
+              success: false,
+              message:
+                refreshedWorkspaceResult
+                  .message ||
+                "最新数据已同步，但页面刷新失败，当前保留上次记录。"
+            }
+          : syncResult;
+
+      this.renderUserWorkspace(
+        refreshedWorkspaceResult.success
+          ? refreshedWorkspaceResult.data
+          : workspaceResult.data,
+        {
+          syncResult:
+            displaySyncResult,
+          tokenBalanceResult
+        }
       );
 
       return;
     }
 
     this.showGate();
+  }
+
+  renderLoadingState() {
+    const app =
+      document.getElementById(
+        "accountApp"
+      );
+
+    if (!app) {
+      return;
+    }
+
+    app.innerHTML = `
+      <section class="account-hero-card account-loading-card">
+        <div>
+          <span class="hero-badge">
+            AIGC 账号管理
+          </span>
+
+          <h1>
+            正在读取账号信息
+          </h1>
+
+          <p>
+            系统正在确认当前账号身份与可用服务。
+          </p>
+        </div>
+
+        <span class="account-loading-dot" aria-hidden="true"></span>
+      </section>
+    `;
   }
 
   renderAdminDashboard() {
@@ -117,6 +218,13 @@ export class AccountManagementView {
             mapping =>
               mapping.mappingStatus ===
               "active"
+          ).length
+        )}
+
+        ${this.metricCard(
+          "主账号负责人",
+          (
+            data.masterOwnerMappings || []
           ).length
         )}
       </section>
@@ -378,7 +486,48 @@ export class AccountManagementView {
 
       <section class="account-panel">
         <h2>
-          5. 建立 Harson-Base ↔ AIGC 账号映射
+          5. 绑定企业主账号负责人
+        </h2>
+
+        <p>
+          每个企业主账号只能绑定一个
+          Harson-Base 负责人。负责人后续可在
+          导航栏查看该企业下全部子账号的
+          Token 使用仪表盘
+        </p>
+
+        <div
+          id="masterOwnerMessage"
+          class="auth-message"
+        ></div>
+
+        <form
+          id="masterOwnerForm"
+          class="management-form"
+        >
+          <select
+            name="masterAccountId"
+            required
+          >
+            ${this.masterOwnerOptions()}
+          </select>
+
+          <select
+            name="clBaseUserId"
+            required
+          >
+            ${this.masterOwnerUserOptions()}
+          </select>
+
+          <button type="submit">
+            绑定主账号负责人
+          </button>
+        </form>
+      </section>
+
+      <section class="account-panel">
+        <h2>
+          6. 建立 Harson-Base ↔ AIGC 子账号映射
         </h2>
 
         <p>
@@ -431,7 +580,305 @@ export class AccountManagementView {
     `;
   }
 
-  renderUserWorkspace(data) {
+  renderOwnerSubAccountManagement(
+    data
+  ) {
+    const app =
+      document.getElementById(
+        "accountApp"
+      );
+
+    const subAccounts =
+      Array.isArray(
+        data?.subAccounts
+      )
+        ? data.subAccounts
+        : [];
+
+    const activeCount =
+      subAccounts.filter(
+        item =>
+          item.status === "active"
+      ).length;
+
+    const totalTokenLimit =
+      subAccounts.reduce(
+        (total, item) =>
+          total +
+          Number(
+            item.tokenLimit || 0
+          ),
+        0
+      );
+
+    const remainingTokens =
+      subAccounts.reduce(
+        (total, item) =>
+          total +
+          Number(
+            item.remainingTokens || 0
+          ),
+        0
+      );
+
+    app.innerHTML = `
+      <section class="account-hero-card">
+        <div>
+          <span class="hero-badge">
+            企业主账号
+          </span>
+
+          <h1>
+            企业子账号管理
+          </h1>
+
+          <p>
+            ${this.escapeHtml(
+              data?.enterpriseName ||
+              "当前企业"
+            )} · 这里只展示本企业的 AIGC 子账号。
+            用户映射与外部账号凭据仍由系统管理员管理。
+          </p>
+        </div>
+
+        <div class="account-hero-actions">
+          <a
+            href="/dashboard"
+            class="btn-primary"
+          >
+            查看企业仪表盘
+          </a>
+
+          <button
+            id="logoutBtn"
+            class="btn-outline"
+          >
+            退出登录
+          </button>
+        </div>
+      </section>
+
+      <div class="account-demo-notice">
+        <strong>
+          演示数据
+        </strong>
+        <span>
+          真实额度管理功能待接入，当前修改操作不会写入系统数据。
+        </span>
+      </div>
+
+      <section class="account-grid-three">
+        ${this.metricCard(
+          "子账号总数",
+          subAccounts.length
+        )}
+
+        ${this.metricCard(
+          "启用子账号",
+          activeCount
+        )}
+
+        ${this.metricCard(
+          "演示分配额度",
+          this.formatToken(
+            totalTokenLimit
+          )
+        )}
+
+        ${this.metricCard(
+          "演示剩余额度",
+          this.formatToken(
+            remainingTokens
+          )
+        )}
+      </section>
+
+      <section class="account-panel">
+        <div class="account-panel-heading">
+          <div>
+            <h2>
+              子账号 Token 管理
+            </h2>
+
+            <p>
+              额度、消耗、剩余和预警阈值目前均为演示展示。
+            </p>
+          </div>
+
+          <span class="account-data-badge">
+            DEMO
+          </span>
+        </div>
+
+        <div
+          id="ownerDemoMessage"
+          class="auth-message"
+        ></div>
+
+        ${
+          subAccounts.length
+            ? `
+              <div class="table-wrap">
+                <table>
+                  ${this.rows(
+                    [
+                      "子账号名称",
+                      "AIGC 登录名",
+                      "分配额度",
+                      "已使用",
+                      "剩余",
+                      "预警阈值",
+                      "状态",
+                      "操作"
+                    ],
+                    subAccounts.map(
+                      item => [
+                        this.escapeHtml(
+                          item.subAccountName ||
+                          "未命名子账号"
+                        ),
+                        this.escapeHtml(
+                          item.platformLogin ||
+                          "-"
+                        ),
+                        this.formatToken(
+                          item.tokenLimit
+                        ),
+                        this.formatToken(
+                          item.usedTokens
+                        ),
+                        this.formatToken(
+                          item.remainingTokens
+                        ),
+                        `${this.formatToken(
+                          item.warningThreshold
+                        )}%`,
+                        item.status === "active"
+                          ? "启用"
+                          : "停用",
+                        `
+                          <button
+                            type="button"
+                            class="btn-outline demo-token-edit-btn"
+                            data-sub-account-id="${this.escapeHtml(
+                              item.id || ""
+                            )}"
+                          >
+                            修改额度
+                          </button>
+                        `
+                      ]
+                    )
+                  )}
+                </table>
+              </div>
+            `
+            : `
+              <div class="account-empty-state">
+                当前企业暂未创建 AIGC 子账号。
+              </div>
+            `
+        }
+      </section>
+    `;
+  }
+
+  renderUnboundUser(data) {
+    const app =
+      document.getElementById(
+        "accountApp"
+      );
+
+    const email =
+      data?.currentUser?.email ||
+      "-";
+
+    app.innerHTML = `
+      <section class="account-hero-card">
+        <div>
+          <span class="hero-badge">
+            普通用户
+          </span>
+
+          <h1>
+            我的 AIGC 账号
+          </h1>
+
+          <p>
+            查看当前 Harson-Base 账号的 AIGC 服务绑定状态。
+          </p>
+        </div>
+
+        <button
+          id="logoutBtn"
+          class="btn-outline"
+        >
+          退出登录
+        </button>
+      </section>
+
+      <section class="account-panel account-unbound-panel">
+        <div class="account-status-icon" aria-hidden="true">
+          !
+        </div>
+
+        <span class="account-data-badge account-data-badge-muted">
+          未绑定
+        </span>
+
+        <h2>
+          尚未开通 AIGC 服务
+        </h2>
+
+        <div class="account-unbound-details">
+          <span>
+            Harson-Base 登录邮箱
+          </span>
+          <strong>
+            ${this.escapeHtml(email)}
+          </strong>
+
+          <span>
+            AIGC 子账号
+          </span>
+          <strong>
+            尚未分配
+          </strong>
+        </div>
+
+        <p class="account-purchase-copy">
+          当前 Harson-Base 账号尚未绑定 AIGC 子账号，
+          因此暂时无法进入 CL-AIGC、查看 Token 点数或创作记录。
+          请自行购买 AIGC 相关服务，或联系管理员进行购买。
+        </p>
+
+        <div class="account-unbound-actions">
+          <button
+            id="refreshBindingBtn"
+            class="btn-primary"
+          >
+            刷新绑定状态
+          </button>
+
+          <a
+            href="/"
+            class="btn-outline"
+          >
+            返回首页
+          </a>
+        </div>
+      </section>
+    `;
+  }
+
+  renderUserWorkspace(
+    data,
+    {
+      isLoading = false,
+      syncResult = null,
+      tokenBalanceResult = null
+    } = {}
+  ) {
     const app =
       document.getElementById(
         "accountApp"
@@ -440,10 +887,21 @@ export class AccountManagementView {
     const mapping =
       data?.mapping || null;
 
+    const subAccount =
+      mapping?.aigcSubAccount ||
+      null;
+
+    const masterAccount =
+      mapping?.masterAccount ||
+      null;
+
+    if (!subAccount || !masterAccount) {
+      this.renderUnboundUser(data);
+      return;
+    }
+
     const works =
-      Array.isArray(
-        data?.works
-      )
+      Array.isArray(data?.works)
         ? data.works
         : [];
 
@@ -459,166 +917,175 @@ export class AccountManagementView {
     };
 
     const taskSync = {
-      status:
-        "not_synced",
-
-      memberId:
-        null,
-
-      latestSyncedAt:
-        null,
-
-      source:
-        "yibai_snapshot",
-
+      latestSyncedAt: null,
       ...(data?.taskSync || {})
     };
 
-    const subAccount =
-      mapping?.aigcSubAccount ||
-      null;
+    const tokenBalance =
+      tokenBalanceResult?.success
+        ? tokenBalanceResult.result
+        : null;
 
-    const masterAccount =
-      mapping?.masterAccount ||
-      null;
-
-    const mappingReady =
-      Boolean(
-        subAccount &&
-        masterAccount
-      );
+    const tokenBalanceValue =
+      tokenBalance?.available &&
+      tokenBalance.tokenBalance !== null &&
+      tokenBalance.tokenBalance !== undefined
+        ? this.formatToken(
+            tokenBalance.tokenBalance
+          )
+        : "--";
 
     app.innerHTML = `
       <section class="account-hero-card">
         <div>
+          <span class="hero-badge">
+            已绑定普通用户
+          </span>
+
           <h1>
-            我的 AIGC 独立创作空间
+            我的 AIGC 账号
           </h1>
 
           <p>
-            当前页面只显示与你的 Harson-Base
-            账号绑定的 AIGC 子账号，以及从
-            YiBai 同步的真实任务和 Token
-            使用情况
+            进入页面后自动读取最新 Token 点数与本人创作记录，
+            页面不会展示其他子账号的数据。
           </p>
         </div>
 
-        <button
-          id="logoutBtn"
-          class="btn-outline"
-        >
-          退出登录
-        </button>
+        <div class="account-hero-actions">
+          <a
+            href="/aigc-workspace"
+            class="btn-primary"
+          >
+            进入 CL-AIGC
+          </a>
+
+          <button
+            id="logoutBtn"
+            class="btn-outline"
+          >
+            退出登录
+          </button>
+        </div>
       </section>
+
+      ${this.userAutoSyncNotice({
+        isLoading,
+        syncResult,
+        tokenBalance,
+        latestSyncedAt:
+          taskSync.latestSyncedAt
+      })}
 
       <section class="account-panel">
-        <h2>
-          我的账号映射
-        </h2>
+        <div class="account-panel-heading">
+          <div>
+            <h2>
+              我的账号
+            </h2>
 
-        ${
-          mappingReady
-            ? `
-              <div class="mapping-card">
-                <strong>
-                  AIGC 子账号：
-                </strong>
-                ${subAccount.subAccountName || "-"}
-                <br/>
+            <p>
+              当前 Harson-Base 用户只读查看自己的绑定信息。
+            </p>
+          </div>
 
-                <strong>
-                  AIGC 登录名：
-                </strong>
-                ${subAccount.platformLogin || "-"}
-                <br/>
+          <span class="account-data-badge account-data-badge-success">
+            已绑定
+          </span>
+        </div>
 
-                <strong>
-                  企业主账号：
-                </strong>
-                ${masterAccount.enterpriseName || "-"}
-                /
-                ${masterAccount.platformName || "-"}
-              </div>
-            `
-            : `
-              <div class="auth-message error">
-                当前 Harson-Base 账号尚未绑定
-                AIGC 子账号，请联系管理员建立
-                账号映射
-              </div>
-            `
-        }
-      </section>
-
-      <section class="account-panel">
-        <h2>
-          真实数据同步状态
-        </h2>
-
-        ${this.taskSyncMessage(
-          taskSync
-        )}
-
-        ${this.taskSummaryTable(
-          taskSummary,
-          taskSync
-        )}
-      </section>
-
-      ${
-        subAccount
-          ? `
-            <section class="account-panel">
-              <h2>
-                我的 AIGC Token 使用情况
-              </h2>
-
-              ${this.tokenWarningBox(
-                subAccount
+        <div class="account-identity-grid">
+          <div>
+            <span>AIGC 子账号</span>
+            <strong>
+              ${this.escapeHtml(
+                subAccount.subAccountName ||
+                "-"
               )}
+            </strong>
+          </div>
 
-              <div class="table-wrap">
-                <table>
-                  ${this.rows(
-                    [
-                      "Token 配额",
-                      "真实净消耗",
-                      "剩余",
-                      "已使用率",
-                      "剩余率",
-                      "剩余预警阈值",
-                      "状态"
-                    ],
-                    [
-                      [
-                        subAccount.tokenLimit ?? 0,
-                        subAccount.usedTokens ?? 0,
-                        subAccount.remainingTokens ?? 0,
-                        `${subAccount.usageRate ?? 0}%`,
-                        `${
-                          subAccount.remainingRate ??
-                          this.calculateRemainingRate(
-                            subAccount
-                          )
-                        }%`,
-                        `${subAccount.warningThreshold ?? 0}%`,
-                        this.tokenStatusLabel(
-                          subAccount.warningStatus
-                        )
-                      ]
-                    ]
-                  )}
-                </table>
-              </div>
-            </section>
-          `
-          : ""
-      }
+          <div>
+            <span>AIGC 登录名</span>
+            <strong>
+              ${this.escapeHtml(
+                subAccount.platformLogin ||
+                "-"
+              )}
+            </strong>
+          </div>
+
+          <div>
+            <span>所属企业</span>
+            <strong>
+              ${this.escapeHtml(
+                masterAccount.enterpriseName ||
+                "-"
+              )}
+            </strong>
+          </div>
+
+          <div>
+            <span>账号状态</span>
+            <strong>
+              ${
+                subAccount.status === "active"
+                  ? "正常"
+                  : "停用"
+              }
+            </strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="account-grid-three account-user-metrics">
+        ${this.metricCard(
+          "当前 Token 点数（实时）",
+          isLoading
+            ? "读取中"
+            : tokenBalanceValue
+        )}
+
+        ${this.metricCard(
+          "真实净消耗 Token",
+          this.formatToken(
+            taskSummary.netUsedTokens
+          )
+        )}
+
+        ${this.metricCard(
+          "创作任务总数",
+          this.formatToken(
+            taskSummary.totalTasks
+          )
+        )}
+
+        ${this.metricCard(
+          "成功任务",
+          this.formatToken(
+            taskSummary.successfulTasks
+          )
+        )}
+      </section>
 
       <section class="account-panel">
-        <h2>
-          我的真实创作记录
-        </h2>
+        <div class="account-panel-heading">
+          <div>
+            <h2>
+              我的创作记录
+            </h2>
+
+            <p>
+              仅显示当前绑定 AIGC 子账号对应的 YiBai 真实记录。
+            </p>
+          </div>
+
+          <span class="account-data-badge">
+            ${this.formatToken(
+              works.length
+            )} 条
+          </span>
+        </div>
 
         ${
           works.length
@@ -630,12 +1097,77 @@ export class AccountManagementView {
               </div>
             `
             : `
-              <p class="muted">
-                暂无已同步的真实创作记录
-              </p>
+              <div class="account-empty-state">
+                暂无已同步的真实创作记录。
+              </div>
             `
         }
       </section>
+    `;
+  }
+
+  userAutoSyncNotice({
+    isLoading,
+    syncResult,
+    tokenBalance,
+    latestSyncedAt
+  }) {
+    if (isLoading) {
+      return `
+        <div class="account-sync-banner is-loading">
+          <span class="account-loading-dot" aria-hidden="true"></span>
+          <div>
+            <strong>正在读取最新数据</strong>
+            <span>
+              正在同步 Token 点数与本人创作记录，请稍候。
+            </span>
+          </div>
+        </div>
+      `;
+    }
+
+    if (!syncResult?.success) {
+      return `
+        <div class="account-sync-banner is-error">
+          <strong>实时读取失败</strong>
+          <span>
+            ${this.escapeHtml(
+              syncResult?.message ||
+              "暂时无法读取最新数据，页面已保留上次记录。"
+            )}
+          </span>
+        </div>
+      `;
+    }
+
+    if (!tokenBalance?.available) {
+      return `
+        <div class="account-sync-banner is-warning">
+          <strong>创作记录已更新</strong>
+          <span>
+            Token 点数暂不可用：${this.escapeHtml(
+              tokenBalance?.message ||
+              "未读取到可用余额"
+            )}
+          </span>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="account-sync-banner is-success">
+        <strong>最新数据已读取</strong>
+        <span>
+          Token 点数和本人创作记录已更新
+          ${
+            latestSyncedAt
+              ? ` · ${this.formatDateTime(
+                  latestSyncedAt
+                )}`
+              : ""
+          }
+        </span>
+      </div>
     `;
   }
 
@@ -677,6 +1209,35 @@ export class AccountManagementView {
         ) {
           await this.vm.logout();
           window.location.href = "/";
+        }
+
+        if (
+          event.target &&
+          event.target.id ===
+            "refreshBindingBtn"
+        ) {
+          const button =
+            event.target;
+
+          button.disabled = true;
+          button.textContent =
+            "刷新中...";
+
+          await this.load();
+        }
+
+        if (
+          event.target &&
+          event.target.classList
+            ?.contains(
+              "demo-token-edit-btn"
+            )
+        ) {
+          this.showLocalMessage(
+            "ownerDemoMessage",
+            "当前为演示数据，真实额度修改功能尚未接入。",
+            false
+          );
         }
       }
     );
@@ -737,6 +1298,15 @@ export class AccountManagementView {
     );
 
     this.bindForm(
+      "masterOwnerForm",
+      async form =>
+        this.vm.createMasterOwnerMapping(
+          this.formToObject(form)
+        ),
+      "masterOwnerMessage"
+    );
+
+    this.bindForm(
       "mappingForm",
       async form =>
         this.vm.createMapping(
@@ -749,6 +1319,67 @@ export class AccountManagementView {
     this.bindUserDataSyncButtons();
     this.bindProviderUnbindButtons();
     this.bindMappingUnbindButtons();
+    this.bindMasterOwnerUnbindButtons();
+  }
+
+  bindMasterOwnerUnbindButtons() {
+    document
+      .querySelectorAll(
+        ".unbind-master-owner-btn"
+      )
+      .forEach(button => {
+        button.addEventListener(
+          "click",
+          async () => {
+            const mappingId = String(
+              button.dataset.mappingId || ""
+            ).trim();
+
+            if (!mappingId) {
+              this.showLocalMessage(
+                "masterOwnerMessage",
+                "缺少负责人绑定 ID",
+                false
+              );
+              return;
+            }
+
+            const confirmed =
+              window.confirm(
+                "解除后，该用户将失去企业负责人仪表盘权限。确定解除绑定吗？"
+              );
+
+            if (!confirmed) {
+              return;
+            }
+
+            button.disabled = true;
+            button.textContent =
+              "解绑中...";
+
+            const result =
+              await this.vm
+                .unbindMasterOwnerMapping(
+                  mappingId
+                );
+
+            this.showLocalMessage(
+              "masterOwnerMessage",
+              result.message,
+              result.success
+            );
+
+            if (result.success) {
+              setTimeout(
+                async () => {
+                  await this.load();
+                },
+                800
+              );
+            }
+          }
+        );
+      });
   }
 
   bindProviderSyncButtons() {
@@ -1200,6 +1831,101 @@ export class AccountManagementView {
     ].join("");
   }
 
+  masterOwnerOptions() {
+    const ownerMasterIds = new Set(
+      (
+        this.state.dashboard
+          ?.masterOwnerMappings || []
+      ).map(
+        mapping =>
+          mapping.masterAccountId
+      )
+    );
+
+    const availableMasters =
+      (
+        this.state.dashboard
+          ?.masters || []
+      ).filter(
+        master =>
+          !ownerMasterIds.has(
+            master.id
+          )
+      );
+
+    return [
+      `<option value="">
+        选择企业主账号
+      </option>`,
+      ...availableMasters.map(
+        master => `
+          <option value="${master.id}">
+            ${master.enterpriseName}
+            /
+            ${master.platformLogin}
+          </option>
+        `
+      )
+    ].join("");
+  }
+
+  masterOwnerUserOptions() {
+    const users =
+      this.state.users || [];
+
+    const subMappedUserIds = new Set(
+      (
+        this.state.dashboard
+          ?.mappings || []
+      )
+        .filter(
+          mapping =>
+            mapping.mappingStatus ===
+            "active"
+        )
+        .map(
+          mapping =>
+            mapping.clBaseUserId
+        )
+    );
+
+    const ownerUserIds = new Set(
+      (
+        this.state.dashboard
+          ?.masterOwnerMappings || []
+      ).map(
+        mapping =>
+          mapping.clBaseUserId
+      )
+    );
+
+    const availableUsers =
+      users.filter(
+        user =>
+          user.role !== "admin" &&
+          !subMappedUserIds.has(
+            user.id
+          ) &&
+          !ownerUserIds.has(
+            user.id
+          )
+      );
+
+    return [
+      `<option value="">
+        选择 Harson-Base 负责人
+      </option>`,
+      ...availableUsers.map(
+        user => `
+          <option value="${user.id}">
+            ${user.name || "未命名用户"}
+            （${user.email || "无登录邮箱"}）
+          </option>
+        `
+      )
+    ].join("");
+  }
+
   subOptions(
     label = "选择 AIGC 子账号"
   ) {
@@ -1263,10 +1989,24 @@ export class AccountManagementView {
           )
       );
 
+    const activeOwnerUserIds =
+      new Set(
+        (
+          this.state.dashboard
+            ?.masterOwnerMappings || []
+        ).map(
+          mapping =>
+            mapping.clBaseUserId
+        )
+      );
+
     const availableUsers =
       normalUsers.filter(
         item =>
           !activeMappedUserIds.has(
+            item.id
+          ) &&
+          !activeOwnerUserIds.has(
             item.id
           )
       );
@@ -1398,6 +2138,9 @@ export class AccountManagementView {
     const mappings =
       data.mappings || [];
 
+    const masterOwnerMappings =
+      data.masterOwnerMappings || [];
+
     const users =
       this.state.users || [];
 
@@ -1480,6 +2223,44 @@ export class AccountManagementView {
           ];
         });
 
+    const masterOwnerRows =
+      masterOwnerMappings.map(
+        mapping => {
+          const user = users.find(
+            item =>
+              item.id ===
+              mapping.clBaseUserId
+          );
+
+          const master = masters.find(
+            item =>
+              item.id ===
+              mapping.masterAccountId
+          );
+
+          return [
+            user?.name ||
+              "未命名用户",
+            mapping.clBaseEmail ||
+              user?.email ||
+              "-",
+            master
+              ? `${master.enterpriseName} / ${master.platformName}`
+              : "未找到企业主账号",
+            "已绑定",
+            `
+              <button
+                type="button"
+                class="btn-outline unbind-master-owner-btn"
+                data-mapping-id="${mapping.id}"
+              >
+                解除负责人绑定
+              </button>
+            `
+          ];
+        }
+      );
+
     return `
       <h3>
         企业点数池
@@ -1539,6 +2320,38 @@ export class AccountManagementView {
           ])
         )}
       </table>
+
+      <h3>
+        企业主账号负责人绑定
+      </h3>
+
+      <p class="muted">
+        负责人后续只能查看自己所属企业及其
+        子账号的 Token 使用仪表盘。
+      </p>
+
+      ${
+        masterOwnerRows.length
+          ? `
+            <table>
+              ${this.rows(
+                [
+                  "Harson-Base 负责人",
+                  "登录邮箱",
+                  "所属企业 / 平台",
+                  "绑定状态",
+                  "操作"
+                ],
+                masterOwnerRows
+              )}
+            </table>
+          `
+          : `
+            <p class="muted">
+              暂无企业主账号负责人绑定。
+            </p>
+          `
+      }
 
       <h3>
         Harson-Base 与 AIGC 绑定情况
@@ -1692,8 +2505,9 @@ export class AccountManagementView {
             "任务标题",
             "任务类型",
             "状态",
-            "YiBai 使用成员",
-            "净消耗 Token",
+            "扣除 Token",
+            "返还 Token",
+            "净消耗",
             "完成或创建时间"
           ],
           works.map(
@@ -1709,13 +2523,27 @@ export class AccountManagementView {
                   item.status
                 ),
 
-              item.memberName ||
-                "-",
+              this.formatToken(
+                item.deductedTokens ??
+                item.point ??
+                0
+              ),
 
-              item.creditCost ?? 0,
+              this.formatToken(
+                item.refundedTokens ??
+                item.refundedPoint ??
+                0
+              ),
 
-              item.createdAt ||
-                "-"
+              this.formatToken(
+                item.creditCost ??
+                item.netUsedTokens ??
+                0
+              ),
+
+              this.formatDateTime(
+                item.createdAt
+              )
             ]
           )
         )}
@@ -1810,6 +2638,65 @@ export class AccountManagementView {
         当前 AIGC 子账号 token 使用状态正常
       </div>
     `;
+  }
+
+  formatToken(value) {
+    const numericValue =
+      Number(value);
+
+    if (!Number.isFinite(numericValue)) {
+      return "0";
+    }
+
+    return numericValue.toLocaleString(
+      "zh-CN",
+      {
+        maximumFractionDigits: 2
+      }
+    );
+  }
+
+  formatDateTime(value) {
+    const normalizedValue =
+      String(value || "").trim();
+
+    if (!normalizedValue) {
+      return "-";
+    }
+
+    const parsedDate =
+      new Date(normalizedValue);
+
+    if (
+      Number.isNaN(
+        parsedDate.getTime()
+      )
+    ) {
+      return this.escapeHtml(
+        normalizedValue
+      );
+    }
+
+    return parsedDate.toLocaleString(
+      "zh-CN",
+      {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      }
+    );
+  }
+
+  escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
   }
 
   rows(headers, rows) {

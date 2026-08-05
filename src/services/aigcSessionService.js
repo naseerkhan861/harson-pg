@@ -4,6 +4,10 @@ const aigcAccountModel = require(
   "../models/aigcAccountCsvModel"
 );
 
+const masterOwnerModel = require(
+  "../models/aigcMasterOwnerCsvModel"
+);
+
 const masterProviderConfigModel = require(
   "../models/aigcMasterProviderConfigCsvModel"
 );
@@ -279,12 +283,16 @@ function withMasterAccountLock(
 }
 
 /**
- * 解析当前普通用户的完整账号关系：
+ * 解析当前用户的完整账号关系：
  *
- * Harson-Base 用户
- * → 内部 AIGC 子账号
- * → 内部企业主账号
- * → YiBai 外部账号
+ * 普通用户：
+ * Harson-Base 用户 → AIGC 子账号 → 企业主账号
+ *
+ * 企业负责人：
+ * Harson-Base 用户 → 主账号负责人绑定 → 企业主账号
+ *
+ * 最后都通过该主账号的 YiBai 外部账号
+ * 获取 Workspace 共享会话。
  *
  * 这里只解析关系，不解密 YiBai 密码。
  * 只有必须重新登录时才解密密码。
@@ -298,15 +306,58 @@ function resolveUserAccount(
       "Harson-Base用户ID"
     );
 
-  const mappingData =
+  let mappingData =
     aigcAccountModel.getMyMapping(
       normalizedUserId
     );
 
+  let accountType =
+    "sub_account";
+
+  let ownerMapping = null;
+
   if (!mappingData?.mapping) {
-    throw new Error(
-      "当前 Harson-Base 账号尚未购买服务"
-    );
+    ownerMapping =
+      masterOwnerModel
+        .getActiveMappingByUserId(
+          normalizedUserId
+        );
+
+    if (!ownerMapping) {
+      throw new Error(
+        "当前 Harson-Base 账号尚未购买服务"
+      );
+    }
+
+    const ownerMasterAccount =
+      aigcAccountModel
+        .getMasterAccountById(
+          ownerMapping
+            .masterAccountId
+        );
+
+    mappingData = {
+      mapping: null,
+
+      aigcSubAccount: {
+        id:
+          `master-owner:${ownerMapping.masterAccountId}`,
+
+        masterAccountId:
+          ownerMapping.masterAccountId,
+
+        subAccountName:
+          "企业主账号负责人",
+
+        status: "active"
+      },
+
+      masterAccount:
+        ownerMasterAccount
+    };
+
+    accountType =
+      "master_owner";
   }
 
   const subAccount =
@@ -344,11 +395,15 @@ function resolveUserAccount(
       subAccount.masterAccountId || ""
     ) !==
       String(masterAccount.id) ||
-    String(
-      mappingData.mapping
-        .masterAccountId || ""
-    ) !==
-      String(masterAccount.id)
+    (
+      accountType ===
+        "sub_account" &&
+      String(
+        mappingData.mapping
+          ?.masterAccountId || ""
+      ) !==
+        String(masterAccount.id)
+    )
   ) {
     throw new Error(
       "AIGC 子账号、企业主账号和用户映射关系不一致"
@@ -379,6 +434,10 @@ function resolveUserAccount(
   return {
     clBaseUserId:
       normalizedUserId,
+
+    accountType,
+
+    ownerMapping,
 
     mapping:
       mappingData.mapping,

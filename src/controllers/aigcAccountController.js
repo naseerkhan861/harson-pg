@@ -1,4 +1,7 @@
 const aigcAccountModel = require("../models/aigcAccountCsvModel");
+const masterOwnerModel = require(
+  "../models/aigcMasterOwnerCsvModel"
+);
 
 const taskSnapshotModel = require(
   "../models/aigcTaskSnapshotCsvModel"
@@ -14,15 +17,534 @@ const aigcUserDataService = require(
 const aigcSessionService = require(
   "../services/aigcSessionService"
 );
+const aigcDashboardService = require(
+  "../services/aigcDashboardService"
+);
 
 async function dashboard(req, res) {
   try {
+    const data =
+      aigcAccountModel.listAdminData();
+
     return res.json({
       success: true,
-      data: aigcAccountModel.listAdminData()
+      data: {
+        ...data,
+        masterOwnerMappings:
+          masterOwnerModel
+            .listActiveMappings()
+      }
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
+  }
+}
+
+function getMyEnterpriseSubAccounts(
+  req,
+  res
+) {
+  try {
+    const ownerMapping =
+      req.user?.id
+        ? masterOwnerModel
+            .getActiveMappingByUserId(
+              req.user.id
+            )
+        : null;
+
+    if (!ownerMapping) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "当前账号不是企业主账号负责人"
+      });
+    }
+
+    const data =
+      aigcAccountModel.listAdminData();
+
+    const masterAccount =
+      data.masters.find(
+        master =>
+          String(master.id) ===
+            String(
+              ownerMapping
+                .masterAccountId
+            ) &&
+          master.status === "active"
+      );
+
+    if (!masterAccount) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "未找到当前负责人所属的企业主账号"
+      });
+    }
+
+    const subAccounts =
+      data.subs
+        .filter(
+          subAccount =>
+            String(
+              subAccount
+                .masterAccountId
+            ) ===
+            String(masterAccount.id)
+        )
+        .map(
+          (
+            subAccount,
+            index
+          ) => {
+            const configuredLimit =
+              Math.max(
+                toNumber(
+                  subAccount.tokenLimit,
+                  0
+                ),
+                0
+              );
+
+            const demoTokenLimit =
+              configuredLimit > 0
+                ? configuredLimit
+                : (
+                    index + 1
+                  ) * 10000;
+
+            const demoUsedTokens =
+              Math.min(
+                Math.max(
+                  toNumber(
+                    subAccount.usedTokens,
+                    0
+                  ),
+                  0
+                ),
+                demoTokenLimit
+              );
+
+            return {
+              id: subAccount.id,
+              subAccountName:
+                subAccount
+                  .subAccountName,
+              platformLogin:
+                subAccount
+                  .platformLogin,
+              tokenLimit:
+                demoTokenLimit,
+              usedTokens:
+                demoUsedTokens,
+              remainingTokens:
+                Math.max(
+                  demoTokenLimit -
+                    demoUsedTokens,
+                  0
+                ),
+              warningThreshold:
+                Math.max(
+                  toNumber(
+                    subAccount
+                      .warningThreshold,
+                    10
+                  ),
+                  0
+                ),
+              status:
+                subAccount.status ||
+                "disabled"
+            };
+          }
+        );
+
+    return res.json({
+      success: true,
+      data: {
+        dataMode: "demo",
+        enterpriseName:
+          masterAccount
+            .enterpriseName ||
+          "未命名企业",
+        masterAccountId:
+          masterAccount.id,
+        subAccounts
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message:
+        error.message ||
+        "企业子账号读取失败"
+    });
+  }
+}
+
+function getDashboardAnalytics(
+  req,
+  res
+) {
+  try {
+    const isAdmin =
+      req.user?.role === "admin";
+
+    const ownerMapping =
+      !isAdmin && req.user?.id
+        ? masterOwnerModel
+            .getActiveMappingByUserId(
+              req.user.id
+            )
+        : null;
+
+    if (
+      !isAdmin &&
+      !ownerMapping
+    ) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "当前账号没有仪表盘访问权限"
+      });
+    }
+
+    const requestedMasterAccountId =
+      String(
+        req.query?.masterAccountId ||
+        ""
+      ).trim();
+
+    if (
+      ownerMapping &&
+      requestedMasterAccountId &&
+      requestedMasterAccountId !==
+        String(
+          ownerMapping.masterAccountId
+        )
+    ) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "不能查看其他企业的仪表盘数据"
+      });
+    }
+
+    const masterAccountIds =
+      ownerMapping
+        ? [
+            ownerMapping
+              .masterAccountId
+          ]
+        : requestedMasterAccountId
+          ? [
+              requestedMasterAccountId
+            ]
+          : [];
+
+    const analytics =
+      aigcDashboardService
+        .buildDashboardAnalytics({
+          masterAccountIds,
+          scope:
+            isAdmin
+              ? "admin"
+              : "master_owner"
+        });
+
+    return res.json({
+      success: true,
+      data: analytics
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message:
+        error.message ||
+        "仪表盘数据读取失败"
+    });
+  }
+}
+
+async function syncDashboardUserData(
+  req,
+  res
+) {
+  const isAdmin =
+    req.user?.role === "admin";
+
+  const requestedMasterAccountId =
+    String(
+      req.body?.masterAccountId ||
+      ""
+    ).trim();
+
+  let masterAccountId =
+    requestedMasterAccountId;
+
+  if (!isAdmin) {
+    const ownerMapping =
+      req.user?.id
+        ? masterOwnerModel
+            .getActiveMappingByUserId(
+              req.user.id
+            )
+        : null;
+
+    if (!ownerMapping) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "当前账号没有仪表盘同步权限"
+      });
+    }
+
+    if (
+      requestedMasterAccountId &&
+      requestedMasterAccountId !==
+        String(
+          ownerMapping.masterAccountId
+        )
+    ) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "不能同步其他企业的创作记录"
+      });
+    }
+
+    masterAccountId =
+      ownerMapping.masterAccountId;
+  }
+
+  if (!masterAccountId) {
+    return res.status(400).json({
+      success: false,
+      message:
+        "请选择需要同步的企业主账号"
+    });
+  }
+
+  req.params = {
+    ...req.params,
+    masterAccountId
+  };
+
+  return syncMasterUserData(
+    req,
+    res
+  );
+}
+
+async function syncMyWorkspaceUserData(
+  req,
+  res
+) {
+  const mapping =
+    aigcAccountModel.getMyMapping(
+      req.user.id
+    );
+
+  const masterAccountId =
+    String(
+      mapping?.mapping
+        ?.masterAccountId ||
+      mapping?.aigcSubAccount
+        ?.masterAccountId ||
+      mapping?.masterAccount?.id ||
+      ""
+    ).trim();
+
+  if (
+    !mapping?.aigcSubAccount ||
+    !masterAccountId
+  ) {
+    return res.status(403).json({
+      success: false,
+      message:
+        "当前 Harson-Base 账号尚未绑定 AIGC 子账号"
+    });
+  }
+
+  req.params = {
+    ...req.params,
+    masterAccountId
+  };
+
+  let forwardedStatus = 200;
+  let forwardedPayload = null;
+
+  const privateResponse = {
+    status(statusCode) {
+      forwardedStatus = statusCode;
+      return this;
+    },
+
+    json(payload) {
+      forwardedPayload = payload;
+      return payload;
+    }
+  };
+
+  await syncMasterUserData(
+    req,
+    privateResponse
+  );
+
+  if (!forwardedPayload?.success) {
+    return res
+      .status(forwardedStatus)
+      .json({
+        success: false,
+        message:
+          forwardedPayload?.message ||
+          "最新创作记录读取失败",
+        data: {
+          timing:
+            forwardedPayload?.data
+              ?.timing ||
+            null
+        }
+      });
+  }
+
+  return res.json({
+    success: true,
+    message:
+      "最新 Token 点数和本人创作记录读取成功",
+    data: {
+      timing:
+        forwardedPayload?.data
+          ?.timing ||
+        null
+    }
+  });
+}
+
+async function createMasterOwnerMapping(
+  req,
+  res
+) {
+  try {
+    const {
+      masterAccountId,
+      clBaseUserId
+    } = req.body;
+
+    if (
+      !masterAccountId ||
+      !clBaseUserId
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "企业主账号和 Harson-Base 负责人不能为空"
+      });
+    }
+
+    const adminData =
+      aigcAccountModel.listAdminData();
+
+    const master =
+      adminData.masters.find(
+        item =>
+          item.id ===
+          String(masterAccountId)
+      );
+
+    if (
+      !master ||
+      master.status !== "active"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "未找到可用的 AIGC 企业主账号"
+      });
+    }
+
+    const user =
+      await userCsvModel.findById(
+        clBaseUserId
+      );
+
+    if (
+      !user ||
+      !user.isActive
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "未找到可用的 Harson-Base 用户"
+      });
+    }
+
+    if (user.role === "admin") {
+      return res.status(400).json({
+        success: false,
+        message:
+          "管理员账号不能绑定为企业主账号负责人"
+      });
+    }
+
+    if (
+      aigcAccountModel.getMyMapping(
+        user.id
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "该 Harson-Base 用户已经绑定了 AIGC 子账号，请先解除子账号映射"
+      });
+    }
+
+    const mapping =
+      masterOwnerModel.createMapping({
+        masterAccountId:
+          master.id,
+        clBaseUserId:
+          user.id,
+        clBaseEmail:
+          user.email
+      });
+
+    return res.status(201).json({
+      success: true,
+      message:
+        "企业主账号负责人绑定成功",
+      data: mapping
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
+function unbindMasterOwnerMapping(
+  req,
+  res
+) {
+  try {
+    const mapping =
+      masterOwnerModel.unbindMapping(
+        req.params.mappingId
+      );
+
+    return res.json({
+      success: true,
+      message:
+        "企业主账号负责人绑定已解除",
+      data: mapping
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message
+    });
   }
 }
 
@@ -519,7 +1041,22 @@ async function syncMasterUserData(
   let taskSyncResult = null;
   let taskSyncError = null;
   let workspaceRestoreError = null;
+  const syncStartedAt = Date.now();
+  const timing = {
+    taskSyncMs: 0,
+    workspaceRestoreMs: 0,
+    totalMs: 0
+  };
 
+  console.info(
+    "[YiBai 创作记录同步] 开始",
+    {
+      masterAccountId
+    }
+  );
+
+  const taskSyncStartedAt =
+    Date.now();
   try {
     taskSyncResult =
       await aigcUserDataService
@@ -528,8 +1065,14 @@ async function syncMasterUserData(
         );
   } catch (error) {
     taskSyncError = error;
+  } finally {
+    timing.taskSyncMs =
+      Date.now() -
+      taskSyncStartedAt;
   }
 
+  const workspaceRestoreStartedAt =
+    Date.now();
   try {
     /*
      * 用户端登录可能影响管理端 Token，
@@ -543,6 +1086,10 @@ async function syncMasterUserData(
     workspaceRestoreError =
       error;
   } finally {
+    timing.workspaceRestoreMs =
+      Date.now() -
+      workspaceRestoreStartedAt;
+
     try {
       /*
        * 管理端重新登录后，
@@ -561,6 +1108,34 @@ async function syncMasterUserData(
     }
   }
 
+  timing.totalMs =
+    Date.now() -
+    syncStartedAt;
+
+  const syncLogDetails = {
+    masterAccountId,
+    ...timing,
+    taskSyncSuccess:
+      !taskSyncError,
+    workspaceRestoreSuccess:
+      !workspaceRestoreError
+  };
+
+  if (
+    taskSyncError ||
+    workspaceRestoreError
+  ) {
+    console.warn(
+      "[YiBai 创作记录同步] 完成但存在失败阶段",
+      syncLogDetails
+    );
+  } else {
+    console.info(
+      "[YiBai 创作记录同步] 完成",
+      syncLogDetails
+    );
+  }
+
   if (workspaceRestoreError) {
     return res.status(500).json({
       success: false,
@@ -568,7 +1143,11 @@ async function syncMasterUserData(
       message:
         taskSyncError
           ? `YiBai 用户数据同步失败，且 Workspace 登录状态恢复失败：${workspaceRestoreError.message}`
-          : `真实创作记录已同步，但 Workspace 登录状态恢复失败：${workspaceRestoreError.message}`
+          : `真实创作记录已同步，但 Workspace 登录状态恢复失败：${workspaceRestoreError.message}`,
+
+      data: {
+        timing
+      }
     });
   }
 
@@ -577,7 +1156,11 @@ async function syncMasterUserData(
       success: false,
 
       message:
-        `YiBai 用户数据同步失败：${taskSyncError.message}。Workspace 登录状态已恢复`
+        `YiBai 用户数据同步失败：${taskSyncError.message}。Workspace 登录状态已恢复`,
+
+      data: {
+        timing
+      }
     });
   }
 
@@ -592,7 +1175,9 @@ async function syncMasterUserData(
         taskSyncResult,
 
       workspaceRestored:
-        true
+        true,
+
+      timing
     }
   });
 }
@@ -912,6 +1497,15 @@ function toWorkspaceWork(
     creditCost:
       task.netPoint,
 
+    deductedTokens:
+      task.point,
+
+    refundedTokens:
+      task.refundedPoint,
+
+    netUsedTokens:
+      task.netPoint,
+
     status:
       task.status,
 
@@ -956,6 +1550,11 @@ function myAigcWorkspace(
         success: true,
 
         data: {
+          currentUser: {
+            email:
+              req.user.email || ""
+          },
+
           mapping:
             originalMapping,
 
@@ -1047,6 +1646,11 @@ function myAigcWorkspace(
       success: true,
 
       data: {
+        currentUser: {
+          email:
+            req.user.email || ""
+        },
+
         mapping,
 
         /*
@@ -1130,6 +1734,10 @@ function addMyWork(req, res) {
 
 module.exports = {
   dashboard,
+  getMyEnterpriseSubAccounts,
+  getDashboardAnalytics,
+  syncDashboardUserData,
+  syncMyWorkspaceUserData,
   aigcCenter,
   purchaseTokens,
 
@@ -1144,6 +1752,8 @@ module.exports = {
 
   createMapping,
   unbindMapping,
+  createMasterOwnerMapping,
+  unbindMasterOwnerMapping,
   listClBaseUsers,
   myAigcWorkspace,
   addMyWork,

@@ -12,69 +12,57 @@
     切换到机能风
   </a>
 
-  <aside class="sidebar">
-    <a href="/" class="logo dashboard-logo-link" title="返回首页">
+  <header class="dashboard-topbar">
+    <a href="/" class="dashboard-brand" title="返回首页">
       <div class="logo-icon">H</div>
       <div class="dashboard-logo-text">
         <span class="dashboard-logo-main">HARSON</span>
-        <span class="dashboard-logo-divider">|</span>
         <span class="dashboard-logo-sub">数智化平台</span>
       </div>
     </a>
 
-    <ul class="menu">
-      <li class="menu-item active" data-page="home">
-        <span class="menu-icon">🏠</span>
-        <span>首页</span>
-      </li>
-      <li class="menu-item" data-page="market">
-        <span class="menu-icon">🛒</span>
-        <span>应用市场</span>
-      </li>
-      <li class="menu-item" data-page="myapps">
-        <span class="menu-icon">📦</span>
-        <span>我的应用</span>
-      </li>
-      <li class="menu-item" data-page="analytics">
-        <span class="menu-icon">📊</span>
-        <span>经营分析</span>
-      </li>
-      <li class="menu-item" data-page="messages">
-        <span class="menu-icon">💬</span>
-        <span>消息中心</span>
-      </li>
-      <li class="menu-item" data-page="settings">
-        <span class="menu-icon">⚙️</span>
-        <span>设置</span>
-      </li>
-    </ul>
-  </aside>
+    <div class="dashboard-topbar-title">
+      <strong>CL-AIGC 企业数据仪表盘</strong>
+      <span>企业总体、主账号与子账号创作分析</span>
+    </div>
+
+    <div class="dashboard-topbar-actions">
+      <a class="dashboard-aigc-link" data-dashboard-aigc-entry href="/aigc">
+        进入 CL-AIGC
+      </a>
+
+      <button id="accountAvatar" class="account-avatar dashboard-account-button" type="button" title="退出登录">
+        <span id="accountAvatarText" class="account-avatar-text">U</span>
+        <span class="dashboard-account-action">退出</span>
+      </button>
+    </div>
+  </header>
 
   <main class="main">
     <header class="header">
-      <h1>HARSON AI 平台</h1>
-      <p>智能应用超市 · CL-AIGC token 经营分析中心</p>
+      <h1>企业 Token 经营概览</h1>
+      <p>集中查看企业总体、主账号及子账号的真实消耗与创作记录</p>
     </header>
 
     <section class="stats" aria-label="平台概览">
       <article class="stat-card">
-        <div class="stat-label">应用总数</div>
-        <div class="stat-value">4 <span>个核心模块</span></div>
+        <div class="stat-label">当前企业</div>
+        <div class="stat-value overview-text" id="overviewEnterprise">读取中</div>
       </article>
 
       <article class="stat-card">
-        <div class="stat-label">运行中</div>
-        <div class="stat-value">3 <span>个应用</span></div>
+        <div class="stat-label">有效子账号</div>
+        <div class="stat-value" id="overviewSubAccounts">0 个</div>
       </article>
 
       <article class="stat-card">
-        <div class="stat-label">今日访问</div>
-        <div class="stat-value">1,234 <span>次</span></div>
+        <div class="stat-label">已同步创作任务</div>
+        <div class="stat-value" id="overviewTasks">0 次</div>
       </article>
 
       <article class="stat-card">
-        <div class="stat-label">系统状态</div>
-        <div class="stat-value status-value">● 正常运行</div>
+        <div class="stat-label">最近数据同步</div>
+        <div class="stat-value overview-sync" id="overviewSync">暂无同步</div>
       </article>
     </section>
 
@@ -153,47 +141,47 @@
     </section>
 
     <section class="analytics-section">
-      <div class="section-title">管理经营分析</div>
+      <div class="section-title">企业总体 · Token 使用分析</div>
 
       <div class="analytics-toolbar">
         <div>
-          <h3>平台整体层级 · AIGC token 分析</h3>
-          <p>按时间维度查看 CL-AIGC 的 token 购买、消耗、剩余和消费金额，同时查看平台整体应用使用情况。</p>
+          <h3 id="enterpriseAnalyticsTitle">CL-AIGC Token 分析</h3>
+          <p id="dashboardDataMessage">正在读取真实 Token 数据...</p>
         </div>
 
-        <select id="globalPeriodSelect" class="user-select">
-          <option value="daily">今日</option>
-          <option value="weekly">本周</option>
-          <option value="monthly">本月</option>
-          <option value="threeMonths">近三个月</option>
-          <option value="sixMonths">近六个月</option>
-        </select>
+        <div class="dashboard-toolbar-actions">
+          <span id="dashboardSyncStatus" class="dashboard-sync-status is-loading">正在读取</span>
+
+          <select id="dashboardMasterSelect" class="user-select" aria-label="选择企业主账号">
+            <option value="">读取中</option>
+          </select>
+        </div>
       </div>
 
       <div class="analytics-summary-grid five-col">
         <article class="analytics-card">
-          <div class="stat-label">AIGC token 总购买量</div>
-          <div class="stat-value" id="globalPurchased">120,000 <span>tokens</span></div>
+          <div class="stat-label">YiBai 最近同步余额</div>
+          <div class="stat-value" id="globalBalance">0 <span>tokens</span></div>
         </article>
 
         <article class="analytics-card">
-          <div class="stat-label">AIGC token 总消耗量</div>
-          <div class="stat-value" id="globalConsumed">82,000 <span>tokens</span></div>
+          <div class="stat-label">子账号总配额</div>
+          <div class="stat-value" id="globalAllocated">0 <span>tokens</span></div>
         </article>
 
         <article class="analytics-card">
-          <div class="stat-label">AIGC token 总剩余量</div>
-          <div class="stat-value" id="globalRemaining">38,000 <span>tokens</span></div>
+          <div class="stat-label">企业总净消耗</div>
+          <div class="stat-value" id="globalConsumed">0 <span>tokens</span></div>
         </article>
 
         <article class="analytics-card">
-          <div class="stat-label">AIGC token 消费金额</div>
-          <div class="stat-value" id="globalMoney">¥26,800</div>
+          <div class="stat-label">子账号剩余配额</div>
+          <div class="stat-value" id="globalRemaining">0 <span>tokens</span></div>
         </article>
 
         <article class="analytics-card">
-          <div class="stat-label">平台活跃应用数</div>
-          <div class="stat-value" id="globalAppsUsed">4 <span>个应用</span></div>
+          <div class="stat-label">企业总任务数</div>
+          <div class="stat-value" id="globalTasks">0 次</div>
         </article>
       </div>
 
@@ -201,54 +189,29 @@
         <article class="chart-card">
           <div class="chart-header">
             <div>
-              <h3>各应用使用次数</h3>
-              <p>用于判断哪个应用使用最多、哪个应用使用较少；其中只有 CL-AIGC 会消耗 token。</p>
+              <h3>主账号与子账号 Token 净消耗</h3>
+              <p>按 YiBai 真实任务的扣点减退点计算，方便比较各账号使用情况。</p>
             </div>
           </div>
 
-          <div class="bar-chart">
-            <div class="bar-row">
-              <span>CL-AIGC</span>
-              <div class="bar-track"><div class="bar-fill aigc-bar width-92"></div></div>
-              <strong>1,240次</strong>
-            </div>
-
-            <div class="bar-row">
-              <span>CL-iStore</span>
-              <div class="bar-track"><div class="bar-fill shop-bar width-58"></div></div>
-              <strong>860次</strong>
-            </div>
-
-            <div class="bar-row">
-              <span>CL-SCM</span>
-              <div class="bar-track"><div class="bar-fill scm-bar width-37"></div></div>
-              <strong>530次</strong>
-            </div>
-
-            <div class="bar-row">
-              <span>CL-iRobot</span>
-              <div class="bar-track"><div class="bar-fill robot-bar width-21"></div></div>
-              <strong>320次</strong>
-            </div>
+          <div class="bar-chart" id="subAccountUsageChart">
+            <p class="dashboard-empty-state">读取中...</p>
           </div>
         </article>
 
         <article class="chart-card">
           <div class="chart-header">
             <div>
-              <h3>AIGC token 年龄组购买分布</h3>
-              <p>用于判断哪些年龄组购买 CL-AIGC token 较多。</p>
+              <h3>主账号与子账号 Token 消耗占比</h3>
+              <p>展示主账号及各子账号在企业净消耗中的占比。</p>
             </div>
           </div>
 
           <div class="pie-layout">
-            <div class="css-pie age-pie" aria-label="AIGC token 年龄组购买分布"></div>
+            <div class="css-pie age-pie" id="subAccountSharePie" aria-label="主账号与子账号 Token 消耗占比"></div>
 
-            <div class="legend-list">
-              <div><span class="dot age-1"></span>18-24 岁：18%</div>
-              <div><span class="dot age-2"></span>25-34 岁：42%</div>
-              <div><span class="dot age-3"></span>35-44 岁：25%</div>
-              <div><span class="dot age-4"></span>45 岁以上：15%</div>
+            <div class="legend-list" id="subAccountShareLegend">
+              <p class="dashboard-empty-state">读取中...</p>
             </div>
           </div>
         </article>
@@ -256,100 +219,84 @@
         <article class="chart-card wide-chart-card">
           <div class="chart-header">
             <div>
-              <h3>本周 AIGC token 购买趋势</h3>
-              <p>用于查看本周每天购买的 CL-AIGC token 数量。</p>
+              <h3>近 7 天 Token 净消耗趋势</h3>
+              <p>按真实任务完成或创建日期汇总企业全部账号每天的 Token 净消耗。</p>
             </div>
           </div>
 
-          <div class="weekly-chart">
-            <div class="week-bar h-44"><span>周一</span><strong>45K</strong></div>
-            <div class="week-bar h-61"><span>周二</span><strong>62K</strong></div>
-            <div class="week-bar h-38"><span>周三</span><strong>39K</strong></div>
-            <div class="week-bar h-70"><span>周四</span><strong>71K</strong></div>
-            <div class="week-bar h-82"><span>周五</span><strong>82K</strong></div>
-            <div class="week-bar h-54"><span>周六</span><strong>54K</strong></div>
-            <div class="week-bar h-68"><span>周日</span><strong>68K</strong></div>
-          </div>
+          <div class="weekly-chart" id="weeklyTokenChart"></div>
         </article>
       </div>
 
-      <div class="local-analytics-section">
-        <div class="analytics-toolbar">
-          <div>
-            <h3>用户个体层级 · AIGC token 分析</h3>
-            <p>选择具体用户和时间维度，查看个人 CL-AIGC token 购买、消耗、剩余和消费金额，同时查看该用户的平台应用使用情况。</p>
-          </div>
-
-          <div class="local-filters">
-            <select id="localUserSelect" class="user-select">
-              <option value="zhangchen">张晨</option>
-              <option value="liwen">李雯</option>
-              <option value="wanglei">王磊</option>
-              <option value="chenyu">陈雨</option>
-            </select>
-
-            <select id="localPeriodSelect" class="user-select">
-              <option value="daily">今日</option>
-              <option value="weekly">本周</option>
-              <option value="monthly">本月</option>
-              <option value="threeMonths">近三个月</option>
-              <option value="sixMonths">近六个月</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="analytics-summary-grid five-col">
-          <article class="analytics-card">
-            <div class="stat-label">AIGC token 购买量</div>
-            <div class="stat-value" id="localPurchased">18,000 <span>tokens</span></div>
-          </article>
-
-          <article class="analytics-card">
-            <div class="stat-label">AIGC token 消耗量</div>
-            <div class="stat-value" id="localConsumed">12,600 <span>tokens</span></div>
-          </article>
-
-          <article class="analytics-card">
-            <div class="stat-label">AIGC token 剩余量</div>
-            <div class="stat-value" id="localRemaining">5,400 <span>tokens</span></div>
-          </article>
-
-          <article class="analytics-card">
-            <div class="stat-label">AIGC token 消费金额</div>
-            <div class="stat-value" id="localMoney">¥3,600</div>
-          </article>
-
-          <article class="analytics-card">
-            <div class="stat-label">平台使用应用数</div>
-            <div class="stat-value" id="localAppsUsed">3 <span>个应用</span></div>
-          </article>
-        </div>
-
-        <div class="chart-grid local-chart-grid">
-          <article class="chart-card">
-            <div class="chart-header">
-              <div>
-                <h3>用户 AIGC token 消耗比例</h3>
-                <p>展示所选用户在当前时间维度下，CL-AIGC token 已消耗与剩余的比例。</p>
-              </div>
+      <div class="account-detail-grid">
+        <article class="account-detail-panel">
+          <div class="account-detail-header">
+            <div>
+              <span class="account-detail-kicker">固定视角</span>
+              <h3>主账号数据</h3>
+              <p>仅展示企业主账号自己的真实创作任务。</p>
             </div>
 
-            <div class="user-consumption-layout">
-              <div class="css-pie user-pie" id="localConsumptionPie" aria-label="用户 AIGC token 消耗比例"></div>
+            <span id="masterAccountStatus" class="account-status-chip">等待同步</span>
+          </div>
 
-              <div class="user-metrics">
-                <div>
-                  <span>最常使用应用</span>
-                  <strong id="localTopApp">CL-AIGC</strong>
-                </div>
-                <div>
-                  <span>当前分析维度</span>
-                  <strong id="localPeriodLabel">今日</strong>
-                </div>
-              </div>
+          <div class="account-metric-grid four-col">
+            <div class="account-metric"><span>创作任务</span><strong id="masterTaskCount">0 次</strong></div>
+            <div class="account-metric"><span>YiBai 扣点</span><strong id="masterDeducted">0</strong></div>
+            <div class="account-metric"><span>YiBai 退点</span><strong id="masterRefunded">0</strong></div>
+            <div class="account-metric"><span>真实净消耗</span><strong id="masterConsumed">0</strong></div>
+          </div>
+
+        
+
+          <div class="task-record-header">
+            <h4>主账号创作记录</h4>
+            <span id="masterTaskRecordCount">0 条</span>
+          </div>
+
+          <div class="task-table-wrap">
+            <table class="task-record-table">
+              <thead><tr><th>创作任务</th><th>状态</th><th>扣点 / 退点</th><th>净消耗</th><th>时间</th></tr></thead>
+              <tbody id="masterTaskRecords"><tr><td colspan="5" class="task-empty-cell">正在读取...</td></tr></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="account-detail-panel">
+          <div class="account-detail-header">
+            <div>
+              <span class="account-detail-kicker">可切换视角</span>
+              <h3>子账号数据</h3>
+              <p>切换账号后，指标和创作记录会同时更新。</p>
             </div>
-          </article>
-        </div>
+
+            <select id="localUserSelect" class="user-select" aria-label="选择子账号">
+              <option value="">读取中</option>
+            </select>
+          </div>
+
+          <div class="account-metric-grid five-col">
+            <div class="account-metric"><span>内部配额</span><strong id="localLimit">0</strong></div>
+            <div class="account-metric"><span>YiBai 扣点</span><strong id="localDeducted">0</strong></div>
+            <div class="account-metric"><span>YiBai 退点</span><strong id="localRefunded">0</strong></div>
+            <div class="account-metric"><span>真实净消耗</span><strong id="localConsumed">0</strong></div>
+            <div class="account-metric"><span>剩余配额</span><strong id="localRemaining">0</strong></div>
+          </div>
+
+
+
+          <div class="task-record-header">
+            <h4>子账号创作记录</h4>
+            <span id="subTaskRecordCount">0 条</span>
+          </div>
+
+          <div class="task-table-wrap">
+            <table class="task-record-table">
+              <thead><tr><th>创作任务</th><th>状态</th><th>扣点 / 退点</th><th>净消耗</th><th>时间</th></tr></thead>
+              <tbody id="subTaskRecords"><tr><td colspan="5" class="task-empty-cell">正在读取...</td></tr></tbody>
+            </table>
+          </div>
+        </article>
       </div>
     </section>
   </main>

@@ -9,6 +9,9 @@ const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 const authRoutes = require("./src/routes/authRoutes");
 const aigcAccountRoutes = require("./src/routes/aigcAccountRoutes");
+const masterOwnerModel = require(
+  "./src/models/aigcMasterOwnerCsvModel"
+);
 
 const connectDB = require("./src/db");
 
@@ -79,6 +82,28 @@ app.use(
   aigcAccountRoutes
 );
 
+app.get(
+  "/dashboard-black-gold.html",
+  (req, res) => {
+    return sendDashboardPage(
+      req,
+      res,
+      "dashboard-black-gold.html"
+    );
+  }
+);
+
+app.get(
+  "/dashboard-mecha.html",
+  (req, res) => {
+    return sendDashboardPage(
+      req,
+      res,
+      "dashboard-mecha.html"
+    );
+  }
+);
+
 app.use(express.static(path.join(__dirname, "public")));
 
 function sendAdminOnlyPage(req, res, filename) {
@@ -96,6 +121,52 @@ function sendAdminOnlyPage(req, res, filename) {
     }
 
     return res.sendFile(path.join(__dirname, "public", filename));
+  } catch {
+    return res.status(200).send("");
+  }
+}
+
+function sendDashboardPage(
+  req,
+  res,
+  filename
+) {
+  const token =
+    req.cookies?.harson_token;
+
+  if (!token) {
+    return res.status(200).send("");
+  }
+
+  try {
+    const user = jwt.verify(
+      token,
+      process.env.JWT_SECRET
+    );
+
+    const ownerMapping =
+      user?.role !== "admin" &&
+      user?.id
+        ? masterOwnerModel
+            .getActiveMappingByUserId(
+              user.id
+            )
+        : null;
+
+    if (
+      user?.role !== "admin" &&
+      !ownerMapping
+    ) {
+      return res.status(200).send("");
+    }
+
+    return res.sendFile(
+      path.join(
+        __dirname,
+        "public",
+        filename
+      )
+    );
   } catch {
     return res.status(200).send("");
   }
@@ -153,7 +224,8 @@ app.get("/account-management", (req, res) => {
   /dashboard-black-gold  -> black-gold style dashboard
   /dashboard-mecha       -> mecha style dashboard
 
-  All dashboard pages are still admin-only.
+  Dashboard pages are available to administrators
+  and bound enterprise master-account owners.
 */
 
 app.get("/dashboard", (req, res) => {
@@ -161,11 +233,11 @@ app.get("/dashboard", (req, res) => {
 });
 
 app.get("/dashboard-black-gold", (req, res) => {
-  return sendAdminOnlyPage(req, res, "dashboard-black-gold.html");
+  return sendDashboardPage(req, res, "dashboard-black-gold.html");
 });
 
 app.get("/dashboard-mecha", (req, res) => {
-  return sendAdminOnlyPage(req, res, "dashboard-mecha.html");
+  return sendDashboardPage(req, res, "dashboard-mecha.html");
 });
 
 app.get("/aigc", (req, res) => {
