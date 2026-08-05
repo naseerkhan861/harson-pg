@@ -305,7 +305,7 @@ function resolveUserAccount(
 
   if (!mappingData?.mapping) {
     throw new Error(
-      "当前 Harson-Base 账号尚未配置 AIGC 子账号映射"
+      "当前 Harson-Base 账号尚未购买服务"
     );
   }
 
