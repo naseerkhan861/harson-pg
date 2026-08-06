@@ -97,7 +97,7 @@ function getProviderContext(
 
   if (!providerConfig) {
     throw new Error(
-      "当前企业主账号尚未绑定 YiBai 外部账号"
+      "当前企业主账号尚未绑定 CL-AIGC 外部账号"
     );
   }
 
@@ -107,14 +107,14 @@ function getProviderContext(
       "active"
   ) {
     throw new Error(
-      "当前企业主账号的 YiBai 外部账号绑定已停用"
+      "当前企业主账号的 CL-AIGC 外部账号绑定已停用"
     );
   }
 
   const providerAccount =
     requireText(
       providerConfig.providerAccount,
-      "YiBai外部账号"
+      "CL-AIGC 外部账号"
     );
 
   return {
@@ -202,7 +202,7 @@ async function loginAndCacheUserDataToken(
     throw new Error(
       getResponseMessage(
         loginResult,
-        "YiBai 用户端账号登录失败"
+        "CL-AIGC 用户端账号登录失败"
       )
     );
   }
@@ -215,7 +215,7 @@ async function loginAndCacheUserDataToken(
 
   if (!userToken) {
     throw new Error(
-      "YiBai 用户端登录成功，但响应中没有 Token"
+      "CL-AIGC 用户端登录成功，但响应中没有 Token"
     );
   }
 
@@ -321,7 +321,7 @@ async function getValidUserDataToken(
         );
   } catch (error) {
     console.warn(
-      "YiBai 用户端 Token 缓存读取失败，将删除损坏缓存：",
+      "CL-AIGC 用户端 Token 缓存读取失败，将删除损坏缓存：",
       error.message
     );
 
@@ -334,7 +334,7 @@ async function getValidUserDataToken(
   if (!cachedToken?.token) {
     return loginWhenAllowed(
       "user_token_missing",
-      "当前企业尚未建立 YiBai 用户数据登录状态"
+      "当前企业尚未建立数据登录状态"
     );
   }
 
@@ -349,7 +349,7 @@ async function getValidUserDataToken(
 
     return loginWhenAllowed(
       "provider_account_changed",
-      "YiBai 外部账号已变更，需要重新建立用户数据登录状态"
+      "账号已变更，需要重新建立用户数据登录状态"
     );
   }
 
@@ -380,7 +380,7 @@ async function getValidUserDataToken(
       reason,
       getResponseMessage(
         validationResult,
-        "YiBai 用户数据登录状态无效"
+        "用户数据登录状态无效"
       )
     );
   }
@@ -400,7 +400,7 @@ async function getValidUserDataToken(
 
     return loginWhenAllowed(
       "validated_token_missing",
-      "YiBai 用户端 Token 验证成功，但响应中没有可用 Token"
+      "用户端 Token 验证成功，但响应中没有可用 Token"
     );
   }
 
@@ -953,7 +953,7 @@ async function getCompanyTaskSnapshot(
     throw new Error(
       getResponseMessage(
         taskResponse,
-        "读取 YiBai 创作任务失败"
+        "读取创作任务失败"
       )
     );
   }
@@ -1168,7 +1168,7 @@ function resolveChildMember(
     candidates.size === 0
   ) {
     throw new Error(
-      "缺少用于匹配 YiBai 子账号的登录信息"
+      "缺少用于匹配 CL-AIGC 子账号的登录信息"
     );
   }
 
@@ -1209,13 +1209,13 @@ function resolveChildMember(
 
   if (matches.length === 0) {
     throw new Error(
-      "未找到与当前 Harson-Base 账号匹配的 YiBai 子账号"
+      "未找到与当前 Harson-Base 账号匹配的 CL-AIGC 子账号"
     );
   }
 
   if (matches.length > 1) {
     throw new Error(
-      "当前账号匹配到多个 YiBai 子账号，请检查账号名称和登录名"
+      "当前账号匹配到多个 CL-AIGC 子账号，请检查账号名称和登录名"
     );
   }
 
@@ -1278,7 +1278,7 @@ async function getMemberTaskSnapshot(
     throw new Error(
       getResponseMessage(
         memberResponse,
-        "读取 YiBai 子账号列表失败"
+        "读取 CL-AIGC 子账号列表失败"
       )
     );
   }
