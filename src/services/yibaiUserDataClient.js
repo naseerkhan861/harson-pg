@@ -124,7 +124,7 @@ async function postJson(
       "Access-Token-User"
     ] = requireText(
       userToken,
-      "YiBai 用户端 Token"
+      "用户端 Token"
     );
   }
 
@@ -135,7 +135,7 @@ async function postJson(
     Date.now();
 
   console.info(
-    `[YiBai 用户端] 请求开始：POST ${pathname}`
+    `[用户端] 请求开始：POST ${pathname}`
   );
 
   const controller =
@@ -183,12 +183,12 @@ async function postJson(
           : {};
     } catch {
       throw new Error(
-        `YiBai 用户端接口 ${pathname} 返回了无法解析的响应，HTTP 状态码：${response.status}`
+        `用户端接口 ${pathname} 返回了无法解析的响应，HTTP 状态码：${response.status}`
       );
     }
 
     console.info(
-      `[YiBai 用户端] 请求完成：POST ${pathname}`,
+      `[用户端] 请求完成：POST ${pathname}`,
       {
         durationMs:
           Date.now() -
@@ -219,7 +219,7 @@ async function postJson(
       "AbortError"
     ) {
       console.warn(
-        `[YiBai 用户端] 请求超时：POST ${pathname}`,
+        `[用户端] 请求超时：POST ${pathname}`,
         {
           durationMs:
             Date.now() -
@@ -230,12 +230,12 @@ async function postJson(
       );
 
       throw new Error(
-        `YiBai 用户端接口 ${pathname} 超时（${timeoutMs} 毫秒）`
+        `用户端接口 ${pathname} 超时（${timeoutMs} 毫秒）`
       );
     }
 
     console.warn(
-      `[YiBai 用户端] 请求失败：POST ${pathname}`,
+      `[用户端] 请求失败：POST ${pathname}`,
       {
         durationMs:
           Date.now() -
@@ -314,7 +314,7 @@ async function loginByToken(
         token:
           requireText(
             userToken,
-            "YiBai 用户端 Token"
+            "用户端 Token"
           )
       }
     }

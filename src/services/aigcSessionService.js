@@ -418,7 +418,7 @@ function resolveUserAccount(
 
   if (!providerConfig) {
     throw new Error(
-      "当前 AIGC 企业主账号尚未绑定 YiBai 外部账号"
+      "当前 AIGC 企业主账号尚未绑定 CL-AIGC 外部账号"
     );
   }
 
@@ -427,7 +427,7 @@ function resolveUserAccount(
     providerConfig.status !== "active"
   ) {
     throw new Error(
-      "当前企业主账号的 YiBai 外部账号绑定已停用"
+      "当前企业主账号的 CL-AIGC 外部账号绑定已停用"
     );
   }
 
