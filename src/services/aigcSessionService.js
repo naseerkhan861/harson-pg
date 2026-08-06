@@ -176,7 +176,7 @@ function readTokenBalance(
 
   if (!selectedBalance) {
     console.warn(
-      "YiBai 管理端响应中没有有效余额字段"
+      "管理端响应中没有有效余额字段"
     );
 
     return {
@@ -543,7 +543,7 @@ async function loginAndCacheToken(
     throw new Error(
       getResponseMessage(
         loginResult,
-        "YiBai AIGC 登录失败"
+        "CL-AIGC 登录失败"
       )
     );
   }
@@ -556,7 +556,7 @@ async function loginAndCacheToken(
 
   if (!token) {
     throw new Error(
-      "YiBai AIGC 登录成功，但响应中没有 token"
+      "CL-AIGC 登录成功，但响应中没有 token"
     );
   }
 
@@ -721,7 +721,7 @@ async function getValidTokenForUser(
 
           if (!validatedToken) {
             throw new Error(
-              "YiBai token 验证成功，但响应中没有可用 token"
+              "CL-AIGC token 验证成功，但响应中没有可用 token"
             );
           }
 
@@ -895,7 +895,7 @@ async function getCachedTokenBalanceForUser(
             "provider_account_changed",
           tokenBalance: null,
           message:
-            "YiBai 外部账号已变更"
+            "CL-AIGC 外部账号已变更"
         };
       }
 
@@ -1087,7 +1087,7 @@ async function logoutUserAigcSession(
           message:
             getResponseMessage(
               logoutResult,
-              "YiBai AIGC 注销失败"
+              "CL-AIGC 注销失败"
             )
         };
       }
@@ -1108,7 +1108,7 @@ async function logoutUserAigcSession(
         masterAccountId,
         remainingActiveUsers: 0,
         message:
-          "共享用户已全部注销，YiBai token 已失效并从本地缓存移除"
+          "共享用户已全部注销，CL-AIGC token 已失效并从本地缓存移除"
       };
     }
   );

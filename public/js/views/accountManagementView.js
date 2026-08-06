@@ -1076,7 +1076,7 @@ export class AccountManagementView {
             </h2>
 
             <p>
-              仅显示当前绑定 AIGC 子账号对应的 YiBai 真实记录。
+              仅显示当前绑定 AIGC 子账号对应的真实记录。
             </p>
           </div>
 
@@ -1472,7 +1472,7 @@ export class AccountManagementView {
 
             const confirmed =
               window.confirm(
-                "同步真实创作记录期间，系统会临时切换 YiBai 登录状态，并在完成后恢复 Workspace。是否继续？"
+                "同步真实创作记录期间，系统会临时切换登录状态，并在完成后恢复 Workspace。是否继续？"
               );
 
             if (!confirmed) {
@@ -2411,7 +2411,7 @@ export class AccountManagementView {
     if (status === "resolved") {
       return `
         <div class="auth-message success">
-          当前数据来自 YiBai 真实任务快照。
+          当前数据来自真实任务快照。
           最近同步时间：${latestSyncedAt}
         </div>
       `;
@@ -2438,8 +2438,8 @@ export class AccountManagementView {
     if (status === "member_unresolved") {
       return `
         <div class="auth-message error">
-          已读取 YiBai 任务快照，但没有找到
-          与当前账号匹配的 YiBai 成员
+          已读取真实任务快照，但没有找到
+          与当前账号匹配的真实成员
         </div>
       `;
     }
@@ -2447,7 +2447,7 @@ export class AccountManagementView {
     if (status === "member_ambiguous") {
       return `
         <div class="auth-message error">
-          当前账号匹配到多个 YiBai 成员，
+          当前账号匹配到多个成员，
           为防止数据泄露，暂不显示任务
         </div>
       `;
@@ -2455,7 +2455,7 @@ export class AccountManagementView {
 
     return `
       <div class="auth-message error">
-        管理员尚未同步 YiBai 真实创作记录
+        管理员尚未同步真实创作记录
       </div>
     `;
   }

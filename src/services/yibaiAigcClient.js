@@ -250,7 +250,7 @@ async function postJson(
     }
 
     throw new Error(
-      `无法连接 YiBai 管理端接口 ${pathname}`
+      `无法连接 CL-AIGC 管理端接口 ${pathname}`
     );
   } finally {
     clearTimeout(timeoutId);

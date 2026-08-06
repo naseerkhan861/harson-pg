@@ -648,10 +648,10 @@ async function initEnterpriseDashboardAnalytics() {
 
     showDataMessage(
       data.latestSyncedAt
-        ? `当前图表来自 YiBai 真实任务快照，最近同步：${formatDateTime(
+        ? `当前图表来自真实任务快照，最近同步：${formatDateTime(
             data.latestSyncedAt
           )}`
-        : "当前企业还没有同步 YiBai 真实任务记录，Token 消耗暂显示为 0。"
+        : "当前企业还没有同步真实任务记录，Token 消耗暂显示为 0。"
     );
   }
 
@@ -899,7 +899,7 @@ async function initEnterpriseDashboardAnalytics() {
   function accountStatusLabel(status) {
     const labels = {
       resolved:
-        "已匹配 YiBai 成员",
+        "已匹配 CL-AIGC 成员",
       member_unresolved:
         "暂无可识别任务",
       member_ambiguous:
@@ -989,7 +989,7 @@ async function initEnterpriseDashboardAnalytics() {
       taskId.textContent =
         task.id
           ? `任务 ${task.id}`
-          : "YiBai 任务";
+          : "CL-AIGC 任务";
 
       titleCell.append(
         title,
@@ -1433,7 +1433,7 @@ async function initEnterpriseDashboardAnalytics() {
     );
 
     showDataMessage(
-      "已显示上次数据，正在后台自动同步 YiBai 最新创作记录..."
+      "已显示上次数据，正在后台自动同步最新创作记录..."
     );
 
     try {
@@ -1503,7 +1503,7 @@ async function initEnterpriseDashboardAnalytics() {
       showDataMessage(
         refreshedData.summary
           ?.totalTasks > 0
-          ? `已自动同步 YiBai 最新创作记录，更新时间：${formatDateTime(
+          ? `已自动同步最新创作记录，更新时间：${formatDateTime(
               refreshedData
                 .latestSyncedAt
             )}`

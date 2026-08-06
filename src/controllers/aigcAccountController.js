@@ -1102,7 +1102,7 @@ async function syncMasterUserData(
         );
     } catch (error) {
       console.warn(
-        "清理 YiBai 用户端 Token 缓存失败：",
+        "清理用户端 Token 缓存失败：",
         error.message
       );
     }
@@ -1142,7 +1142,7 @@ async function syncMasterUserData(
 
       message:
         taskSyncError
-          ? `YiBai 用户数据同步失败，且 Workspace 登录状态恢复失败：${workspaceRestoreError.message}`
+          ? `用户数据同步失败，且 Workspace 登录状态恢复失败：${workspaceRestoreError.message}`
           : `真实创作记录已同步，但 Workspace 登录状态恢复失败：${workspaceRestoreError.message}`,
 
       data: {
@@ -1156,7 +1156,7 @@ async function syncMasterUserData(
       success: false,
 
       message:
-        `YiBai 用户数据同步失败：${taskSyncError.message}。Workspace 登录状态已恢复`,
+        `用户数据同步失败：${taskSyncError.message}。Workspace 登录状态已恢复`,
 
       data: {
         timing
@@ -1168,7 +1168,7 @@ async function syncMasterUserData(
     success: true,
 
     message:
-      "YiBai 真实创作记录同步成功，Workspace 登录状态已恢复",
+      "真实创作记录同步成功，Workspace 登录状态已恢复",
 
     data: {
       taskSync:
@@ -1295,7 +1295,7 @@ async function getMyRechargeRecords(
         );
     } catch (error) {
       console.warn(
-        "清理 YiBai 用户端 Token 缓存失败：",
+        "清理用户端 Token 缓存失败：",
         error.message
       );
     }

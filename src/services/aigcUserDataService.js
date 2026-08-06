@@ -334,7 +334,7 @@ async function getValidUserDataToken(
   if (!cachedToken?.token) {
     return loginWhenAllowed(
       "user_token_missing",
-      "当前企业尚未建立 YiBai 用户数据登录状态"
+      "当前企业尚未建立数据登录状态"
     );
   }
 
@@ -349,7 +349,7 @@ async function getValidUserDataToken(
 
     return loginWhenAllowed(
       "provider_account_changed",
-      "YiBai 外部账号已变更，需要重新建立用户数据登录状态"
+      "账号已变更，需要重新建立用户数据登录状态"
     );
   }
 
@@ -380,7 +380,7 @@ async function getValidUserDataToken(
       reason,
       getResponseMessage(
         validationResult,
-        "YiBai 用户数据登录状态无效"
+        "用户数据登录状态无效"
       )
     );
   }
@@ -400,7 +400,7 @@ async function getValidUserDataToken(
 
     return loginWhenAllowed(
       "validated_token_missing",
-      "YiBai 用户端 Token 验证成功，但响应中没有可用 Token"
+      "用户端 Token 验证成功，但响应中没有可用 Token"
     );
   }
 
@@ -953,7 +953,7 @@ async function getCompanyTaskSnapshot(
     throw new Error(
       getResponseMessage(
         taskResponse,
-        "读取 YiBai 创作任务失败"
+        "读取创作任务失败"
       )
     );
   }
