@@ -66,3 +66,6 @@ out/
 
 # Local AIGC reset backups
 data/aigc-reset-backup-*/
+
+.env.*
+!.env.example

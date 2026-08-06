@@ -580,6 +580,33 @@ function updateBalance(
   return true;
 }
 
+
+
+function clearBalance() {
+  [
+    elements.currentBalance,
+    elements.accountBalance,
+    elements.bonusBalance
+  ].forEach(element => {
+    if (element) {
+      element.textContent = "--";
+    }
+  });
+
+  [
+    window.sessionStorage,
+    window.localStorage
+  ].forEach(storage => {
+    try {
+      storage.removeItem(
+        TOKEN_BALANCE_STORAGE_KEY
+      );
+    } catch {
+      // 存储不可用时仍显示 --。
+    }
+  });
+}
+
 function restoreCachedBalance() {
   const storageList = [
     window.sessionStorage,
@@ -672,6 +699,14 @@ async function fetchLatestBalance() {
     }
 
     if (
+      response.status === 400 ||
+      response.status === 403
+    ) {
+      clearBalance();
+    }
+
+
+    if (
       !response.ok ||
       !data.success
     ) {
@@ -688,6 +723,8 @@ async function fetchLatestBalance() {
       data.result?.available !==
       true
     ) {
+      clearBalance();
+
       console.warn(
         "Token 余额暂不可用：",
         data.result?.reason ||
@@ -1443,7 +1480,7 @@ function bindEvents() {
 function initializePurchaseCenter() {
   renderMemberships();
   renderPackages();
-  restoreCachedBalance();
+  clearBalance();
   updateSelectedPackage();
   updatePaymentButtons();
   bindEvents();

@@ -4,6 +4,10 @@ const aigcAccountModel = require(
   "../models/aigcAccountCsvModel"
 );
 
+const masterOwnerModel = require(
+  "../models/aigcMasterOwnerCsvModel"
+);
+
 const masterProviderConfigModel = require(
   "../models/aigcMasterProviderConfigCsvModel"
 );
@@ -172,7 +176,7 @@ function readTokenBalance(
 
   if (!selectedBalance) {
     console.warn(
-      "YiBai 管理端响应中没有有效余额字段"
+      "管理端响应中没有有效余额字段"
     );
 
     return {
@@ -279,12 +283,16 @@ function withMasterAccountLock(
 }
 
 /**
- * 解析当前普通用户的完整账号关系：
+ * 解析当前用户的完整账号关系：
  *
- * Harson-Base 用户
- * → 内部 AIGC 子账号
- * → 内部企业主账号
- * → YiBai 外部账号
+ * 普通用户：
+ * Harson-Base 用户 → AIGC 子账号 → 企业主账号
+ *
+ * 企业负责人：
+ * Harson-Base 用户 → 主账号负责人绑定 → 企业主账号
+ *
+ * 最后都通过该主账号的 YiBai 外部账号
+ * 获取 Workspace 共享会话。
  *
  * 这里只解析关系，不解密 YiBai 密码。
  * 只有必须重新登录时才解密密码。
@@ -298,15 +306,58 @@ function resolveUserAccount(
       "Harson-Base用户ID"
     );
 
-  const mappingData =
+  let mappingData =
     aigcAccountModel.getMyMapping(
       normalizedUserId
     );
 
+  let accountType =
+    "sub_account";
+
+  let ownerMapping = null;
+
   if (!mappingData?.mapping) {
-    throw new Error(
-      "当前 Harson-Base 账号尚未配置 AIGC 子账号映射"
-    );
+    ownerMapping =
+      masterOwnerModel
+        .getActiveMappingByUserId(
+          normalizedUserId
+        );
+
+    if (!ownerMapping) {
+      throw new Error(
+        "当前 Harson-Base 账号尚未购买服务"
+      );
+    }
+
+    const ownerMasterAccount =
+      aigcAccountModel
+        .getMasterAccountById(
+          ownerMapping
+            .masterAccountId
+        );
+
+    mappingData = {
+      mapping: null,
+
+      aigcSubAccount: {
+        id:
+          `master-owner:${ownerMapping.masterAccountId}`,
+
+        masterAccountId:
+          ownerMapping.masterAccountId,
+
+        subAccountName:
+          "企业主账号负责人",
+
+        status: "active"
+      },
+
+      masterAccount:
+        ownerMasterAccount
+    };
+
+    accountType =
+      "master_owner";
   }
 
   const subAccount =
@@ -344,11 +395,15 @@ function resolveUserAccount(
       subAccount.masterAccountId || ""
     ) !==
       String(masterAccount.id) ||
-    String(
-      mappingData.mapping
-        .masterAccountId || ""
-    ) !==
-      String(masterAccount.id)
+    (
+      accountType ===
+        "sub_account" &&
+      String(
+        mappingData.mapping
+          ?.masterAccountId || ""
+      ) !==
+        String(masterAccount.id)
+    )
   ) {
     throw new Error(
       "AIGC 子账号、企业主账号和用户映射关系不一致"
@@ -363,7 +418,7 @@ function resolveUserAccount(
 
   if (!providerConfig) {
     throw new Error(
-      "当前 AIGC 企业主账号尚未绑定 YiBai 外部账号"
+      "当前 AIGC 企业主账号尚未绑定 CL-AIGC 外部账号"
     );
   }
 
@@ -372,13 +427,17 @@ function resolveUserAccount(
     providerConfig.status !== "active"
   ) {
     throw new Error(
-      "当前企业主账号的 YiBai 外部账号绑定已停用"
+      "当前企业主账号的 CL-AIGC 外部账号绑定已停用"
     );
   }
 
   return {
     clBaseUserId:
       normalizedUserId,
+
+    accountType,
+
+    ownerMapping,
 
     mapping:
       mappingData.mapping,
@@ -484,7 +543,7 @@ async function loginAndCacheToken(
     throw new Error(
       getResponseMessage(
         loginResult,
-        "YiBai AIGC 登录失败"
+        "CL-AIGC 登录失败"
       )
     );
   }
@@ -497,7 +556,7 @@ async function loginAndCacheToken(
 
   if (!token) {
     throw new Error(
-      "YiBai AIGC 登录成功，但响应中没有 token"
+      "CL-AIGC 登录成功，但响应中没有 token"
     );
   }
 
@@ -662,7 +721,7 @@ async function getValidTokenForUser(
 
           if (!validatedToken) {
             throw new Error(
-              "YiBai token 验证成功，但响应中没有可用 token"
+              "CL-AIGC token 验证成功，但响应中没有可用 token"
             );
           }
 
@@ -836,7 +895,7 @@ async function getCachedTokenBalanceForUser(
             "provider_account_changed",
           tokenBalance: null,
           message:
-            "YiBai 外部账号已变更"
+            "CL-AIGC 外部账号已变更"
         };
       }
 
@@ -1028,7 +1087,7 @@ async function logoutUserAigcSession(
           message:
             getResponseMessage(
               logoutResult,
-              "YiBai AIGC 注销失败"
+              "CL-AIGC 注销失败"
             )
         };
       }
@@ -1049,7 +1108,7 @@ async function logoutUserAigcSession(
         masterAccountId,
         remainingActiveUsers: 0,
         message:
-          "共享用户已全部注销，YiBai token 已失效并从本地缓存移除"
+          "共享用户已全部注销，CL-AIGC token 已失效并从本地缓存移除"
       };
     }
   );

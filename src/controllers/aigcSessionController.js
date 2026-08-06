@@ -133,7 +133,7 @@ async function resolveModuleRouterUrl(
     )
   ) {
     throw new Error(
-      `YiBai AIGC 菜单读取失败：${String(
+      `CL-AIGC 菜单读取失败：${String(
         menuResponse?.message ||
         "未知错误"
       )}`
@@ -146,7 +146,7 @@ async function resolveModuleRouterUrl(
     )
   ) {
     throw new Error(
-      "YiBai AIGC 菜单返回格式无效"
+      `CL-AIGC 菜单返回格式无效`
     );
   }
 
@@ -354,10 +354,10 @@ function getErrorStatus(
       "超时"
     ) ||
     message.includes(
-      "YiBai AIGC 登录失败"
+      "CL-AIGC 登录失败"
     ) ||
     message.includes(
-      "yibaiaigc 登录失败"
+      "cl-aigc 登录失败"
     ) ||
     message.includes(
       "菜单读取失败"

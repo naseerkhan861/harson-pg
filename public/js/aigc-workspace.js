@@ -1173,6 +1173,31 @@ function updateTokenBalance(
   return true;
 }
 
+
+
+function clearTokenBalance() {
+  state.tokenBalance = null;
+
+  if (elements.tokenBalanceValue) {
+    elements.tokenBalanceValue.textContent = "--";
+    elements.tokenBalanceValue.title = "--";
+  }
+
+  [
+    window.sessionStorage,
+    window.localStorage
+  ].forEach(storage => {
+    try {
+      storage.removeItem(
+        TOKEN_BALANCE_STORAGE_KEY
+      );
+    } catch {
+      // 浏览器存储不可用时，
+      // 仍保留页面上的 --。
+    }
+  });
+}
+
 function restoreTokenBalance() {
   try {
     const savedBalance =
@@ -1678,6 +1703,14 @@ async function requestSession({
     }
 
     if (
+      response.status === 400 ||
+      response.status ===
+      403
+    ) {
+      clearTokenBalance();
+    }
+
+    if (
       !response.ok ||
       !data.success
     ) {
@@ -1791,6 +1824,14 @@ async function refreshSessionInBackground() {
         "/login";
 
       return;
+    }
+
+    if (
+      response.status === 400 ||
+      response.status ===
+      403
+    ) {
+      clearTokenBalance();
     }
 
     if (
@@ -2340,6 +2381,14 @@ async function fetchReadOnlyTokenBalance() {
         "/login";
 
       return;
+    }
+
+    if (
+      response.status === 400 ||
+      response.status ===
+      403
+    ) {
+      clearTokenBalance();
     }
 
     if (

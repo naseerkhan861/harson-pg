@@ -1,0 +1,137 @@
+"use strict";
+
+/*
+ * 仅处理可能展示给用户的文字字段。
+ *
+ * 不处理 frameUrl、providerAccount、tokenBalance 等业务字段，
+ * 避免修改 iframe 地址或正常接口数据。
+ */
+const PUBLIC_TEXT_KEYS = new Set([
+  "message",
+  "error",
+  "warning",
+  "detail",
+  "description",
+  "statusMessage"
+]);
+
+/*
+ * 匹配：
+ * YiBai
+ * yibai
+ * Yi Bai
+ * yibaiaigc
+ * yi-bai-aigc
+ */
+const BRAND_PATTERN =
+  /\byi[\s_-]*bai(?:[\s_-]*aigc)?\b/gi;
+
+/*
+ * 防止异常文案中直接出现外部服务域名。
+ */
+const DOMAIN_PATTERN =
+  /(?:https?:\/\/)?(?:[\w-]+\.)*yibaiaigc\.com/gi;
+
+function sanitizePublicText(
+  value,
+  fallback = "CL-AIGC 服务暂不可用"
+) {
+  const originalText =
+    String(value ?? "").trim();
+
+  const safeText =
+    originalText || fallback;
+
+  return safeText
+    .replace(
+      DOMAIN_PATTERN,
+      "CL-AIGC 服务"
+    )
+    .replace(
+      BRAND_PATTERN,
+      "CL-AIGC"
+    );
+}
+
+function sanitizePublicPayload(
+  value,
+  currentKey = ""
+) {
+  if (Array.isArray(value)) {
+    return value.map(item =>
+      sanitizePublicPayload(item)
+    );
+  }
+
+  if (
+    value === null ||
+    value === undefined
+  ) {
+    return value;
+  }
+
+  if (typeof value !== "object") {
+    if (
+      typeof value === "string" &&
+      PUBLIC_TEXT_KEYS.has(currentKey)
+    ) {
+      return sanitizePublicText(value);
+    }
+
+    return value;
+  }
+
+  const sanitizedObject = {};
+
+  Object.entries(value).forEach(
+    ([key, item]) => {
+      if (
+        typeof item === "string" &&
+        PUBLIC_TEXT_KEYS.has(key)
+      ) {
+        sanitizedObject[key] =
+          sanitizePublicText(item);
+
+        return;
+      }
+
+      if (
+        item !== null &&
+        typeof item === "object"
+      ) {
+        sanitizedObject[key] =
+          sanitizePublicPayload(
+            item,
+            key
+          );
+
+        return;
+      }
+
+      sanitizedObject[key] = item;
+    }
+  );
+
+  return sanitizedObject;
+}
+
+function sanitizeAigcResponseForUser(
+  req,
+  payload
+) {
+  /*
+   * 管理员属于内部人员，保留原始错误，
+   * 方便判断具体外部平台问题。
+   */
+  if (req?.user?.role === "admin") {
+    return payload;
+  }
+
+  return sanitizePublicPayload(payload);
+}
+
+module.exports = {
+  sanitizePublicText,
+  sanitizePublicPayload,
+  sanitizeAigcResponseForUser
+};

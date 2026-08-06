@@ -3,6 +3,9 @@ const userCsvModel = require("../models/userCsvModel");
 const aigcSessionService = require(
   "../services/aigcSessionService"
 );
+const masterOwnerModel = require(
+  "../models/aigcMasterOwnerCsvModel"
+);
 
 const VALID_GENDERS = ["Male", "Female", "Other"];
 const VALID_AGE_GROUPS = [
@@ -207,9 +210,42 @@ async function logout(req, res) {
 }
 
 function me(req, res) {
+  const isAdmin =
+    req.user?.role === "admin";
+
+  const ownerMapping =
+    !isAdmin && req.user?.id
+      ? masterOwnerModel
+          .getActiveMappingByUserId(
+            req.user.id
+          )
+      : null;
+
   return res.json({
     success: true,
-    user: req.user || null
+    user: req.user
+      ? {
+          ...req.user,
+
+          dashboardAccess: {
+            allowed:
+              isAdmin ||
+              Boolean(ownerMapping),
+
+            scope:
+              isAdmin
+                ? "admin"
+                : ownerMapping
+                  ? "master_owner"
+                  : null,
+
+            masterAccountId:
+              ownerMapping
+                ?.masterAccountId ||
+              null
+          }
+        }
+      : null
   });
 }
 

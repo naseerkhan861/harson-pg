@@ -29,6 +29,25 @@ export class AccountManagementViewModel {
     );
   }
 
+  async getMyEnterpriseSubAccounts() {
+    return this.getJson(
+      "/api/aigc/my-enterprise/sub-accounts"
+    );
+  }
+
+  async syncMyWorkspace() {
+    return this.postJson(
+      "/api/aigc/my-workspace/sync",
+      {}
+    );
+  }
+
+  async getMyTokenBalance() {
+    return this.getJson(
+      "/api/aigc/session/token-balance"
+    );
+  }
+
   async createMaster(payload) {
     return this.postJson(
       "/api/aigc/admin/master-accounts",
@@ -129,6 +148,43 @@ export class AccountManagementViewModel {
     return this.postJson(
       "/api/aigc/admin/mappings",
       payload
+    );
+  }
+
+  async createMasterOwnerMapping(
+    payload
+  ) {
+    return this.postJson(
+      "/api/aigc/admin/master-owner-mappings",
+      payload
+    );
+  }
+
+  async unbindMasterOwnerMapping(
+    mappingId
+  ) {
+    const normalizedMappingId =
+      encodeURIComponent(
+        String(
+          mappingId || ""
+        ).trim()
+      );
+
+    return this.postJson(
+      `/api/aigc/admin/master-owner-mappings/${normalizedMappingId}/unbind`,
+      {}
+    );
+  }
+
+  async unbindMapping(mappingId) {
+    const normalizedMappingId =
+      encodeURIComponent(
+        String(mappingId || "").trim()
+      );
+
+    return this.postJson(
+      `/api/aigc/admin/mappings/${normalizedMappingId}/unbind`,
+      {}
     );
   }
 
