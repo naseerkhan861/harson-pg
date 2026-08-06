@@ -8,7 +8,15 @@ const express = require("express");
  */
 require("../services/aigcSubProviderRuntimePatch").install();
 
+
 const controller = require("../controllers/aigcAccountController");
+
+const {
+  sanitizeAigcResponseForUser
+} = require(
+  "../utils/publicAigcMessage"
+);
+
 const subProviderController = require(
   "../controllers/aigcSubProviderController"
 );
@@ -21,6 +29,35 @@ const {
 } = require("../middleware/authMiddleware");
 
 const router = express.Router();
+
+
+/*
+ * CL-AIGC 接口统一响应脱敏。
+ *
+ * 该中间件在路由处理前包装 res.json，
+ * 真正返回响应时 req.user 已由 requireAuth 写入。
+ *
+ * 管理员保留内部原文；
+ * 其他用户只处理 message、error、warning 等展示字段。
+ */
+router.use((req, res, next) => {
+  const originalJson =
+    res.json.bind(res);
+
+  res.json = payload => {
+    const safePayload =
+      sanitizeAigcResponseForUser(
+        req,
+        payload
+      );
+
+    return originalJson(
+      safePayload
+    );
+  };
+
+  next();
+});
 
 router.get(
   "/session",
