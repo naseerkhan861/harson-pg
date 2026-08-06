@@ -145,7 +145,7 @@ async function postJson(
     new AbortController();
 
   console.info(
-    `[YiBai 管理端] 请求开始：POST ${pathname}`
+    `[管理端] 请求开始：POST ${pathname}`
   );
 
   const timeoutId = setTimeout(() => {
@@ -185,12 +185,12 @@ async function postJson(
         : {};
     } catch (error) {
       throw new Error(
-        `YiBai 管理端接口 ${pathname} 返回了无法解析的响应，HTTP 状态码：${response.status}`
+        `CL-AIGC 管理端接口 ${pathname} 返回了无法解析的响应，HTTP 状态码：${response.status}`
       );
     }
 
     console.info(
-      `[YiBai 管理端] 请求完成：POST ${pathname}`,
+      `[CL-AIGC 管理端] 请求完成：POST ${pathname}`,
       {
         durationMs:
           Date.now() - startedAt,
@@ -213,7 +213,7 @@ async function postJson(
   } catch (error) {
     if (error.name === "AbortError") {
       console.warn(
-        `[YiBai 管理端] 请求超时：POST ${pathname}`,
+        `[CL-AIGC 管理端] 请求超时：POST ${pathname}`,
         {
           durationMs:
             Date.now() - startedAt,
@@ -223,12 +223,12 @@ async function postJson(
       );
 
       throw new Error(
-        `YiBai 管理端接口 ${pathname} 超时（${timeoutMs} 毫秒）`
+        `CL-AIGC 管理端接口 ${pathname} 超时（${timeoutMs} 毫秒）`
       );
     }
 
     console.warn(
-      `[YiBai 管理端] 请求失败：POST ${pathname}`,
+      `[CL-AIGC 管理端] 请求失败：POST ${pathname}`,
       {
         durationMs:
           Date.now() - startedAt,
