@@ -33,6 +33,8 @@ const MASTER_PROVIDER_HEADERS = [
   "syncedTotalCredits",
   "providerCompanyId",
   "providerCompanyName",
+  "providerMemberId",
+  "providerMemberName",
 
   "status",
   "lastSyncedAt",
@@ -255,6 +257,14 @@ function toSafeRecord(
       record.providerCompanyName ||
       "",
 
+    providerMemberId:
+      record.providerMemberId ||
+      "",
+
+    providerMemberName:
+      record.providerMemberName ||
+      "",
+
     status:
       record.status,
 
@@ -418,6 +428,10 @@ function upsertMasterProviderConfig({
 
       providerCompanyName: "",
 
+      providerMemberId: "",
+
+      providerMemberName: "",
+
       status: "active",
 
       lastSyncedAt: "",
@@ -523,6 +537,20 @@ function upsertMasterProviderConfig({
             .providerCompanyName ||
           "",
 
+    providerMemberId:
+      providerChanged
+        ? ""
+        : existing
+            .providerMemberId ||
+          "",
+
+    providerMemberName:
+      providerChanged
+        ? ""
+        : existing
+            .providerMemberName ||
+          "",
+
     status: "active",
 
     lastSyncedAt:
@@ -558,7 +586,9 @@ function updateProviderSyncSnapshot({
   masterAccountId,
   syncedTotalCredits,
   providerCompanyId,
-  providerCompanyName
+  providerCompanyName,
+  providerMemberId,
+  providerMemberName
 }) {
   const normalizedMasterAccountId =
     requireText(
@@ -605,6 +635,18 @@ function updateProviderSyncSnapshot({
     providerCompanyName:
       String(
         providerCompanyName ||
+        ""
+      ).trim(),
+
+    providerMemberId:
+      String(
+        providerMemberId ||
+        ""
+      ).trim(),
+
+    providerMemberName:
+      String(
+        providerMemberName ||
         ""
       ).trim(),
 
