@@ -1833,3 +1833,150 @@ body::after {
     padding: 18px;
   }
 }
+
+/* AIGC task cover thumbnails */
+.task-record-table td:first-child {
+  min-width: 250px;
+  max-width: 280px;
+}
+
+.task-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.task-title-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-thumbnail {
+  display: block;
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+@media (max-width: 720px) {
+  .task-record-table td:first-child {
+    min-width: 220px;
+  }
+
+  .task-thumbnail {
+    flex-basis: 52px;
+    width: 52px;
+    height: 52px;
+  }
+}
+
+/* Task image preview */
+.task-thumbnail-button {
+  display: block;
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  overflow: hidden;
+  cursor: zoom-in;
+  border: 0;
+  background: transparent;
+}
+
+.task-thumbnail-button .task-thumbnail {
+  width: 100%;
+  height: 100%;
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease;
+}
+
+.task-thumbnail-button:hover .task-thumbnail,
+.task-thumbnail-button:focus-visible .task-thumbnail {
+  transform: scale(1.06);
+  filter: brightness(1.08);
+}
+
+.task-thumbnail-button:focus-visible {
+  outline: 2px solid var(--gold, var(--primary));
+  outline-offset: 3px;
+}
+
+.task-preview-open {
+  overflow: hidden;
+}
+
+.task-image-preview[hidden] {
+  display: none;
+}
+
+.task-image-preview {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(8px);
+}
+
+.task-image-preview-dialog {
+  position: relative;
+  display: flex;
+  max-width: min(1100px, 94vw);
+  max-height: 90vh;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.task-image-preview-content {
+  display: block;
+  max-width: 100%;
+  max-height: 82vh;
+  object-fit: contain;
+  border: 1px solid var(--border);
+  background: #090909;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+}
+
+.task-image-preview-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  width: 42px;
+  height: 42px;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.72);
+  color: #ffffff;
+  font-size: 30px;
+  line-height: 1;
+}
+
+.task-image-preview-caption {
+  max-width: 90vw;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  .task-thumbnail-button {
+    flex-basis: 52px;
+    width: 52px;
+    height: 52px;
+  }
+
+  .task-image-preview {
+    padding: 14px;
+  }
+}
+
