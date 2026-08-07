@@ -924,6 +924,152 @@ async function initEnterpriseDashboardAnalytics() {
       "处理中";
   }
 
+  function openTaskImagePreview(
+    imageUrl,
+    title
+  ) {
+    if (!imageUrl) {
+      return;
+    }
+
+    let preview =
+      document.getElementById(
+        "taskImagePreview"
+      );
+
+    if (!preview) {
+      preview =
+        document.createElement("div");
+
+      preview.id =
+        "taskImagePreview";
+
+      preview.className =
+        "task-image-preview";
+
+      preview.hidden = true;
+
+      const dialog =
+        document.createElement("div");
+
+      dialog.className =
+        "task-image-preview-dialog";
+
+      dialog.setAttribute(
+        "role",
+        "dialog"
+      );
+
+      dialog.setAttribute(
+        "aria-modal",
+        "true"
+      );
+
+      const closeButton =
+        document.createElement("button");
+
+      closeButton.type =
+        "button";
+
+      closeButton.className =
+        "task-image-preview-close";
+
+      closeButton.textContent =
+        "×";
+
+      closeButton.setAttribute(
+        "aria-label",
+        "关闭图片预览"
+      );
+
+      const image =
+        document.createElement("img");
+
+      image.className =
+        "task-image-preview-content";
+
+      image.referrerPolicy =
+        "no-referrer";
+
+      image.decoding =
+        "async";
+
+      const caption =
+        document.createElement("p");
+
+      caption.className =
+        "task-image-preview-caption";
+
+      dialog.append(
+        closeButton,
+        image,
+        caption
+      );
+
+      preview.append(dialog);
+      document.body.append(preview);
+
+      const closePreview = () => {
+        preview.hidden = true;
+        document.body.classList.remove(
+          "task-preview-open"
+        );
+      };
+
+      closeButton.addEventListener(
+        "click",
+        closePreview
+      );
+
+      preview.addEventListener(
+        "click",
+        event => {
+          if (event.target === preview) {
+            closePreview();
+          }
+        }
+      );
+
+      document.addEventListener(
+        "keydown",
+        event => {
+          if (
+            event.key === "Escape" &&
+            !preview.hidden
+          ) {
+            closePreview();
+          }
+        }
+      );
+    }
+
+    const image =
+      preview.querySelector(
+        ".task-image-preview-content"
+      );
+
+    const caption =
+      preview.querySelector(
+        ".task-image-preview-caption"
+      );
+
+    image.src = imageUrl;
+    image.alt = `${title}大图`;
+    caption.textContent = title;
+
+    preview.hidden = false;
+
+    document.body.classList.add(
+      "task-preview-open"
+    );
+
+    preview
+      .querySelector(
+        ".task-image-preview-close"
+      )
+      ?.focus();
+  }
+
   function renderTaskRecords(
     tasks,
     bodyId,
@@ -976,6 +1122,90 @@ async function initEnterpriseDashboardAnalytics() {
       const titleCell =
         document.createElement("td");
 
+      const taskSummary =
+        document.createElement("div");
+
+      taskSummary.className =
+        "task-summary";
+
+      const titleText =
+        document.createElement("div");
+
+      titleText.className =
+        "task-title-text";
+
+      if (task.imageUrl) {
+        const thumbnail =
+          document.createElement("img");
+
+        thumbnail.className =
+          "task-thumbnail";
+
+        thumbnail.src =
+          task.imageUrl;
+
+        thumbnail.alt =
+          `${task.title || "AIGC 创作任务"}封面`;
+
+        thumbnail.loading =
+          "lazy";
+
+        thumbnail.decoding =
+          "async";
+
+        thumbnail.referrerPolicy =
+          "no-referrer";
+
+        thumbnail.width = 64;
+        thumbnail.height = 64;
+
+        thumbnail.addEventListener(
+          "error",
+          () => {
+            thumbnail.remove();
+          },
+          {
+            once: true
+          }
+        );
+
+        const previewButton =
+          document.createElement("button");
+
+        previewButton.type =
+          "button";
+
+        previewButton.className =
+          "task-thumbnail-button";
+
+        previewButton.title =
+          "点击放大查看";
+
+        previewButton.setAttribute(
+          "aria-label",
+          `放大查看${task.title || "创作任务"}封面`
+        );
+
+        previewButton.append(
+          thumbnail
+        );
+
+        previewButton.addEventListener(
+          "click",
+          () => {
+            openTaskImagePreview(
+              task.imageUrl,
+              task.title ||
+                "AIGC 创作任务"
+            );
+          }
+        );
+
+        taskSummary.append(
+          previewButton
+        );
+      }
+
       const title =
         document.createElement("strong");
 
@@ -991,9 +1221,17 @@ async function initEnterpriseDashboardAnalytics() {
           ? `任务 ${task.id}`
           : "CL-AIGC 任务";
 
-      titleCell.append(
+      titleText.append(
         title,
         taskId
+      );
+
+      taskSummary.append(
+        titleText
+      );
+
+      titleCell.append(
+        taskSummary
       );
 
       const statusCell =

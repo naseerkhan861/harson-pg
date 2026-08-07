@@ -40,7 +40,13 @@ app.use(
           "https://fonts.gstatic.com",
           "https://cdnjs.cloudflare.com"
         ],
-        "img-src": ["'self'", "data:", "https://www.zhihuiyunji.com"],
+        "img-src": [
+          "'self'",
+          "data:",
+          "https://www.zhihuiyunji.com",
+          "https://image.yibaiaigc.com",
+          "https://yb-ai.oss-accelerate.aliyuncs.com"
+        ],
         "connect-src": ["'self'"],
         "frame-src": [
           "'self'",

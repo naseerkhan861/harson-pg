@@ -1104,6 +1104,42 @@ export class AccountManagementView {
         }
       </section>
     `;
+
+    app
+      .querySelectorAll(
+        ".account-work-thumbnail"
+      )
+      .forEach(image => {
+        image.addEventListener(
+          "error",
+          () => {
+            const button =
+              image.closest(
+                ".account-work-preview-btn"
+              );
+
+            if (button) {
+              const placeholder =
+                document.createElement(
+                  "span"
+                );
+
+              placeholder.className =
+                "account-work-no-image";
+
+              placeholder.textContent =
+                "图片加载失败";
+
+              button.replaceWith(
+                placeholder
+              );
+            }
+          },
+          {
+            once: true
+          }
+        );
+      });
   }
 
   userAutoSyncNotice({
@@ -1224,6 +1260,22 @@ export class AccountManagementView {
             "刷新中...";
 
           await this.load();
+        }
+
+        const previewButton =
+          event.target instanceof Element
+            ? event.target.closest(
+                ".account-work-preview-btn"
+              )
+            : null;
+
+        if (previewButton) {
+          this.openWorkImagePreview(
+            previewButton.dataset.imageUrl,
+            previewButton.dataset.imageTitle
+          );
+
+          return;
         }
 
         if (
@@ -2497,11 +2549,169 @@ export class AccountManagementView {
     `;
   }
 
+  openWorkImagePreview(
+    imageUrl,
+    title = "AIGC 创作任务"
+  ) {
+    const normalizedUrl =
+      String(imageUrl || "").trim();
+
+    if (!normalizedUrl) {
+      return;
+    }
+
+    let preview =
+      document.getElementById(
+        "accountWorkImagePreview"
+      );
+
+    if (!preview) {
+      preview =
+        document.createElement("div");
+
+      preview.id =
+        "accountWorkImagePreview";
+
+      preview.className =
+        "account-work-image-preview";
+
+      preview.hidden = true;
+
+      const dialog =
+        document.createElement("div");
+
+      dialog.className =
+        "account-work-preview-dialog";
+
+      dialog.setAttribute(
+        "role",
+        "dialog"
+      );
+
+      dialog.setAttribute(
+        "aria-modal",
+        "true"
+      );
+
+      const closeButton =
+        document.createElement("button");
+
+      closeButton.type =
+        "button";
+
+      closeButton.className =
+        "account-work-preview-close";
+
+      closeButton.textContent =
+        "×";
+
+      closeButton.setAttribute(
+        "aria-label",
+        "关闭图片预览"
+      );
+
+      const image =
+        document.createElement("img");
+
+      image.className =
+        "account-work-preview-image";
+
+      image.referrerPolicy =
+        "no-referrer";
+
+      image.decoding =
+        "async";
+
+      const caption =
+        document.createElement("p");
+
+      caption.className =
+        "account-work-preview-caption";
+
+      dialog.append(
+        closeButton,
+        image,
+        caption
+      );
+
+      preview.append(dialog);
+
+      document.body.append(
+        preview
+      );
+
+      const closePreview = () => {
+        preview.hidden = true;
+
+        document.body.classList.remove(
+          "account-work-preview-open"
+        );
+      };
+
+      closeButton.addEventListener(
+        "click",
+        closePreview
+      );
+
+      preview.addEventListener(
+        "click",
+        event => {
+          if (event.target === preview) {
+            closePreview();
+          }
+        }
+      );
+
+      document.addEventListener(
+        "keydown",
+        event => {
+          if (
+            event.key === "Escape" &&
+            !preview.hidden
+          ) {
+            closePreview();
+          }
+        }
+      );
+    }
+
+    const image =
+      preview.querySelector(
+        ".account-work-preview-image"
+      );
+
+    const caption =
+      preview.querySelector(
+        ".account-work-preview-caption"
+      );
+
+    image.src = normalizedUrl;
+
+    image.alt =
+      `${title || "AIGC 创作任务"}大图`;
+
+    caption.textContent =
+      title || "AIGC 创作任务";
+
+    preview.hidden = false;
+
+    document.body.classList.add(
+      "account-work-preview-open"
+    );
+
+    preview
+      .querySelector(
+        ".account-work-preview-close"
+      )
+      ?.focus();
+  }
+
   worksTable(works) {
     return `
       <table>
         ${this.rows(
           [
+            "创作封面",
             "任务标题",
             "任务类型",
             "状态",
@@ -2512,6 +2722,44 @@ export class AccountManagementView {
           ],
           works.map(
             item => [
+              item.imageUrl
+                ? `
+                  <button
+                    type="button"
+                    class="account-work-preview-btn"
+                    data-image-url="${this.escapeHtml(
+                      item.imageUrl
+                    )}"
+                    data-image-title="${this.escapeHtml(
+                      item.title ||
+                      "AIGC 创作任务"
+                    )}"
+                    aria-label="放大查看创作封面"
+                    title="点击放大查看"
+                  >
+                    <img
+                      class="account-work-thumbnail"
+                      src="${this.escapeHtml(
+                        item.imageUrl
+                      )}"
+                      alt="${this.escapeHtml(
+                        item.title ||
+                        "AIGC 创作任务"
+                      )}封面"
+                      width="72"
+                      height="72"
+                      loading="lazy"
+                      decoding="async"
+                      referrerpolicy="no-referrer"
+                    />
+                  </button>
+                `
+                : `
+                  <span class="account-work-no-image">
+                    暂无图片
+                  </span>
+                `,
+
               item.title ||
                 "AIGC 创作任务",
 

@@ -234,7 +234,20 @@ function toDashboardTask(task) {
       task.dateCreate || "",
 
     completedAt:
-      task.dateEnd || ""
+      task.dateEnd || "",
+
+    imageUrl:
+      task.imageUrl || "",
+
+    imageWidth:
+      toNonNegativeNumber(
+        task.imageWidth
+      ),
+
+    imageHeight:
+      toNonNegativeNumber(
+        task.imageHeight
+      )
   };
 }
 
