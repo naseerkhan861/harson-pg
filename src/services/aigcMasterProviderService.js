@@ -401,7 +401,15 @@ function restorePreviousBinding({
 
       providerCompanyName:
         previousConfig
-          .providerCompanyName || ""
+          .providerCompanyName || "",
+
+      providerMemberId:
+        previousConfig
+          .providerMemberId || "",
+
+      providerMemberName:
+        previousConfig
+          .providerMemberName || ""
     });
 }
 
@@ -629,7 +637,15 @@ async function bindMasterProviderAndSync({
 
               providerCompanyName:
                 providerSession
-                  .providerCompanyName
+                  .providerCompanyName,
+
+              providerMemberId:
+                providerSession
+                  .providerMemberId,
+
+              providerMemberName:
+                providerSession
+                  .providerMemberName
             });
 
         return buildSafeResult({
@@ -861,7 +877,15 @@ async function syncBoundMasterProvider(
 
               providerCompanyName:
                 providerSession
-                  .providerCompanyName
+                  .providerCompanyName,
+
+              providerMemberId:
+                providerSession
+                  .providerMemberId,
+
+              providerMemberName:
+                providerSession
+                  .providerMemberName
             });
 
         return buildSafeResult({

@@ -248,19 +248,58 @@ function createMasterAnalytics({
         master.id
       );
 
-  const snapshot =
-    taskSnapshotModel
-      .listTaskSnapshotByIdentity({
-        masterAccountId:
-          master.id,
+  const providerMemberId =
+    String(
+      providerConfig
+        ?.providerMemberId ||
+      ""
+    ).trim();
 
-        identities: [
-          providerConfig
-            ?.providerAccount,
-          master.platformLogin,
-          ownerMapping?.clBaseEmail
-        ]
-      });
+  const snapshot =
+    providerMemberId
+      ? (() => {
+          const tasks =
+            taskSnapshotModel
+              .listTasksByMemberId({
+                masterAccountId:
+                  master.id,
+
+                memberId:
+                  providerMemberId
+              });
+
+          return {
+            status: "resolved",
+
+            memberId:
+              providerMemberId,
+
+            tasks,
+
+            summary:
+              summarizeTasks(tasks),
+
+            latestSyncedAt:
+              latestValue(
+                tasks.map(task =>
+                  task.syncedAt
+                )
+              )
+          };
+        })()
+      : taskSnapshotModel
+          .listTaskSnapshotByIdentity({
+            masterAccountId:
+              master.id,
+
+            identities: [
+              providerConfig
+                ?.providerAccount,
+              master.platformLogin,
+              ownerMapping
+                ?.clBaseEmail
+            ]
+          });
 
   const summary =
     snapshot.summary ||
