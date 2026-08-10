@@ -1210,28 +1210,62 @@ async function getMyRechargeRecords(
   req,
   res
 ) {
-  const mapping =
-    aigcAccountModel
-      .getMyMapping(
-        req.user.id
-      );
+  const subMapping =
+  aigcAccountModel
+    .getMyMapping(
+      req.user.id
+    );
 
-  const masterAccountId =
-    String(
-      mapping?.masterAccount?.id ||
-      mapping?.mapping
-        ?.masterAccountId ||
-      ""
-    ).trim();
+const ownerMapping =
+  masterOwnerModel
+    .getActiveMappingByUserId(
+      req.user.id
+    );
 
-  if (!masterAccountId) {
-    return res.status(404).json({
-      success: false,
+/*
+ * 正常情况下，同一个 Harson-Base 用户
+ * 不应该同时绑定企业主账号和子账号。
+ */
+if (
+  subMapping?.mapping &&
+  ownerMapping
+) {
+  return res.status(409).json({
+    success: false,
 
-      message:
-        "当前 Harson-Base 账号尚未绑定可用的 AIGC 企业主账号"
-    });
-  }
+    message:
+      "当前 Harson-Base 账号同时绑定了企业主账号和子账号，请联系管理员检查账号映射"
+  });
+}
+
+/*
+ * 企业主账号负责人：
+ * 直接读取负责人绑定的 masterAccountId。
+ *
+ * 普通用户：
+ * 继续通过子账号映射找到所属企业主账号。
+ */
+const masterAccountId =
+  String(
+    ownerMapping
+      ?.masterAccountId ||
+    subMapping
+      ?.masterAccount
+      ?.id ||
+    subMapping
+      ?.mapping
+      ?.masterAccountId ||
+    ""
+  ).trim();
+
+if (!masterAccountId) {
+  return res.status(404).json({
+    success: false,
+
+    message:
+      "当前 Harson-Base 账号尚未绑定可用的 AIGC 企业账号"
+  });
+}
 
   const datePay =
     String(
