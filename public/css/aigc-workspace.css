@@ -2100,66 +2100,128 @@ button {
 
   gap: 10px;
 }
-/* 鏈€鏂板伐鍏凤細涓€琛屽叚寮� */
+
+/* 最新工具：横向单排展示，桌面端约 4 张 */
 .home-latest-grid {
   display: grid;
 
-  grid-template-columns:
-    repeat(6, minmax(0, 1fr));
+  grid-auto-flow: column;
 
-  gap: 10px;
+  grid-auto-columns:
+    calc((100% - 36px) / 4);
 
-  padding-bottom: 4px;
+  grid-template-columns: none;
+
+  gap: 12px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  padding:
+    0 0 8px;
+
+  scroll-snap-type: x proximity;
+
+  scrollbar-width: thin;
+  scrollbar-color:
+    rgba(214, 174, 76, 0.35)
+    transparent;
 }
 
-/* 棣栭〉宸ュ叿鍗＄墖 */
-.home-tool-card {
-  min-width: 0;
+.home-latest-grid::-webkit-scrollbar {
+  height: 6px;
+}
 
+.home-latest-grid::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+
+  background:
+    rgba(214, 174, 76, 0.35);
+}
+
+.home-latest-grid .home-tool-card {
+  scroll-snap-align: start;
+}
+
+/* =========================================================
+   首页工具卡片 - 精简高级版
+   ========================================================= */
+
+.home-tool-card {
+  position: relative;
+
+  min-width: 0;
   overflow: hidden;
 
   border:
-    1px solid #343434;
+    1px solid
+    rgba(255, 255, 255, 0.11);
 
-  border-radius: 7px;
+  border-radius: 10px;
 
-  background: #181818;
+  background:
+    #111111;
 
   box-shadow:
-    0 2px 8px
-    rgba(0, 0, 0, 0.22);
+    0 4px 16px
+    rgba(0, 0, 0, 0.26);
 
   transition:
-    border-color 0.18s ease,
-    transform 0.18s ease,
-    box-shadow 0.18s ease;
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .home-tool-card:hover {
-  border-color: var(--gold);
-
   transform:
-    translateY(-2px);
+    translateY(-3px);
+
+  border-color:
+    rgba(214, 174, 76, 0.7);
 
   box-shadow:
-    0 9px 24px
-    rgba(0, 0, 0, 0.4);
+    0 12px 28px
+    rgba(0, 0, 0, 0.42);
 }
+
+
+/* =========================
+   封面
+   ========================= */
 
 .home-tool-media {
   position: relative;
 
   width: 100%;
-
   aspect-ratio: 3 / 2;
 
   overflow: hidden;
 
-  border-bottom:
-    1px solid #303030;
-
-  background: #101010;
+  background: #0b0b0b;
 }
+
+
+/* 图片底部加一点渐变，
+   让图片和文字区域衔接更自然 */
+.home-tool-media::after {
+  content: "";
+
+  position: absolute;
+  inset:
+    auto 0 0 0;
+
+  height: 34%;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      to bottom,
+      transparent,
+      rgba(0, 0, 0, 0.32)
+    );
+}
+
 
 .home-tool-media img {
   display: block;
@@ -2171,60 +2233,84 @@ button {
   object-position: center;
 
   transition:
-    transform 0.28s ease;
+    transform 0.35s ease;
 }
+
 
 .home-tool-card:hover
 .home-tool-media img {
   transform:
-    scale(1.035);
+    scale(1.025);
 }
 
-/* HOT 鍜� NEW 鏍囩 */
+
+/* =========================
+   HOT / NEW
+   ========================= */
+
 .home-tool-badge {
   position: absolute;
 
-  top: 9px;
-  right: 9px;
+  z-index: 2;
+
+  top: 10px;
+  right: 10px;
 
   display: inline-flex;
   align-items: center;
   justify-content: center;
 
   min-width: 42px;
-  height: 22px;
+  height: 23px;
 
-  border-radius: 4px;
+  border-radius: 5px;
 
   padding:
-    0 8px;
-
-  color: #070707;
+    0 9px;
 
   font-size: 10px;
   font-weight: 800;
+
   line-height: 1;
+
+  box-shadow:
+    0 3px 10px
+    rgba(0, 0, 0, 0.28);
 }
 
-.badge-hot {
-  background: #ff4c45;
 
+.badge-hot {
+  background: #ff514a;
   color: #ffffff;
 }
 
+
 .badge-new {
   background: #9bea27;
+  color: #080808;
 }
 
-/* 鍗＄墖鏂囧瓧鍖哄煙 */
+
+/* =========================
+   卡片文字区域
+   ========================= */
+
 .home-tool-body {
-  min-height: 94px;
+  min-height: 92px;
 
   padding:
-    12px 13px 13px;
+    13px 14px 14px;
 
-  background: #191919;
+  background:
+    linear-gradient(
+      180deg,
+      #171717 0%,
+      #131313 100%
+    );
 }
+
+
+/* 工具名称 */
 
 .home-tool-body h3 {
   margin: 0;
@@ -2233,18 +2319,24 @@ button {
 
   color: #f5f5f5;
 
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
+
   line-height: 1.35;
+
+  letter-spacing:
+    0.01em;
 
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.home-tool-body p {
-  display: -webkit-box;
 
-  min-height: 38px;
+/* 工具介绍 */
+
+.home-tool-body p {
+  display:
+    -webkit-box;
 
   margin:
     7px 0 0;
@@ -2252,10 +2344,11 @@ button {
   overflow: hidden;
 
   color:
-    rgba(255, 255, 255, 0.62);
+    rgba(255, 255, 255, 0.64);
 
-  font-size: 11px;
-  line-height: 1.65;
+  font-size: 13px;
+
+  line-height: 1.55;
 
   -webkit-box-orient:
     vertical;
@@ -2265,7 +2358,6 @@ button {
 }
 
 
-/* 鏌ョ湅鍏ㄩ儴宸ュ叿鎸夐挳 */
 .home-all-tools-button {
   display: inline-flex;
   align-items: center;
@@ -2309,16 +2401,7 @@ button {
   font-size: 16px;
 }
 
-/* =========================================================
-   棣栭〉鍝嶅簲寮忓竷灞€
-   ========================================================= */
 
-@media (max-width: 1380px) {
-  .home-latest-grid {
-    grid-template-columns:
-      repeat(3, minmax(0, 1fr));
-  }
-}
 
 @media (max-width: 1050px) {
   .home-banner {
@@ -2423,7 +2506,7 @@ button {
   }
 }
 
-/* Banner 鍥剧墖宸茬粡鑷甫鏂囧瓧锛屼笉鍐嶅彔鍔犻粦鑹查伄缃╁拰 HTML 鏂囨 */
+
 .home-banner-shade {
   display: none !important;
 }
@@ -2432,23 +2515,22 @@ button {
   display: none !important;
 }
 
-/* 淇濇寔鍘熷浘浜害涓庢竻鏅板害 */
+
 .home-banner-image {
   filter: none !important;
   opacity: 1 !important;
 }
 
-/* 闅愯棌椤甸潰鏉ユ簮鍜岃繛鎺ョ姸鎬侊紝淇濇寔鎵€鏈夊瓙鑿滃崟椤堕儴涓€鑷� */
 .connection-status {
   display: none !important;
 }
 
-/* 棣栭〉涓庡叏閮ㄥ伐鍏蜂腑鐨勫埛鏂版寜閽篃淇濇寔姝ｅ父澶栬 */
+
 .refresh-button {
   opacity: 1;
 }
 
-/* 鍙湁鐪熸澶勪簬璇锋眰杩囩▼鏃舵墠鏄剧ず绂佺敤鐘舵€� */
+
 .refresh-button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
@@ -2456,8 +2538,7 @@ button {
 
 
 /* =========================================================
-   鍏ㄩ儴宸ュ叿鍒嗙被绛涢€夋爮
-   淇濈暀鐜版湁椤甸潰瀹瑰櫒鍜屽伐鍏峰崱鐗囨牱寮�
+ 
    ========================================================= */
 
 .all-tools-filters {

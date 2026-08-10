@@ -1152,11 +1152,24 @@ async function syncMasterUserData(
   }
 
   if (taskSyncError) {
+    /*
+     * 详细技术错误仅保留在服务器日志中，
+     * 不返回给页面用户。
+     */
+    console.error(
+      "[CL-AIGC 创作记录同步] 详细错误",
+      {
+        masterAccountId,
+        message:
+          taskSyncError.message
+      }
+    );
+
     return res.status(400).json({
       success: false,
 
       message:
-        `用户数据同步失败：${taskSyncError.message}。Workspace 登录状态已恢复`,
+        "显示异常，请稍后联系管理员再试。",
 
       data: {
         timing

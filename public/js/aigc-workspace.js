@@ -25,6 +25,12 @@ const BACKGROUND_TOKEN_WAIT_MS =
   5000;
 
 const ALL_TOOLS = Object.freeze([
+   {
+    name: "Seedance 2.5 视频" ,
+    subtitle: "AI AGENT VIDEO",
+    cover:
+      "/images/all-tools/40-seedance-2.5-video.webp"
+  },
   {
     name: "全能图片 pro",
     subtitle: "IMAGE LAB",
@@ -61,6 +67,7 @@ const ALL_TOOLS = Object.freeze([
     cover:
       "/images/all-tools/06-seedance-video.webp"
   },
+ 
   {
     name: "批量换衣",
     subtitle: "OUTFIT SWAP",
@@ -311,6 +318,11 @@ const TOOL_FILTERS = Object.freeze({
     primary: "video-create",
     business: []
   },
+
+  "Seedance 2.5 视频": {
+    primary: "video-create",
+    business: []
+},
 
   "批量换衣": {
     primary: "image-edit",
