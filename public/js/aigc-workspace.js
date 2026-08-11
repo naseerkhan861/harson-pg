@@ -1333,13 +1333,27 @@ function setRefreshButton(
 
   clearRefreshFeedbackTimer();
 
-  elements.refreshButton
-    .textContent =
-      text;
+  const isRefreshing =
+    text ===
+    "刷新中...";
 
   elements.refreshButton
-    .disabled =
-      disabled;
+    .classList.toggle(
+      "is-refreshing",
+      isRefreshing
+    );
+
+  elements.refreshButton
+    .setAttribute(
+      "aria-label",
+      text
+    );
+
+  elements.refreshButton.title =
+    text;
+
+  elements.refreshButton.disabled =
+    disabled;
 
   if (
     restoreAfter > 0
@@ -1351,16 +1365,25 @@ function setRefreshButton(
             null;
 
           elements.refreshButton
-            .textContent =
-              "刷新";
+            .classList.remove(
+              "is-refreshing"
+            );
 
           elements.refreshButton
-            .disabled =
-              Boolean(
-                state.loading ||
-                state.backgroundRefreshing ||
-                state.awaitingMemberInfo
-              );
+            .setAttribute(
+              "aria-label",
+              "刷新"
+            );
+
+          elements.refreshButton.title =
+            "刷新";
+
+          elements.refreshButton.disabled =
+            Boolean(
+              state.loading ||
+              state.backgroundRefreshing ||
+              state.awaitingMemberInfo
+            );
         },
         restoreAfter
       );

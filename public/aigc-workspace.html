@@ -75,13 +75,23 @@
           hidden
         ></span>
 
-        <button
-          id="refreshSessionBtn"
-          class="refresh-button"
-          type="button"
+       <button
+        id="refreshSessionBtn"
+        class="refresh-button"
+        type="button"
+        aria-label="刷新"
+        title="刷新"
+      >
+        <svg
+          class="refresh-icon"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
         >
-          刷新
-        </button>
+          <path
+            d="M20 11a8 8 0 1 0-2.34 5.66M20 11V5m0 6h-6"
+          ></path>
+        </svg>
+      </button>
       </div>
     </header>
 
@@ -783,6 +793,16 @@
         referrerpolicy="no-referrer"
         hidden
       ></iframe>
+
+      <div
+        class="iframe-seam-mask"
+        aria-hidden="true"
+      ></div>
+
+      <div
+        class="iframe-result-seam-mask"
+        aria-hidden="true"
+      ></div>
     </main>
   </div>
 </body>
