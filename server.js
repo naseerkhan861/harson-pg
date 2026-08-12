@@ -44,15 +44,13 @@ app.use(
           "'self'",
           "data:",
           "https://www.zhihuiyunji.com",
-          "https://image.yibaiaigc.com",
           "https://yb-ai.oss-accelerate.aliyuncs.com"
         ],
         "connect-src": ["'self'"],
         "frame-src": [
           "'self'",
           "blob:",
-          "https://cl-base.yibaiaigc.com",
-          "https://yibaiaigc.com"
+          "https://ai.harson-base.com"
         ],
         "frame-ancestors": ["'self'"],
         "upgrade-insecure-requests": null
