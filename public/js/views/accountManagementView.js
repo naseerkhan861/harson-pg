@@ -257,7 +257,7 @@ export class AccountManagementView {
 
           <input
             name="platformName"
-            placeholder="平台名称，例如 yibaiaigc"
+            placeholder="平台名称，例如 AIGC平台"
             required
           />
 
