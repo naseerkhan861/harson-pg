@@ -28,6 +28,11 @@ const {
   requireAdmin
 } = require("../middleware/authMiddleware");
 
+const downloadController =
+  require(
+    "../controllers/aigcDownloadController"
+  );
+
 const router = express.Router();
 
 
@@ -260,6 +265,12 @@ router.post(
   "/my-workspace/works",
   requireAuth,
   controller.addMyWork
+);
+
+router.get(
+  "/download",
+  requireAuth,
+  downloadController.proxyDownload
 );
 
 module.exports = router;

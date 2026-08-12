@@ -6,6 +6,9 @@ const FRAME_LOGIN_INVALID =
 const MEMBER_INFO =
   "MEMBER_INFO";
 
+const AIGC_DOWNLOAD_REQUEST =
+  "AIGC_DOWNLOAD_REQUEST";
+
 const TOKEN_BALANCE_STORAGE_KEY =
   "clBaseTokenBalance";
 
@@ -25,6 +28,12 @@ const BACKGROUND_TOKEN_WAIT_MS =
   5000;
 
 const ALL_TOOLS = Object.freeze([
+   {
+    name: "Seedance 2.5 视频" ,
+    subtitle: "AI AGENT VIDEO",
+    cover:
+      "/images/all-tools/40-seedance-2.5-video.webp"
+  },
   {
     name: "全能图片 pro",
     subtitle: "IMAGE LAB",
@@ -61,6 +70,7 @@ const ALL_TOOLS = Object.freeze([
     cover:
       "/images/all-tools/06-seedance-video.webp"
   },
+ 
   {
     name: "批量换衣",
     subtitle: "OUTFIT SWAP",
@@ -311,6 +321,11 @@ const TOOL_FILTERS = Object.freeze({
     primary: "video-create",
     business: []
   },
+
+  "Seedance 2.5 视频": {
+    primary: "video-create",
+    business: []
+},
 
   "批量换衣": {
     primary: "image-edit",
@@ -1321,13 +1336,27 @@ function setRefreshButton(
 
   clearRefreshFeedbackTimer();
 
-  elements.refreshButton
-    .textContent =
-      text;
+  const isRefreshing =
+    text ===
+    "刷新中...";
 
   elements.refreshButton
-    .disabled =
-      disabled;
+    .classList.toggle(
+      "is-refreshing",
+      isRefreshing
+    );
+
+  elements.refreshButton
+    .setAttribute(
+      "aria-label",
+      text
+    );
+
+  elements.refreshButton.title =
+    text;
+
+  elements.refreshButton.disabled =
+    disabled;
 
   if (
     restoreAfter > 0
@@ -1339,16 +1368,25 @@ function setRefreshButton(
             null;
 
           elements.refreshButton
-            .textContent =
-              "刷新";
+            .classList.remove(
+              "is-refreshing"
+            );
 
           elements.refreshButton
-            .disabled =
-              Boolean(
-                state.loading ||
-                state.backgroundRefreshing ||
-                state.awaitingMemberInfo
-              );
+            .setAttribute(
+              "aria-label",
+              "刷新"
+            );
+
+          elements.refreshButton.title =
+            "刷新";
+
+          elements.refreshButton.disabled =
+            Boolean(
+              state.loading ||
+              state.backgroundRefreshing ||
+              state.awaitingMemberInfo
+            );
         },
         restoreAfter
       );
@@ -2322,6 +2360,63 @@ function handleIframeMessage(
 
     return;
   }
+
+if (
+  messageType ===
+  AIGC_DOWNLOAD_REQUEST
+) {
+  const fileUrl =
+    typeof event.data?.payload?.url ===
+    "string"
+      ? event.data.payload.url.trim()
+      : "";
+
+  const filename =
+    typeof event.data?.payload?.filename ===
+    "string"
+      ? event.data.payload.filename.trim()
+      : "";
+
+  if (!fileUrl) {
+    console.warn(
+      "Harson-Base 收到无效的下载请求。"
+    );
+
+    return;
+  }
+
+  const params =
+    new URLSearchParams({
+      url: fileUrl
+    });
+
+  if (filename) {
+    params.set(
+      "filename",
+      filename
+    );
+  }
+
+  const downloadLink =
+    document.createElement(
+      "a"
+    );
+
+  downloadLink.href =
+    `/api/aigc/download?${params.toString()}`;
+
+  downloadLink.style.display =
+    "none";
+
+  document.body.append(
+    downloadLink
+  );
+
+  downloadLink.click();
+  downloadLink.remove();
+
+  return;
+}
 
   if (
     messageType ===
