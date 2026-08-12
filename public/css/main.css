@@ -182,8 +182,13 @@ body[data-page="account-management"] .logo-text span {
   list-style: none;
   display: flex;
   align-items: center;
-  gap: 26px;
-  flex-wrap: wrap;
+  gap: 18px;
+  flex-wrap: nowrap;
+}
+
+.nav-links li,
+.nav-links a {
+  white-space: nowrap;
 }
 
 .nav-links a {
@@ -661,11 +666,12 @@ body[data-page="home"] .account-avatar.logged-in .account-avatar-text {
 
 .platform-product-heading h2 {
   color: var(--text);
-  font-size: 34px;
+  font-size: 32px;
   font-weight: 800;
   letter-spacing: -0.8px;
   line-height: 1.1;
   margin-bottom: 9px;
+  white-space: nowrap;
 }
 
 .platform-product-heading h2 a {
