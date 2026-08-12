@@ -11,15 +11,6 @@ const yibaiAigcClient = require(
 const DEFAULT_HOST =
   "https://cl-base.yibaiaigc.com";
 
-// Host used for the embedded iframe URL as seen by the browser. We proxy the
-// real upstream (cl-base.yibaiaigc.com) through ai.harson-base.com in nginx so
-// the client never sees the yibaiaigc domain. Override with YIBAI_EMBED_HOST.
-// NOTE: backend server-to-server API calls (yibaiAigcClient) still use the real
-// upstream via YIBAI_AIGC_HOST — that traffic is already invisible to clients.
-const EMBED_HOST =
-  process.env.YIBAI_EMBED_HOST ||
-  "https://ai.harson-base.com";
-
 const MODULE_DEFINITIONS = Object.freeze({
   "image-generator": {
     menuName: "图片创作"
@@ -213,7 +204,7 @@ async function buildFrameUrl({
 
   const hostUrl =
     new URL(
-      `${EMBED_HOST}/`
+      `${getHost()}/`
     );
 
   const routerUrl =
