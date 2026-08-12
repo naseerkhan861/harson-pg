@@ -2193,7 +2193,7 @@ button {
   position: relative;
 
   width: 100%;
-  aspect-ratio: 3 / 2;
+  aspect-ratio: 16 / 9;
 
   overflow: hidden;
 
@@ -2230,7 +2230,7 @@ button {
   height: 100%;
 
   object-fit: cover;
-  object-position: center;
+  object-position: center 20%;
 
   transition:
     transform 0.35s ease;
@@ -2296,10 +2296,10 @@ button {
    ========================= */
 
 .home-tool-body {
-  min-height: 92px;
+  min-height: 108px;
 
   padding:
-    13px 14px 14px;
+    14px 15px 16px;
 
   background:
     linear-gradient(

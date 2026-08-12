@@ -4,7 +4,7 @@ export const platformModel = {
     { label: "仪表盘", href: "/dashboard" },
     { label: "账号管理", href: "/account-management" },
     { label: "核心平台", href: "#platforms" },
-    { label: "CL-AIGC", href: "#cl-aigc" },
+    { label: "CL-AIGC（BETA）", href: "#cl-aigc" },
     { label: "CL-SCM", href: "#cl-scm" },
     { label: "CL-iRobot", href: "#cl-irobot" },
     { label: "CL-iStore", href: "#cl-istore" },
@@ -14,7 +14,7 @@ export const platformModel = {
   platforms: [
     {
       id: "cl-aigc",
-      title: "CL-AIGC",
+      title: "CL-AIGC（BETA）",
       link: "/aigc-workspace",
       subtitle: "时尚生成式 AI · 品牌视觉引擎",
       description: "面向鞋服品牌、电商团队与营销部门，支持快速生成模特图、商品图和广告素材，降低视觉内容制作成本。",
