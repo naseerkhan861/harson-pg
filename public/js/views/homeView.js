@@ -146,12 +146,6 @@ export class HomeView {
       });
     }
 
-    document.querySelectorAll(".feature-item").forEach(item => {
-      item.addEventListener("click", event => {
-        event.stopPropagation();
-        alert(this.vm.getFeatureMessage(item.dataset.feature));
-      });
-    });
 
     document.querySelectorAll(".nav-links a").forEach(link => {
       link.addEventListener("click", event => {
