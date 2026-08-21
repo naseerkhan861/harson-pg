@@ -24,7 +24,11 @@ app.use(
       useDefaults: true,
       directives: {
         "default-src": ["'self'"],
-        "script-src": ["'self'", "https://cdnjs.cloudflare.com"],
+        "script-src": [
+          "'self'",
+          "'wasm-unsafe-eval'",
+          "https://cdnjs.cloudflare.com"
+        ],
         "style-src": [
           "'self'",
           "'unsafe-inline'",
@@ -43,7 +47,9 @@ app.use(
           "https://image.yibaiaigc.com",
           "https://yb-ai.oss-accelerate.aliyuncs.com"
         ],
-        "connect-src": ["'self'"],
+        "connect-src": [
+          "'self'",
+          "blob:",],
         "frame-src": [
           "'self'",
           "blob:",
@@ -213,6 +219,10 @@ function sendAuthenticatedPage(
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+app.get("/index-mecha", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index-mecha.html"));
 });
 
 app.get("/login", (req, res) => {

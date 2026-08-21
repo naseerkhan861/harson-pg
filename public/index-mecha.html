@@ -6,28 +6,32 @@
   <title>哈森HARSON智能平台 | 四大智能应用平台</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="/css/main-mecha.css" />
+
+  <script
+  type="module"
+  src="/js/vendor/model-viewer.min.js"
+></script>
 </head>
 
 <body data-page="home">
-
   <a
-  href="/index-mecha"
+  href="/"
   style="
     position: fixed;
     right: 24px;
     bottom: 24px;
     z-index: 9999;
     padding: 10px 18px;
-    background: #ffc107;
-    color: #111;
+    background: #263238;
+    color: #ffc107;
     text-decoration: none;
     font-size: 13px;
     font-weight: 800;
-    border: 1px solid #ffd54f;
+    border: 1px solid #ffc107;
   "
 >
-  切换到机能风
+  切换到黑金风
 </a>
   <div class="home-background-glow"></div>
 
@@ -74,9 +78,23 @@
       -->
       
 
-      <div class="hero-visual-layer"></div>
-      <div class="hero-orbit hero-orbit-one"></div>
-      <div class="hero-orbit hero-orbit-two"></div>
+      <div class="hero-shoe-3d">
+        <model-viewer
+          src="/models/hero/harson-male-loafer-web.glb"
+          alt="HARSON 男士鞋款 3D 展示"
+          camera-controls
+          auto-rotate
+          rotation-per-second="12deg"
+          shadow-intensity="0.9"
+          shadow-softness="0.8"
+          exposure="1"
+          camera-orbit="35deg 70deg 105%"
+          min-camera-orbit="auto auto 65%"
+          max-camera-orbit="auto auto 160%"
+          interaction-prompt="none"
+          touch-action="pan-y">
+        </model-viewer>
+      </div>
 
       <div class="container hero-grid">
         <div class="hero-content">
