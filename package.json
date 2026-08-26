@@ -25,6 +25,7 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^9.6.3",
+    "multer": "^2.2.0",
     "nanoid": "^3.3.7"
   },
   "devDependencies": {

@@ -9,6 +9,8 @@ const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 const authRoutes = require("./src/routes/authRoutes");
 const aigcAccountRoutes = require("./src/routes/aigcAccountRoutes");
+const aiRoutes =
+  require("./src/routes/aiRoutes");
 const masterOwnerModel = require(
   "./src/models/aigcMasterOwnerCsvModel"
 );
@@ -92,6 +94,26 @@ app.use(
     }
   }),
   aigcAccountRoutes
+);
+
+app.use(
+  "/api/ai",
+
+  rateLimit({
+    windowMs:
+      15 * 60 * 1000,
+
+    max: 30,
+
+    message: {
+      success: false,
+
+      message:
+        "AI 请求过于频繁，请稍后重试。"
+    }
+  }),
+
+  aiRoutes
 );
 
 app.get(

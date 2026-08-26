@@ -69,3 +69,6 @@ data/aigc-reset-backup-*/
 
 .env.*
 !.env.example
+
+# Runtime AIGC generated media
+public/generated/
