@@ -14,6 +14,11 @@ const imageController =
     "../controllers/imageController"
   );
 
+const videoController =
+  require(
+    "../controllers/videoController"
+  );
+
 const {
   requireAuth
 } =
@@ -25,16 +30,6 @@ const router =
   express.Router();
 
 
-/*
-  图片上传先暂存在服务器内存中。
-
-  当前限制：
-  - 最大 10 MB
-  - 只允许图片 MIME 类型
-
-  后续 imageController 会把这里收到的图片
-  转交给 Seedream 做图片编辑。
-*/
 const upload =
   multer({
     storage:
@@ -75,36 +70,36 @@ const upload =
 
 router.post(
   "/chat",
-
   requireAuth,
-
   aiController.chat
 );
 
 
-/*
-  两种请求都继续使用同一个接口：
-
-  纯文本：
-  POST /api/ai/image
-  Content-Type: application/json
-
-  图片编辑：
-  POST /api/ai/image
-  Content-Type: multipart/form-data
-  image = 上传图片
-  prompt = 修改要求
-*/
 router.post(
   "/image",
-
   requireAuth,
-
   upload.single(
     "image"
   ),
-
   imageController.generateImage
+);
+
+
+/*
+  PoC 视频生成接口：
+  POST /api/ai/video
+
+  当前：
+  - Seedance 1.5 Pro
+  - 文生视频
+  - 4 秒默认
+  - 720p 默认
+  - draft 样片模式
+*/
+router.post(
+  "/video",
+  requireAuth,
+  videoController.generateVideo
 );
 
 

@@ -762,9 +762,38 @@
   function scrollChatToBottom() {
     if (!resultPanel) return;
 
+    const scrollToLatest = () => {
+      resultPanel.scrollTop =
+        resultPanel.scrollHeight;
+    };
+
+    /*
+      第一次：DOM 插入后的下一帧。
+    */
     window.requestAnimationFrame(() => {
-      resultPanel.scrollTop = resultPanel.scrollHeight;
+      scrollToLatest();
+
+      /*
+        第二次：浏览器完成本轮布局后再次校正。
+      */
+      window.requestAnimationFrame(() => {
+        scrollToLatest();
+      });
     });
+
+    /*
+      图片、视频、字体等可能继续改变消息高度，
+      再做两次轻量校正，确保最终停在最新消息。
+    */
+    window.setTimeout(
+      scrollToLatest,
+      80
+    );
+
+    window.setTimeout(
+      scrollToLatest,
+      250
+    );
   }
 
   function isPromptDocked() {
@@ -1851,50 +1880,158 @@
       Mock 阶段显示视频任务占位卡。
     */
     if (messageType === "video") {
-      const media = document.createElement("div");
-      media.className =
-        "cl-chat-media cl-chat-media--video";
+  const media = document.createElement("div");
+  media.className =
+    "cl-chat-media cl-chat-media--video";
 
-      if (message.media?.url) {
-        const video = document.createElement("video");
-        video.src = message.media.url;
-        video.controls = true;
-        video.playsInline = true;
-        video.preload = "metadata";
+  if (message.media?.url) {
+    const video = document.createElement("video");
+    video.src = message.media.url;
+    video.controls = true;
+    video.playsInline = true;
+    video.preload = "metadata";
 
-        media.appendChild(video);
-      } else {
-        const placeholder =
-          document.createElement("div");
+    media.appendChild(video);
 
-        placeholder.className =
-          "cl-chat-media__placeholder";
+    const downloadLink =
+      document.createElement("a");
 
-        const icon =
-          document.createElement("span");
-        icon.className =
-          "cl-chat-media__icon";
-        icon.textContent = "▶";
+    downloadLink.className =
+      "cl-chat-media__download";
 
-        const title =
-          document.createElement("strong");
-        title.textContent =
-          "视频生成任务";
+    downloadLink.href = "#";
 
-        const description =
-          document.createElement("span");
-        description.textContent =
-          "当前为 Mock 模式，真实视频模型尚未接入。";
+    downloadLink.addEventListener(
+      "click",
+      async event => {
+        event.preventDefault();
+        event.stopPropagation();
 
-        placeholder.appendChild(icon);
-        placeholder.appendChild(title);
-        placeholder.appendChild(description);
+        try {
+          const originalHtml =
+            downloadLink.innerHTML;
 
-        media.appendChild(placeholder);
+          downloadLink.style.pointerEvents =
+            "none";
+
+          const response = await fetch(
+            message.media.url
+          );
+
+          if (!response.ok) {
+            throw new Error(
+              `视频下载失败：${response.status}`
+            );
+          }
+
+          const blob =
+            await response.blob();
+
+          const blobUrl =
+            URL.createObjectURL(blob);
+
+          const tempLink =
+            document.createElement("a");
+
+          tempLink.href =
+            blobUrl;
+
+          tempLink.download =
+            `cl-aigc-video-${Date.now()}.mp4`;
+
+          document.body.appendChild(
+            tempLink
+          );
+
+          tempLink.click();
+          tempLink.remove();
+
+          window.setTimeout(() => {
+            URL.revokeObjectURL(
+              blobUrl
+            );
+          }, 1000);
+
+          downloadLink.innerHTML =
+            originalHtml;
+        } catch (error) {
+          console.error(
+            "[CL-AIGC Video Download Error]",
+            error
+          );
+
+          alert(
+            "视频下载失败，请稍后重试。"
+          );
+        } finally {
+          downloadLink.style.pointerEvents =
+            "";
+        }
       }
+    );
 
-      bubble.appendChild(media);
-    }
+    downloadLink.setAttribute(
+      "aria-label",
+      "下载视频"
+    );
+
+    downloadLink.innerHTML = `
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none">
+        <path
+          d="M12 4V14"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+        <path
+          d="M8.5 10.5L12 14L15.5 10.5"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M5 18H19"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+      </svg>
+    `;
+
+    media.appendChild(downloadLink);
+  } else {
+    const placeholder =
+      document.createElement("div");
+
+    placeholder.className =
+      "cl-chat-media__placeholder";
+
+    const icon =
+      document.createElement("span");
+    icon.className =
+      "cl-chat-media__icon";
+    icon.textContent = "▶";
+
+    const title =
+      document.createElement("strong");
+    title.textContent =
+      "视频生成任务";
+
+    const description =
+      document.createElement("span");
+    description.textContent =
+      "当前为 Mock 模式，真实视频模型尚未接入。";
+
+    placeholder.appendChild(icon);
+    placeholder.appendChild(title);
+    placeholder.appendChild(description);
+
+    media.appendChild(placeholder);
+  }
+
+  bubble.appendChild(media);
+}
 
     wrapper.appendChild(meta);
     wrapper.appendChild(bubble);
@@ -2489,50 +2626,120 @@
     }
 
 
-    /* =====================================================
-       视频生成
-       当前继续 Mock
-       ===================================================== */
-
-    if (
+        if (
       resolvedTaskType ===
       "video"
     ) {
-      if (!USE_MOCK_VIDEO_AI) {
-        throw new Error(
-          "真实视频生成服务尚未接入"
-        );
+      /*
+        Mock 模式：仅用于前端演示
+      */
+      if (USE_MOCK_VIDEO_AI) {
+        await wait(500);
+
+        return {
+          success: true,
+
+          result: {
+            provider:
+              internalProvider,
+
+            model:
+              getPublicAssistantLabel(
+                "video"
+              ),
+
+            type:
+              "video",
+
+            content:
+              "已识别为视频生成任务。当前为演示模式，真实视频服务暂未调用。",
+
+            media: {
+              status:
+                "mock",
+
+              prompt:
+                message,
+
+              model:
+                "video-mock"
+            }
+          }
+        };
       }
 
-      await wait(500);
+      /*
+        真实模式：调用后端 /api/ai/video
+      */
+      const response =
+        await fetch(
+          "/api/ai/video",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json"
+            },
+
+            body:
+              JSON.stringify({
+                prompt:
+                  message,
+
+                duration: 5,
+                resolution: "720p",
+                ratio: "16:9"
+              })
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (
+        !response.ok ||
+        !data.success
+      ) {
+        throw new Error(
+          data.message ||
+          "视频生成失败"
+        );
+      }
 
       return {
         success: true,
 
         result: {
-          provider:
-            internalProvider,
+          ...data.result,
+
+          type:
+            "video",
 
           model:
             getPublicAssistantLabel(
               "video"
             ),
 
-          type:
-            "video",
-
           content:
-            "已识别为视频生成任务。当前先使用 Mock 结果验证聊天工作区的视频消息结构。",
+            data.result.content ||
+            "鞋履视频任务已创建。",
 
           media: {
+            ...data.result.media,
+
             status:
-              "mock",
+              data.result.media?.status ||
+              "submitted",
 
             prompt:
+              data.result.media?.prompt ||
               message,
 
             model:
-              "video-mock"
+              data.result.media?.model ||
+              data.result.model ||
+              "seedance"
           }
         }
       };
@@ -2728,10 +2935,18 @@
       pendingText
     );
 
-    renderConversationHistory();
+        renderConversationHistory();
 
-    const originalButtonText =
-      submitButton?.textContent || "→";
+        /*
+          用户点击发送后立即清空输入框。
+          message 已经在上方保存，因此不会影响实际发送内容。
+        */
+        if (input) {
+          input.value = "";
+        }
+
+        const originalButtonText =
+          submitButton?.textContent || "→";
 
     if (input) {
       input.disabled = true;
@@ -2802,9 +3017,7 @@
       renderConversation(conversation);
       renderConversationHistory();
 
-      if (input) {
-        input.value = "";
-      }
+     
 
       if (
         imageFileForRequest &&

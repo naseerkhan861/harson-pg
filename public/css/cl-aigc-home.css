@@ -1593,3 +1593,402 @@ span:last-child {
     pointer-events: auto;
   }
 }
+
+.cl-chat-media--video {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  background: #f5f5f7;
+}
+
+.cl-chat-media--video video {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: inherit;
+  background: #000;
+}
+
+.cl-chat-media--video .cl-chat-media__download {
+  position: absolute;
+  right: 16px;
+  bottom: 40px;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(17, 24, 39, 0.72);
+  color: #ffffff;
+  text-decoration: none;
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease,
+    background 0.22s ease;
+  z-index: 3;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.cl-chat-media--video:hover .cl-chat-media__download,
+.cl-chat-media--video:focus-within .cl-chat-media__download {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  z-index: 999;
+}
+
+.cl-chat-media--video .cl-chat-media__download:hover {
+  background: rgba(91, 95, 255, 0.96);
+}
+
+.cl-chat-media--video .cl-chat-media__download svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* =========================================================
+   Workspace desktop full-page layout
+   仅调整工作空间布局，不修改现有功能组件
+   ========================================================= */
+
+@media (min-width: 761px) {
+
+  /*
+    Workspace 本身占满导航栏以下的整个视口。
+  */
+  .cl-workspace {
+    width: 100%;
+    height: calc(100dvh - 58px);
+    min-height: calc(100dvh - 58px);
+
+    padding: 0;
+
+    background: #ffffff;
+
+    border-top:
+      1px solid var(--line);
+
+    scroll-margin-top: 58px;
+  }
+
+  /*
+    去掉原来的 1180px 居中限制。
+  */
+  .cl-workspace__inner {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+
+    margin: 0;
+
+    display: flex;
+    flex-direction: column;
+  }
+
+  /*
+    Workspace 顶部标题区域保留，
+    但压缩成正常工具栏尺寸。
+  */
+  .cl-workspace__header {
+    flex: 0 0 auto;
+
+    min-height: 68px;
+
+    margin: 0;
+    padding: 14px 28px;
+
+    align-items: center;
+
+    border-bottom:
+      1px solid var(--line);
+
+    background:
+      rgba(255, 255, 255, 0.98);
+  }
+
+  .cl-workspace__eyebrow {
+    margin-bottom: 4px;
+  }
+
+  .cl-workspace__header h2 {
+    font-size: 20px;
+  }
+
+  /*
+    左侧历史 + 右侧聊天真正占满剩余高度。
+    去掉原先 620px 卡片效果。
+  */
+  .cl-workspace__body {
+    width: 100%;
+
+    height: auto;
+    min-height: 0;
+
+    flex: 1 1 auto;
+
+    grid-template-columns:
+      260px
+      minmax(0, 1fr);
+
+    border: 0;
+    border-radius: 0;
+
+    box-shadow: none;
+
+    background: #ffffff;
+  }
+
+  /*
+    左侧栏仍然保留现有所有历史记录功能。
+  */
+  .cl-workspace__sidebar {
+    min-height: 0;
+
+    padding: 22px 18px;
+
+    background: #fafafa;
+
+    border-right:
+      1px solid var(--line);
+  }
+
+  /*
+    右侧聊天区域占满。
+  */
+  .cl-workspace__content {
+    min-width: 0;
+    min-height: 0;
+
+    background: #ffffff;
+  }
+
+  /*
+    当前聊天标题继续保留，
+    但内容和下面聊天区统一视觉中心。
+  */
+  .cl-conversation-header {
+    min-height: 68px;
+
+    padding-left:
+      max(
+        32px,
+        calc((100% - 920px) / 2)
+      );
+
+    padding-right:
+      max(
+        32px,
+        calc((100% - 920px) / 2)
+      );
+  }
+
+  /*
+    整个聊天面板仍然占满，
+    只有“消息内容”收拢到约 920px 视觉区域。
+
+    这样不会出现：
+    AI 在最左边，
+    用户在屏幕最右边。
+  */
+  .cl-ai-result {
+    padding-top: 30px;
+    padding-bottom: 30px;
+
+    padding-left:
+      max(
+        32px,
+        calc((100% - 920px) / 2)
+      );
+
+    padding-right:
+      max(
+        32px,
+        calc((100% - 920px) / 2)
+      );
+  }
+
+  /*
+    不改变聊天气泡功能，
+    只控制桌面端最大阅读宽度。
+  */
+  .cl-chat-message {
+    max-width:
+      min(
+        82%,
+        760px
+      );
+  }
+
+  .cl-chat-message--assistant {
+    max-width:
+      min(
+        84%,
+        820px
+      );
+  }
+
+  /*
+    输入区仍然是原来的那个 clPromptForm。
+    这里只让它和聊天内容对齐。
+  */
+  .cl-workspace-composer {
+    padding-top: 14px;
+    padding-bottom: 18px;
+
+    padding-left:
+      max(
+        32px,
+        calc((100% - 920px) / 2)
+      );
+
+    padding-right:
+      max(
+        32px,
+        calc((100% - 920px) / 2)
+      );
+  }
+
+  .cl-workspace-composer .cl-prompt {
+    width: 100%;
+    max-width: 920px;
+
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* =========================================================
+   Workspace desktop layout refinement
+   保留全部现有功能，只优化空间布局
+   ========================================================= */
+
+@media (min-width: 761px) {
+
+  /* ---------- 顶部 Workspace 标题栏压缩 ---------- */
+
+  .cl-workspace__header {
+    min-height: 52px;
+    margin: 0;
+    padding: 10px 28px;
+
+    align-items: center;
+
+    border-bottom:
+      1px solid var(--line);
+
+    background: #ffffff;
+  }
+
+  .cl-workspace__eyebrow {
+    display: none;
+  }
+
+  .cl-workspace__header h2 {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .cl-workspace__status {
+    padding: 7px 11px;
+    font-size: 10px;
+  }
+
+
+  /* ---------- 当前聊天标题栏也压缩 ---------- */
+
+  .cl-conversation-header {
+    min-height: 58px;
+
+    padding:
+      12px
+      28px;
+
+    align-items: center;
+  }
+
+  .cl-conversation-header__label {
+    margin-bottom: 3px;
+  }
+
+
+  /* ---------- 聊天区域恢复整块空间 ---------- */
+
+  .cl-ai-result {
+    width: 100%;
+
+    padding:
+      28px
+      34px
+      30px;
+
+    gap: 22px;
+  }
+
+  /*
+    AI 靠左。
+    保留原有气泡最大宽度，
+    不再整体居中。
+  */
+  .cl-chat-message--assistant {
+    align-self: flex-start;
+
+    width: fit-content;
+
+    max-width:
+      min(
+        72%,
+        820px
+      );
+  }
+
+  /*
+    用户靠右。
+  */
+  .cl-chat-message--user {
+    align-self: flex-end;
+
+    width: fit-content;
+
+    max-width:
+      min(
+        68%,
+        720px
+      );
+  }
+
+
+  /* ---------- 输入区铺满右侧聊天区域 ---------- */
+
+  .cl-workspace-composer {
+    width: 100%;
+
+    padding:
+      14px
+      28px
+      18px;
+  }
+
+  .cl-workspace-composer .cl-prompt {
+    width: 100%;
+    max-width: none;
+
+    margin: 0;
+  }
+}
+
+/* =========================================================
+   Workspace header cleanup
+   去掉重复的“AI 创作工作区”层级
+   ========================================================= */
+
+@media (min-width: 761px) {
+  .cl-workspace__header {
+    display: none;
+  }
+}
