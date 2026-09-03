@@ -9,6 +9,7 @@ const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 const authRoutes = require("./src/routes/authRoutes");
 const aigcAccountRoutes = require("./src/routes/aigcAccountRoutes");
+const ssoRoutes = require("./src/routes/ssoRoutes");
 const masterOwnerModel = require(
   "./src/models/aigcMasterOwnerCsvModel"
 );
@@ -86,6 +87,19 @@ app.use(
     }
   }),
   aigcAccountRoutes
+);
+
+app.use(
+  "/api/sso",
+  rateLimit({
+    windowMs: 60 * 1000,
+    max: 20,
+    message: {
+      success: false,
+      message: "Too many requests. Please try again later."
+    }
+  }),
+  ssoRoutes
 );
 
 app.get(

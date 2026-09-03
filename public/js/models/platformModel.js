@@ -143,6 +143,40 @@ export const platformModel = {
           "fas fa-shopping-cart"
         ]
       ]
+    },
+
+    {
+      id: "foot-measure",
+      title: "3D 足型测量",
+      ssoUrl: "/api/sso/foot-entry",
+      subtitle: "3D 足测数据采集与分析平台",
+      description: "面向门店与客户，支持足型三维扫描、测量数据管理与数字鞋楦，帮助门店提供个性化选鞋服务。",
+      badge: "足测数智",
+      actionLabel: "进入足型测量平台",
+      icon: "fas fa-shoe-prints",
+      badgeIcon: "fas fa-ruler-combined",
+      features: [
+        [
+          "足型三维扫描",
+          "毫米级足部数据采集，生成三维足型模型并保存历史记录。",
+          "fas fa-cube"
+        ],
+        [
+          "测量数据分析",
+          "多维度足测指标分析、趋势跟踪与异常足型识别。",
+          "fas fa-chart-bar"
+        ],
+        [
+          "数字鞋楦",
+          "结合测量结果推荐适配鞋楦与鞋码，提升成交与复购。",
+          "fas fa-shoe-prints"
+        ],
+        [
+          "足测报告",
+          "一键生成可视化足型报告，支持门店展示与客户留存。",
+          "fas fa-file-alt"
+        ]
+      ]
     }
   ],
 
