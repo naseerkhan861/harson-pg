@@ -227,7 +227,7 @@ body[data-page="account-management"] .header-icons {
 }
 
 .header-icons i {
-  font-size: 17px;
+  font-size: 18px;
   cursor: pointer;
   transition: color 0.2s ease, transform 0.2s ease;
 }
@@ -2225,3 +2225,1400 @@ body[data-page="account-management"]::before {
   }
 }
 
+
+/* =========================================================
+   Harson-Base Homepage
+   Minimal product-style homepage
+   ========================================================= */
+
+/* ---------- Page ---------- */
+
+body[data-page="home"] {
+  background: #f5f5f7;
+  color: #1d1d1f;
+}
+
+body[data-page="home"]::before {
+  display: none;
+}
+
+/* ---------- Navigation ---------- */
+
+body[data-page="home"] .top-bar {
+  height: 52px;
+
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+
+  background: rgba(250, 250, 252, 0.88);
+
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+/* 整个导航作为一个整体居中 */
+body[data-page="home"] .navbar {
+  min-height: 52px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 38px;
+}
+
+/* H Logo */
+body[data-page="home"] .logo-area {
+  margin: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+}
+
+body[data-page="home"] .logo-icon {
+  width: 22px;
+  height: 22px;
+
+  border: none;
+  border-radius: 50%;
+
+  background: #1d1d1f;
+  color: #ffffff;
+
+  box-shadow: none;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+body[data-page="home"] .logo-icon::after {
+  display: none;
+}
+
+/* 中间菜单 */
+body[data-page="home"] .nav-links {
+  width: auto;
+
+  margin: 0;
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 36px;
+}
+
+body[data-page="home"] .nav-links a {
+  height: 22px;
+
+  display: flex;
+  align-items: center;
+
+  color: #1d1d1f;
+
+  font-size: 12px;
+  line-height: 22px;
+  font-weight: 400;
+
+  text-decoration: none;
+}
+
+body[data-page="home"] .nav-links a:hover {
+  color: #0071e3;
+}
+
+/* 右侧账户 */
+body[data-page="home"] .header-icons {
+  margin: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  color: #1d1d1f;
+}
+
+body[data-page="home"] .account-avatar,
+body[data-page="home"] .account-avatar-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body[data-page="home"] .account-avatar-text {
+  color: #1d1d1f;
+}
+
+body[data-page="home"] .account-avatar-text i {
+  font-size: 19px;
+}
+
+
+/* =========================================================
+   Navigation scroll motion
+   ========================================================= */
+
+body[data-page="home"] .top-bar {
+  transition:
+    background-color 350ms ease,
+    border-color 350ms ease,
+    box-shadow 350ms ease;
+}
+
+body[data-page="home"] .top-bar.is-scrolled {
+  background: rgba(255, 255, 255, 0.97);
+
+  border-bottom-color:
+    rgba(0, 0, 0, 0.10);
+
+  box-shadow:
+    0 10px 30px
+    rgba(0, 0, 0, 0.10);
+
+  backdrop-filter:
+    saturate(190%)
+    blur(28px);
+
+  -webkit-backdrop-filter:
+    saturate(190%)
+    blur(28px);
+}
+
+/* ---------- Hero ---------- */
+
+body[data-page="home"] .apple-hero {
+  height: 580px;
+  min-height: 580px;
+
+  padding: 0;
+
+  display: block;
+
+  overflow: hidden;
+
+  border: none;
+
+  background: #f5f5f7;
+  background-image: url("/images/home-banners/home-hero5.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+body[data-page="home"] .apple-hero::before,
+body[data-page="home"] .apple-hero::after {
+  display: none;
+}
+
+.apple-hero-inner {
+  height: 100%;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+}
+/* =========================================================
+   Hero Text Soft Reveal
+   Performance optimized
+   ========================================================= */
+
+body[data-page="home"] .hero-content h1,
+body[data-page="home"] .hero-content .hero-subtitle,
+body[data-page="home"] .hero-content .hero-actions {
+  opacity: 0;
+
+  animation:
+    heroSoftReveal
+    900ms
+    cubic-bezier(0.22, 1, 0.36, 1)
+    forwards;
+}
+
+
+/* Harson-Base */
+
+body[data-page="home"] .hero-content h1 {
+  animation-delay: 100ms;
+}
+
+
+/* 副标题 */
+
+body[data-page="home"] .hero-content .hero-subtitle {
+  animation-delay: 260ms;
+}
+
+
+/* 按钮 */
+
+body[data-page="home"] .hero-content .hero-actions {
+  animation-delay: 420ms;
+}
+
+
+@keyframes heroSoftReveal {
+
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+
+  body[data-page="home"] .hero-content h1,
+  body[data-page="home"] .hero-content .hero-subtitle,
+  body[data-page="home"] .hero-content .hero-actions {
+    opacity: 1;
+
+    animation: none;
+  }
+
+}
+
+/* ---------- Hero typography ---------- */
+
+body[data-page="home"] .hero-content {
+  width: 100%;
+  max-width: 900px;
+
+  margin: 0 auto;
+
+  text-align: center;
+
+  /* Hero 文案位于中下区域 */
+  transform: translateY(80px);
+}
+
+body[data-page="home"] .hero-content h1 {
+  margin: 0;
+
+  color: #1d1d1f;
+
+  font-size: clamp(58px, 5vw, 72px);
+  line-height: 1.02;
+
+  font-weight: 600;
+
+  letter-spacing: -2.8px;
+}
+
+body[data-page="home"] .hero-content .hero-subtitle {
+  max-width: 900px;
+
+  margin: 20px auto 0;
+
+  color: #6e6e73;
+
+  font-size: 24px;
+  line-height: 1.3;
+
+  font-weight: 400;
+
+  letter-spacing: -0.6px;
+}
+
+
+/* ---------- Hero actions ---------- */
+
+.hero-actions {
+  margin-top: 24px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 34px;
+}
+
+.hero-action-link {
+  appearance: none;
+
+  border: none;
+
+  padding: 5px 0;
+
+  background: transparent;
+  color: #0066cc;
+
+  font-family: inherit;
+
+  font-size: 17px;
+  line-height: 1.4;
+  font-weight: 400;
+
+  text-decoration: none;
+
+  cursor: pointer;
+}
+
+.hero-action-link:hover {
+  text-decoration: underline;
+}
+
+.hero-action-link i {
+  margin-left: 5px;
+  font-size: 10px;
+}
+
+
+/* ---------- Future hero artwork ---------- */
+
+.hero-media-slot {
+  display: none;
+}
+
+
+/* ---------- Tablet ---------- */
+
+@media (max-width: 900px) {
+  body[data-page="home"] .nav-links {
+    display: none;
+  }
+
+  body[data-page="home"] .hero-content {
+    max-width: 720px;
+    transform: translateY(105px);
+  }
+
+  body[data-page="home"] .hero-content h1 {
+    font-size: clamp(50px, 8vw, 64px);
+  }
+}
+
+
+/* ---------- Mobile ---------- */
+
+@media (max-width: 600px) {
+  body[data-page="home"] .container {
+    width: calc(100% - 32px);
+  }
+
+  body[data-page="home"] .apple-hero {
+    height: 500px;
+    min-height: 500px;
+  }
+
+  body[data-page="home"] .hero-content {
+    max-width: 100%;
+    transform: translateY(75px);
+  }
+
+  body[data-page="home"] .hero-content h1 {
+    font-size: 42px;
+    line-height: 1.05;
+
+    letter-spacing: -1.8px;
+  }
+
+  body[data-page="home"] .hero-content .hero-subtitle {
+    max-width: 340px;
+
+    margin-top: 16px;
+
+    font-size: 18px;
+  }
+
+  .hero-actions {
+    margin-top: 20px;
+
+    gap: 25px;
+  }
+
+  .hero-action-link {
+    font-size: 16px;
+  }
+}
+
+/* =========================================================
+   Harson-Base Platform Story
+   ========================================================= */
+
+.platform-story {
+  position: relative;
+
+  background:
+    linear-gradient(
+      rgba(255, 255, 255, 0.28),
+      rgba(255, 255, 255, 0.28)
+    ),
+    url("/images/home-banners/platform-story-bg1.png");
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  color: #1d1d1f;
+
+  padding: 130px 0 140px;
+}
+
+.platform-story-inner {
+  max-width: 1120px;
+
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+
+  gap: 110px;
+
+  align-items: start;
+}
+
+/* Left */
+
+.platform-story-heading {
+  max-width: 610px;
+}
+
+.platform-story-kicker {
+  display: block;
+
+  margin-bottom: 28px;
+
+  color: #86868b;
+
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 500;
+
+  letter-spacing: 0.08em;
+
+  text-transform: uppercase;
+}
+
+.platform-story-heading h2 {
+  margin: 0;
+
+  color: #1d1d1f;
+
+  font-size: clamp(56px, 5.2vw, 78px);
+  line-height: 1.03;
+  font-weight: 600;
+
+  letter-spacing: -3.2px;
+}
+
+/* Right */
+
+.platform-story-content {
+  padding-top: 45px;
+}
+
+.platform-story-lead {
+  margin: 0;
+
+  color: #1d1d1f;
+
+  font-size: 27px;
+  line-height: 1.4;
+  font-weight: 500;
+
+  letter-spacing: -0.8px;
+}
+
+.platform-story-description {
+  margin: 25px 0 0;
+
+  max-width: 470px;
+
+  color: #6e6e73;
+
+  font-size: 18px;
+  line-height: 1.75;
+  font-weight: 400;
+}
+
+.platform-story-link {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 9px;
+
+  margin-top: 36px;
+
+  color: #1d1d1f;
+
+  font-size: 16px;
+  font-weight: 500;
+
+  text-decoration: none;
+
+  border-bottom: 1px solid #1d1d1f;
+
+  padding-bottom: 4px;
+}
+
+.platform-story-link i {
+  font-size: 11px;
+
+  transition: transform 0.2s ease;
+}
+
+.platform-story-link:hover i {
+  transform: translateX(4px);
+}
+
+
+/* Tablet */
+
+@media (max-width: 900px) {
+  .platform-story {
+    padding: 90px 0 100px;
+  }
+
+  .platform-story-inner {
+    grid-template-columns: 1fr;
+
+    gap: 48px;
+  }
+
+  .platform-story-content {
+    padding-top: 0;
+  }
+
+  .platform-story-heading h2 {
+    font-size: 56px;
+  }
+}
+
+
+/* Mobile */
+
+@media (max-width: 600px) {
+  .platform-story {
+    padding: 72px 0 80px;
+  }
+
+  .platform-story-inner {
+    gap: 38px;
+  }
+
+  .platform-story-kicker {
+    margin-bottom: 20px;
+  }
+
+  .platform-story-heading h2 {
+    font-size: 44px;
+
+    letter-spacing: -2px;
+  }
+
+  .platform-story-lead {
+    font-size: 23px;
+  }
+
+  .platform-story-description {
+    font-size: 17px;
+  }
+}
+
+/* Anthropic-inspired story motion */
+
+body[data-page="home"] .platform-story .scroll-reveal {
+  opacity: 0;
+
+  transform: translateY(30px);
+
+  transition:
+    opacity 760ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 860ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+body[data-page="home"] .platform-story .scroll-reveal.is-visible {
+  opacity: 1;
+
+  transform: translateY(0);
+}
+
+/* Story title line-by-line reveal */
+
+.platform-story-line {
+  display: block;
+}
+
+body[data-page="home"]
+.platform-story-line.scroll-reveal {
+  opacity: 0;
+
+  transform: translateY(34px);
+
+  clip-path: inset(0 0 100% 0);
+
+  transition:
+    opacity 760ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 900ms cubic-bezier(0.22, 1, 0.36, 1),
+    clip-path 900ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+body[data-page="home"]
+.platform-story-line.scroll-reveal.is-visible {
+  opacity: 1;
+
+  transform: translateY(0);
+
+  clip-path: inset(0 0 0 0);
+
+}
+
+/* =========================================================
+   Featured Apps
+   ========================================================= */
+
+body[data-page="home"] .platform-section {
+  padding: 0;
+  margin: 0;
+  background: #f5f5f7;
+  overflow: hidden;
+}
+
+
+/* =========================================================
+   Featured Apps Main Container
+   卡片接近全屏
+   ========================================================= */
+
+body[data-page="home"] .platform-section > .container {
+  width: 100%;
+  max-width: none !important;
+
+  margin: 0;
+
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+
+
+
+/* =========================================================
+   Featured Apps Grid
+   ========================================================= */
+
+body[data-page="home"] .platform-grid {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 10px;
+}
+
+
+/* =========================================================
+   Featured App Card
+   ========================================================= */
+
+.featured-app-card {
+  position: relative;
+
+  width: 100%;
+
+  aspect-ratio: 1.42 / 1;
+
+  min-width: 0;
+
+  overflow: hidden;
+
+  background: #e9e9eb;
+
+  isolation: isolate;
+}
+
+
+/* =========================================================
+   App Background
+   ========================================================= */
+
+.featured-app-visual {
+  position: absolute;
+
+  inset: 0;
+
+  z-index: 0;
+
+  background-position: center;
+
+  background-repeat: no-repeat;
+
+  background-size: cover;
+
+  transition:
+    transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+
+.featured-app-card:hover .featured-app-visual {
+  transform: scale(1.018);
+}
+
+
+/* =========================================================
+   Dark Card Overlay
+   SCM / iStore
+   ========================================================= */
+
+.featured-app-card::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  z-index: 1;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.14) 0%,
+      rgba(0, 0, 0, 0.02) 36%,
+      rgba(0, 0, 0, 0.02) 64%,
+      rgba(0, 0, 0, 0.22) 100%
+    );
+}
+
+
+/* =========================================================
+   Light Card Overlay
+   AIGC / iRobot
+   ========================================================= */
+
+.featured-app-cl-aigc::after,
+.featured-app-cl-irobot::after {
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.16) 0%,
+      rgba(255, 255, 255, 0.02) 38%,
+      rgba(255, 255, 255, 0.02) 66%,
+      rgba(255, 255, 255, 0.14) 100%
+    );
+}
+
+
+/* =========================================================
+   App Copy
+   ========================================================= */
+
+.featured-app-copy {
+  position: absolute;
+
+  top: 38px;
+  left: 42px;
+  right: 42px;
+
+  z-index: 2;
+}
+
+
+
+.featured-app-copy h3 {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: clamp(32px, 2.5vw, 42px);
+
+  line-height: 1.05;
+
+  font-weight: 600;
+
+  letter-spacing: -1.6px;
+}
+
+
+.featured-app-copy p {
+  margin: 9px 0 0;
+
+  color: rgba(255, 255, 255, 0.86);
+
+  font-size: 18px;
+
+  line-height: 1.35;
+
+  font-weight: 400;
+}
+
+
+/* =========================================================
+   App CTA
+   ========================================================= */
+
+.featured-app-link {
+  position: absolute;
+
+  left: 42px;
+  bottom: 34px;
+
+  z-index: 2;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  padding-bottom: 4px;
+
+  border-bottom:
+    1px solid
+    rgba(255, 255, 255, 0.76);
+
+  color: #ffffff;
+
+  font-size: 15px;
+
+  line-height: 1.3;
+
+  font-weight: 500;
+
+  text-decoration: none;
+}
+
+
+.featured-app-link i {
+  font-size: 10px;
+
+  transition:
+    transform 220ms ease;
+}
+
+
+.featured-app-link:hover i {
+  transform: translateX(4px);
+}
+
+
+/* =========================================================
+   Light Card Typography
+   ========================================================= */
+
+
+.featured-app-cl-aigc .featured-app-copy h3,
+.featured-app-cl-irobot .featured-app-copy h3 {
+  color: #1d1d1f;
+}
+
+
+.featured-app-cl-aigc .featured-app-copy p,
+.featured-app-cl-irobot .featured-app-copy p {
+  color: rgba(29, 29, 31, 0.70);
+}
+
+
+.featured-app-cl-aigc .featured-app-link,
+.featured-app-cl-irobot .featured-app-link {
+  color: #1d1d1f;
+
+  border-bottom-color:
+    rgba(29, 29, 31, 0.70);
+}
+
+
+/* =========================================================
+   Featured App Backgrounds
+   ========================================================= */
+
+.featured-app-cl-aigc .featured-app-visual {
+  background-image:
+    url("/images/home-banners/featured-aigc.png");
+
+  background-position: center;
+}
+
+
+.featured-app-cl-scm .featured-app-visual {
+  background-image:
+    url("/images/home-banners/featured-scm.png");
+
+  background-position: center;
+}
+
+
+.featured-app-cl-irobot .featured-app-visual {
+  background-image:
+    url("/images/home-banners/featured-irobot.png");
+
+  background-position: center;
+}
+
+
+.featured-app-cl-istore .featured-app-visual {
+  background-image:
+    url("/images/home-banners/featured-istore.png");
+
+  background-position: center;
+}
+
+
+/* =========================================================
+   Application Ecosystem
+   紧接精选应用，不留白
+   ========================================================= */
+
+.app-ecosystem {
+  margin: 0;
+
+  padding: 118px 0 110px;
+
+  background: #111111;
+
+  color: #f5f5f7;
+}
+
+
+.app-ecosystem > .container {
+  width: min(1180px, calc(100% - 96px));
+
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+/* ---------- Ecosystem Header ---------- */
+
+.app-ecosystem-header {
+  max-width: 980px;
+
+  margin: 0;
+}
+
+
+.app-ecosystem-kicker {
+  display: block;
+
+  margin-bottom: 25px;
+
+  color: #86868b;
+
+  font-size: 12px;
+
+  line-height: 1;
+
+  font-weight: 500;
+
+  letter-spacing: 0.12em;
+
+  text-transform: uppercase;
+}
+
+
+.app-ecosystem-header h2 {
+  margin: 0;
+
+  color: #f5f5f7;
+
+  font-size: clamp(54px, 5.5vw, 78px);
+
+  line-height: 1.03;
+
+  font-weight: 600;
+
+  letter-spacing: -3.2px;
+}
+
+
+.app-ecosystem-header p {
+  max-width: 680px;
+
+  margin: 30px 0 0;
+
+  color: #a1a1a6;
+
+  font-size: 19px;
+
+  line-height: 1.7;
+}
+
+
+/* =========================================================
+   Minimal Footer
+   ========================================================= */
+
+.site-footer {
+  margin: 0;
+
+  background: #050505;
+
+  color: #f5f5f7;
+
+  border-top:
+    1px solid
+    rgba(255, 255, 255, 0.07);
+}
+
+
+.site-footer-inner {
+  width: min(1180px, calc(100% - 96px));
+
+  margin-left: auto;
+  margin-right: auto;
+
+  padding-top: 72px;
+  padding-bottom: 26px;
+}
+
+
+/* =========================================================
+   Footer Main
+   ========================================================= */
+
+.footer-main {
+  display: flex;
+
+  align-items: flex-end;
+
+  justify-content: space-between;
+
+  gap: 80px;
+
+  padding-bottom: 64px;
+}
+
+
+.footer-brand-kicker {
+  display: block;
+
+  margin-bottom: 18px;
+
+  color: #86868b;
+
+  font-size: 11px;
+
+  line-height: 1;
+
+  font-weight: 500;
+
+  letter-spacing: 0.14em;
+}
+
+
+.footer-brand h2 {
+  margin: 0;
+
+  color: #f5f5f7;
+
+  font-size: clamp(34px, 4vw, 52px);
+
+  line-height: 1.05;
+
+  font-weight: 500;
+
+  letter-spacing: -2px;
+}
+
+
+.footer-brand p {
+  margin: 18px 0 0;
+
+  color: #86868b;
+
+  font-size: 15px;
+
+  line-height: 1.6;
+}
+
+
+/* =========================================================
+   Footer Navigation
+   ========================================================= */
+
+.footer-nav {
+  display: flex;
+
+  align-items: center;
+
+  flex-wrap: wrap;
+
+  gap: 28px;
+}
+
+
+.footer-nav a {
+  color: #a1a1a6;
+
+  font-size: 14px;
+
+  font-weight: 400;
+
+  text-decoration: none;
+
+  transition:
+    color 200ms ease;
+}
+
+
+.footer-nav a:hover {
+  color: #ffffff;
+}
+
+
+/* =========================================================
+   Footer Bottom
+   ========================================================= */
+
+.footer-bottom {
+  padding-top: 22px;
+
+  border-top:
+    1px solid
+    rgba(255, 255, 255, 0.08);
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 30px;
+
+  color: #6e6e73;
+
+  font-size: 12px;
+}
+
+
+/* =========================================================
+   Tablet
+   ========================================================= */
+
+@media (max-width: 1000px) {
+
+  body[data-page="home"] .featured-apps-header {
+    width: calc(100% - 64px);
+  }
+
+
+  .featured-app-copy {
+    top: 30px;
+    left: 30px;
+    right: 30px;
+  }
+
+
+  .featured-app-link {
+    left: 30px;
+    bottom: 28px;
+  }
+
+
+  .app-ecosystem {
+    padding:
+      90px
+      0
+      90px;
+  }
+
+
+  .app-ecosystem > .container,
+  .site-footer-inner {
+    width: calc(100% - 64px);
+  }
+
+}
+
+
+/* =========================================================
+   Mobile
+   ========================================================= */
+
+@media (max-width: 800px) {
+
+  body[data-page="home"] .platform-section {
+    padding-top: 28px;
+  }
+
+
+  body[data-page="home"] .platform-section > .container {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+
+  body[data-page="home"] .featured-apps-header {
+    width: calc(100% - 32px);
+
+    margin-bottom: 26px;
+  }
+
+
+  .featured-apps-title h2 {
+    font-size: 44px;
+
+    letter-spacing: -2px;
+  }
+
+
+  body[data-page="home"] .platform-grid {
+    grid-template-columns: 1fr;
+
+    gap: 8px;
+  }
+
+
+  .featured-app-card {
+    aspect-ratio: 4 / 3;
+  }
+
+
+  .featured-app-copy {
+    top: 26px;
+    left: 26px;
+    right: 26px;
+  }
+
+
+  .featured-app-copy h3 {
+    font-size: 34px;
+  }
+
+
+  .featured-app-copy p {
+    font-size: 17px;
+  }
+
+
+  .featured-app-link {
+    left: 26px;
+    bottom: 26px;
+  }
+
+
+  .app-ecosystem {
+    padding:
+      74px
+      0
+      76px;
+  }
+
+
+  .app-ecosystem > .container,
+  .site-footer-inner {
+    width: calc(100% - 32px);
+  }
+
+
+  .app-ecosystem-header h2 {
+    font-size: 44px;
+
+    letter-spacing: -2px;
+  }
+
+
+  .footer-main {
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    gap: 42px;
+
+    padding-bottom: 52px;
+  }
+
+
+  .footer-nav {
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    gap: 16px;
+  }
+
+
+  .footer-bottom {
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    gap: 8px;
+  }
+
+}
+
+
+/* =========================================================
+   Premium Homepage Motion
+   ========================================================= */
+
+/* Featured app entrance */
+
+body[data-page="home"] .featured-app-card.scroll-reveal {
+  opacity: 0;
+
+  transform:
+    translateY(28px)
+    scale(0.99);
+
+  transition:
+    opacity 760ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 950ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  transition-delay:
+    var(--reveal-delay, 0ms);
+}
+
+
+body[data-page="home"]
+.featured-app-card.scroll-reveal.is-visible {
+  opacity: 1;
+
+  transform:
+    translateY(0)
+    scale(1);
+}
+
+
+/* 图片本身再慢半拍 */
+
+body[data-page="home"]
+.featured-app-card.scroll-reveal
+.featured-app-visual {
+  transform: scale(1.045);
+}
+
+
+body[data-page="home"]
+.featured-app-card.scroll-reveal.is-visible
+.featured-app-visual {
+  transform: scale(1);
+}
+
+
+/* Mouse hover */
+
+@media (hover: hover) {
+
+  body[data-page="home"]
+  .featured-app-card.is-visible:hover
+  .featured-app-visual {
+    transform: scale(1.025);
+  }
+
+}

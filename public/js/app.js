@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
     view.render();
 
     initHomeAnchorNavigation();
+    initHomeNavScroll();
 
     requestAnimationFrame(() => {
       forceHomeTopOnRefresh();
@@ -157,6 +158,33 @@ function initHomeAnchorNavigation() {
   }
 }
 
+
+function initHomeNavScroll() {
+  const topBar = document.querySelector(
+    'body[data-page="home"] .top-bar'
+  );
+
+  if (!topBar) {
+    return;
+  }
+
+  const updateNav = () => {
+    if (window.scrollY > 20) {
+      topBar.classList.add("is-scrolled");
+    } else {
+      topBar.classList.remove("is-scrolled");
+    }
+  };
+
+  updateNav();
+
+  window.addEventListener(
+    "scroll",
+    updateNav,
+    { passive: true }
+  );
+}
+
 function initHomeScrollReveal() {
   if (document.body.dataset.page !== "home") {
     return;
@@ -168,9 +196,49 @@ function initHomeScrollReveal() {
 
   const revealGroups = [
     {
-      selector: ".hero-content",
-      effectClass: "reveal-left",
-      stagger: 0
+      selector: ".platform-story-kicker",
+      effectClass: "reveal-up",
+      stagger: 0,
+      delayOffset: 0
+    },
+    {
+      selector: ".platform-story-line",
+      effectClass: "reveal-up",
+      stagger: 130,
+      delayOffset: 100
+    },
+    {
+      selector: ".platform-story-lead",
+      effectClass: "reveal-up",
+      stagger: 0,
+      delayOffset: 360
+    },
+    {
+      selector: ".platform-story-description",
+      effectClass: "reveal-up",
+      stagger: 0,
+      delayOffset: 500
+    },
+    {
+      selector: ".platform-story-link",
+      effectClass: "reveal-up",
+      stagger: 0,
+      delayOffset: 640
+    },
+    {
+      selector: ".featured-app-card",
+      effectClass: "reveal-app",
+      stagger: 120,
+      delayOffset: 80
+    },
+    {
+      selector:
+        ".app-ecosystem-kicker, " +
+        ".app-ecosystem-header h2, " +
+        ".app-ecosystem-header p",
+      effectClass: "reveal-up",
+      stagger: 140,
+      delayOffset: 80
     },
     {
       selector: ".hero-access-card, .hero-summary-card, .hero-suite-card",
@@ -202,11 +270,23 @@ function initHomeScrollReveal() {
   const revealElements = [];
 
   revealGroups.forEach((group) => {
-    const elements = Array.from(document.querySelectorAll(group.selector));
+    const elements = Array.from(
+      document.querySelectorAll(group.selector)
+    );
+
+    const delayOffset = group.delayOffset || 0;
 
     elements.forEach((element, index) => {
-      element.classList.add("scroll-reveal", group.effectClass);
-      element.style.setProperty("--reveal-delay", `${index * group.stagger}ms`);
+      element.classList.add(
+        "scroll-reveal",
+        group.effectClass
+      );
+
+      element.style.setProperty(
+        "--reveal-delay",
+        `${delayOffset + index * group.stagger}ms`
+      );
+
       revealElements.push(element);
     });
   });
@@ -225,18 +305,22 @@ function initHomeScrollReveal() {
 
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("is-visible");
-      } else {
-        entry.target.classList.remove("is-visible");
+      if (!entry.isIntersecting) {
+        return;
       }
+
+      entry.target.classList.add("is-visible");
+
+      observer.unobserve(entry.target);
     });
   }, {
     threshold: 0.14,
     rootMargin: "0px 0px -10% 0px"
   });
 
-  revealElements.forEach((element) => observer.observe(element));
+  revealElements.forEach((element) => {
+    observer.observe(element);
+  });
 }
 
 function injectScrollRevealStyles() {
@@ -2330,7 +2414,7 @@ async function initAccountAvatar() {
   if (!currentUser) {
     avatarButton.classList.remove("logged-in");
     avatarButton.title = "用户登录";
-    avatarText.innerHTML = `<i class="fas fa-user-circle"></i>`;
+    avatarText.innerHTML = `<i class="fa-regular fa-circle-user"></i>`;
 
     avatarButton.addEventListener("click", () => {
       window.location.href = "/login";

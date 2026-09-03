@@ -37,63 +37,63 @@ export class HomeView {
   }
 
   platformTemplate(platform) {
-    const platformTitle = platform.link
-      ? `<a href="${platform.link}">${platform.title}</a>`
-      : platform.title;
+    const appMeta = {
+      "cl-aigc": {
+        title: "CL-AIGC",
+        tagline: "创意生成",
+        link: "/aigc-workspace"
+      },
 
-    const actionButton = platform.link
-      ? `
-        <a class="platform-action" href="${platform.link}">
-          ${platform.actionLabel || "进入平台"} <i class="fas fa-arrow-right"></i>
-        </a>
-      `
-      : `
-        <a class="platform-action" href="#${platform.id}">
-          ${platform.actionLabel || "查看能力"} <i class="fas fa-arrow-right"></i>
-        </a>
-      `;
+      "cl-scm": {
+        title: "CL-SCM",
+        tagline: "供应协同",
+        link: "#cl-scm"
+      },
+
+      "cl-irobot": {
+        title: "CL-iRobot",
+        tagline: "自动化执行",
+        link: "#cl-irobot"
+      },
+
+      "cl-istore": {
+        title: "CL-iStore",
+        tagline: "零售体验",
+        link: "#cl-istore"
+      }
+    };
+
+    const app = appMeta[platform.id];
+
+    if (!app) {
+      return "";
+    }
 
     return `
-      <article class="platform-card platform-product-card" id="${platform.id}">
-        <div class="platform-product-info">
-          <div class="platform-product-top">
-            <div class="platform-icon">
-              <i class="${platform.icon}"></i>
-            </div>
+      <article
+        class="featured-app-card featured-app-${platform.id}"
+        id="${platform.id}"
+      >
+        <div class="featured-app-copy">
+    
 
-            <div class="platform-product-heading">
-              <h2>${platformTitle}</h2>
-              <p>${platform.subtitle}</p>
-            </div>
-          </div>
+          <h3>${app.title}</h3>
 
-          <p class="platform-description">
-            ${platform.description || ""}
-          </p>
-
-          <div class="platform-meta-row">
-            <span class="platform-badge">
-              <i class="${platform.badgeIcon}"></i> ${platform.badge}
-            </span>
-          </div>
-
-          ${actionButton}
+          <p>${app.tagline}</p>
         </div>
 
-        <div class="feature-list">
-          ${platform.features.map(feature => `
-            <div class="feature-item" data-feature="${feature[0]}">
-              <div class="feature-icon">
-                <i class="${feature[2]}"></i>
-              </div>
+        <div
+          class="featured-app-visual"
+          aria-hidden="true"
+        ></div>
 
-              <div class="feature-text">
-                <strong>${feature[0]}</strong>
-                <span>${feature[1]}</span>
-              </div>
-            </div>
-          `).join("")}
-        </div>
+        <a
+          class="featured-app-link"
+          href="${app.link}"
+        >
+          探索 ${app.title}
+          <i class="fas fa-arrow-right"></i>
+        </a>
       </article>
     `;
   }
