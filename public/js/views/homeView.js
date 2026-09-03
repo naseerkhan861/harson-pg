@@ -41,17 +41,26 @@ export class HomeView {
       ? `<a href="${platform.link}">${platform.title}</a>`
       : platform.title;
 
-    const actionButton = platform.link
-      ? `
+    let actionButton;
+    if (platform.ssoUrl) {
+      actionButton = `
+        <a class="platform-action sso-entry" href="${platform.ssoUrl}" data-sso-url="${platform.ssoUrl}">
+          ${platform.actionLabel || "进入平台"} <i class="fas fa-arrow-right"></i>
+        </a>
+      `;
+    } else if (platform.link) {
+      actionButton = `
         <a class="platform-action" href="${platform.link}">
           ${platform.actionLabel || "进入平台"} <i class="fas fa-arrow-right"></i>
         </a>
-      `
-      : `
+      `;
+    } else {
+      actionButton = `
         <a class="platform-action" href="#${platform.id}">
           ${platform.actionLabel || "查看能力"} <i class="fas fa-arrow-right"></i>
         </a>
       `;
+    }
 
     return `
       <article class="platform-card platform-product-card" id="${platform.id}">
@@ -166,6 +175,59 @@ export class HomeView {
             behavior: "smooth",
             block: "start"
           });
+        }
+      });
+    });
+
+    this.bindSsoEntries();
+  }
+
+  /**
+   * 绑定 SSO 跳转入口（如「3D 足型测量」卡片）。
+   *
+   * 点击后请求同源接口 /api/sso/foot-entry：
+   *  - 已登录：接口返回免登录跳转 URL，浏览器整页跳转到目标系统。
+   *  - 未登录：接口返回 401，跳转到本系统登录页。
+   */
+  bindSsoEntries() {
+    const ssoLinks = document.querySelectorAll(".platform-action[data-sso-url]");
+
+    if (!ssoLinks.length) {
+      return;
+    }
+
+    ssoLinks.forEach(link => {
+      link.addEventListener("click", async event => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const ssoUrl = link.dataset.ssoUrl;
+
+        try {
+          const response = await fetch(ssoUrl, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+              "Accept": "application/json"
+            }
+          });
+
+          if (response.status === 401) {
+            window.location.href = "/login";
+            return;
+          }
+
+          const result = await response.json().catch(() => null);
+
+          if (response.ok && result && result.url) {
+            window.location.href = result.url;
+            return;
+          }
+
+          alert((result && result.message) || "跳转失败，请稍后重试或直接登录目标系统。");
+        } catch (error) {
+          console.error("SSO 跳转失败", error);
+          alert("跳转失败，请稍后重试或直接登录目标系统。");
         }
       });
     });
