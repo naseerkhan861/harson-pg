@@ -1,0 +1,1994 @@
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-soft: #f7f7f8;
+  --surface-muted: #fafafa;
+  --text: #111317;
+  --text-secondary: #34373d;
+  --muted: #858991;
+  --muted-light: #a3a5aa;
+  --line: rgba(17, 19, 23, 0.06);
+  --line-strong: rgba(17, 19, 23, 0.09);
+  --accent: #5d55f6;
+  --accent-hover: #4e45ef;
+  --accent-soft: #f1f0ff;
+  --shadow-md: 0 16px 42px rgba(20, 22, 28, 0.10);
+  --shadow-lg: 0 24px 64px rgba(18, 20, 28, 0.13);
+  --radius-sm: 11px;
+  --radius-lg: 22px;
+  --radius-xl: 26px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "PingFang SC",
+    "Microsoft YaHei",
+    "Segoe UI",
+    sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+/* Header */
+
+.cl-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: 58px;
+  padding: 0 38px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px);
+}
+
+.cl-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.cl-brand__name {
+  font-size: 22px;
+  font-weight: 780;
+  letter-spacing: -0.04em;
+}
+
+.cl-brand__beta {
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #efeff1;
+  color: #666a72;
+  font-size: 9px;
+  font-weight: 720;
+}
+
+.cl-nav {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.cl-nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 560;
+  transition: color 160ms ease;
+}
+
+.cl-nav a:hover {
+  color: var(--text);
+}
+
+/* Hero */
+
+.cl-hero {
+  width: min(1500px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 48px 0 56px;
+}
+
+.cl-hero__copy {
+  text-align: center;
+}
+
+.cl-hero h1 {
+  margin: 0;
+  color: #101216;
+  font-size: clamp(42px, 3.6vw, 58px);
+  line-height: 1.05;
+  font-weight: 790;
+  letter-spacing: -0.05em;
+}
+
+.cl-hero__copy p {
+  max-width: 760px;
+  margin: 15px auto 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+/* Prompt + model picker */
+
+.cl-carousel-section {
+  margin-top: 12px;
+}
+
+.cl-carousel-shell {
+  position: relative;
+  width: min(1400px, 100%);
+  margin: 0 auto;
+  padding: 10px 0 8px;
+  overflow: hidden;
+}
+
+.cl-prompt {
+  position: relative;
+  z-index: 30;
+  width: min(1000px, calc(100% - 40px));
+  min-height: 76px;
+  margin: 0 auto 26px;
+  padding: 9px 10px 9px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid rgba(17, 19, 23, 0.055);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(16px);
+}
+
+.cl-prompt input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.cl-prompt input::placeholder {
+  color: #a7aab0;
+}
+
+.cl-prompt__submit {
+  width: 54px;
+  height: 54px;
+  flex: 0 0 54px;
+  border: 0;
+  border-radius: 17px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  font-size: 29px;
+  box-shadow: 0 10px 28px rgba(93, 85, 246, 0.24);
+  transition:
+    transform 180ms ease,
+    background 180ms ease,
+    opacity 180ms ease;
+}
+
+.cl-prompt__submit:hover {
+  transform: translateY(-1px);
+  background: var(--accent-hover);
+}
+
+.cl-prompt__submit:disabled {
+  cursor: default;
+  opacity: 0.72;
+  transform: none;
+}
+
+.cl-model-picker {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.cl-model-button {
+  height: 44px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  border-radius: 13px;
+  background: #f5f5f7;
+  color: #292b30;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition:
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.cl-model-button:hover {
+  background: #ededf1;
+}
+
+.cl-model-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(93, 85, 246, 0.10);
+}
+
+.cl-model-arrow {
+  margin-left: 2px;
+  color: #8f9299;
+  font-size: 12px;
+}
+
+.cl-model-menu {
+  position: absolute;
+  z-index: 100;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 154px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 12px 32px rgba(20, 22, 28, 0.10);
+  backdrop-filter: blur(18px);
+}
+
+.cl-model-option {
+  width: 100%;
+  height: 38px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #25272b;
+  cursor: pointer;
+}
+
+.cl-model-option:hover {
+  background: #f6f6f8;
+}
+
+.cl-model-option.is-active {
+  background: var(--accent-soft);
+}
+
+.cl-model-option span {
+  font-size: 12px;
+  font-weight: 620;
+}
+
+.cl-model-option small {
+  margin-left: auto;
+  font-size: 0;
+}
+
+.cl-model-option small::after {
+  content: "";
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #c8c9ce;
+}
+
+.cl-model-option.is-active small::after {
+  background: var(--accent);
+}
+
+/* Carousel */
+
+.cl-carousel-stage {
+  position: relative;
+  height: 430px;
+}
+
+.cl-slide {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 350px;
+  height: 390px;
+  overflow: hidden;
+  border-radius: 24px;
+  background: #f4f2ef;
+  box-shadow: 0 16px 46px rgba(18, 20, 28, 0.08);
+  transform-origin: center center;
+  opacity: 0;
+  transition:
+    transform 760ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 760ms ease,
+    filter 760ms ease,
+    box-shadow 760ms ease;
+}
+
+.cl-slide img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+}
+
+.cl-slide::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(251, 250, 248, 0.92) 0%,
+      rgba(251, 250, 248, 0.58) 14%,
+      rgba(251, 250, 248, 0.10) 29%,
+      rgba(251, 250, 248, 0) 46%
+    );
+}
+
+.cl-slide__meta {
+  position: absolute;
+  z-index: 4;
+  top: 20px;
+  right: 20px;
+  left: 21px;
+}
+
+.cl-slide__meta span {
+  display: block;
+  margin-bottom: 5px;
+  color: #9a9ca1;
+  font-size: 9px;
+  font-weight: 550;
+}
+
+.cl-slide__meta h2 {
+  margin: 0;
+  color: #17191d;
+  font-size: 15px;
+  line-height: 1.3;
+  font-weight: 630;
+  letter-spacing: -0.02em;
+}
+
+.cl-slide.is-active {
+  z-index: 8;
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+  filter: saturate(1) brightness(1);
+  box-shadow: var(--shadow-lg);
+}
+
+.cl-slide.is-prev {
+  z-index: 5;
+  opacity: 0.66;
+  transform: translateX(calc(-50% - 330px)) scale(0.90);
+  filter: saturate(0.88) brightness(1.02);
+}
+
+.cl-slide.is-next {
+  z-index: 5;
+  opacity: 0.66;
+  transform: translateX(calc(-50% + 330px)) scale(0.90);
+  filter: saturate(0.88) brightness(1.02);
+}
+
+.cl-slide.is-far-prev {
+  z-index: 2;
+  opacity: 0.16;
+  transform: translateX(calc(-50% - 585px)) scale(0.74);
+  filter: saturate(0.5) brightness(1.08);
+}
+
+.cl-slide.is-far-next {
+  z-index: 2;
+  opacity: 0.16;
+  transform: translateX(calc(-50% + 585px)) scale(0.74);
+  filter: saturate(0.5) brightness(1.08);
+}
+
+.cl-slide:nth-child(1) img {
+  object-position: center 58%;
+}
+
+.cl-slide:nth-child(2) img {
+  object-position: center 56%;
+}
+
+.cl-slide:nth-child(3) img {
+  object-position: center 58%;
+}
+
+.cl-slide:nth-child(4) img {
+  object-position: center 56%;
+}
+
+.cl-slide:nth-child(5) img {
+  object-position: center 55%;
+}
+
+.cl-carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  margin-top: -2px;
+}
+
+.cl-carousel-dots button {
+  width: 6px;
+  height: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #d8d9dd;
+  cursor: pointer;
+  transition:
+    width 220ms ease,
+    background 220ms ease;
+}
+
+.cl-carousel-dots button.is-active {
+  width: 22px;
+  background: var(--accent);
+}
+
+/* Workspace */
+
+.cl-workspace {
+  width: 100%;
+  min-height: 100vh;
+  padding: 72px 40px 80px;
+  border-top: 1px solid var(--line);
+  background: var(--surface-soft);
+  scroll-margin-top: 58px;
+}
+
+.cl-workspace__inner {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.cl-workspace__header {
+  margin-bottom: 28px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.cl-workspace__eyebrow {
+  display: block;
+  margin-bottom: 8px;
+  color: #989ba2;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.cl-workspace__header h2 {
+  margin: 0;
+  color: #15171b;
+  font-size: 30px;
+  font-weight: 760;
+  letter-spacing: -0.04em;
+}
+
+.cl-workspace__status {
+  padding: 9px 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: #55585f;
+  font-size: 11px;
+}
+
+.cl-workspace__status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(93, 85, 246, 0.10);
+}
+
+.cl-workspace__body {
+  height: 620px;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid rgba(17, 19, 23, 0.055);
+  border-radius: var(--radius-xl);
+  background: #fff;
+  box-shadow: 0 18px 50px rgba(20, 22, 28, 0.045);
+}
+
+/* Workspace sidebar */
+
+.cl-workspace__sidebar {
+  min-height: 0;
+  padding: 22px 18px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(17, 19, 23, 0.055);
+  background: var(--surface-muted);
+}
+
+.cl-new-chat {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 13px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--line-strong);
+  border-radius: 13px;
+  background: #fff;
+  color: #292b30;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 620;
+  box-shadow: 0 4px 14px rgba(20, 22, 28, 0.035);
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.cl-new-chat:hover {
+  border-color: rgba(93, 85, 246, 0.22);
+  background: #fbfbff;
+  transform: translateY(-1px);
+}
+
+.cl-new-chat__icon {
+  width: 23px;
+  height: 23px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 17px;
+  line-height: 1;
+}
+
+.cl-history {
+  min-height: 0;
+  margin-top: 20px;
+  padding-top: 18px;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  border-top: 1px solid var(--line);
+}
+
+.cl-history__header {
+  margin-bottom: 10px;
+  padding: 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #999ca3;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.cl-history__header button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 9px;
+}
+
+.cl-history__header button:hover {
+  color: #555;
+}
+
+.cl-history__list {
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: #d7d8dc transparent;
+}
+
+.cl-history__list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.cl-history__list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cl-history__list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #d7d8dc;
+}
+
+.cl-history__list::-webkit-scrollbar-thumb:hover {
+  background: #bfc1c6;
+}
+
+.cl-history__item {
+  width: 100%;
+  padding: 10px 11px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: background 160ms ease;
+}
+
+.cl-history__item:hover {
+  background: #f1f1f3;
+}
+
+.cl-history__item.is-active {
+  background: var(--accent-soft);
+}
+
+.cl-history__title {
+  display: block;
+  overflow: hidden;
+  color: #393b40;
+  font-size: 11px;
+  font-weight: 580;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.cl-history__meta {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted-light);
+  font-size: 8px;
+}
+
+.cl-history__empty {
+  padding: 14px 8px;
+  color: #9aa0ab;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+/* Conversation */
+
+.cl-workspace__content {
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+}
+
+.cl-conversation-header {
+  min-height: 78px;
+  padding: 18px 28px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.cl-conversation-header__label {
+  display: block;
+  margin-bottom: 5px;
+  color: #9a9da4;
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+}
+
+.cl-conversation-header h3 {
+  max-width: 720px;
+  margin: 0;
+  overflow: hidden;
+  color: #22252a;
+  font-size: 15px;
+  font-weight: 650;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.cl-ai-result {
+  width: 100%;
+  min-height: 0;
+  flex: 1;
+  padding: 28px 30px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  color: #34363b;
+  scrollbar-width: thin;
+  scrollbar-color: #d7d8dc transparent;
+}
+
+.cl-ai-result::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cl-ai-result::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cl-ai-result::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #d7d8dc;
+}
+
+.cl-ai-result::-webkit-scrollbar-thumb:hover {
+  background: #c5c8d1;
+}
+
+.cl-chat-empty,
+.cl-ai-result__empty {
+  margin: auto;
+  color: #999eab;
+  font-size: 14px;
+  line-height: 1.8;
+  text-align: center;
+}
+
+/* Chat bubbles */
+
+.cl-chat-message {
+  width: fit-content;
+  max-width: min(78%, 760px);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.cl-chat-message--user {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.cl-chat-message--assistant {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.cl-chat-message__meta {
+  padding: 0 6px;
+  color: #9398a6;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.cl-chat-message__bubble {
+  padding: 14px 17px;
+  border-radius: 20px;
+  font-size: 14px;
+  line-height: 1.85;
+  word-break: break-word;
+  box-shadow: 0 8px 26px rgba(18, 18, 23, 0.05);
+}
+
+.cl-chat-message--user .cl-chat-message__bubble {
+  border-bottom-right-radius: 8px;
+  background: linear-gradient(135deg, #6f63ff 0%, #5c54f6 100%);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(93, 85, 246, 0.16);
+}
+
+.cl-chat-message--assistant .cl-chat-message__bubble {
+  border: 1px solid #ececf2;
+  border-bottom-left-radius: 8px;
+  background: #fff;
+  color: #1c2230;
+}
+
+.cl-chat-message__content {
+  white-space: normal;
+}
+
+.cl-chat-message__content strong {
+  font-weight: 700;
+}
+
+/* Responsive */
+
+@media (max-width: 980px) {
+  .cl-hero h1 {
+    font-size: 46px;
+  }
+
+  .cl-carousel-stage {
+    height: 410px;
+  }
+
+  .cl-slide {
+    width: 320px;
+    height: 365px;
+  }
+
+  .cl-slide.is-prev {
+    transform: translateX(calc(-50% - 270px)) scale(0.86);
+  }
+
+  .cl-slide.is-next {
+    transform: translateX(calc(-50% + 270px)) scale(0.86);
+  }
+
+  .cl-slide.is-far-prev {
+    transform: translateX(calc(-50% - 470px)) scale(0.70);
+  }
+
+  .cl-slide.is-far-next {
+    transform: translateX(calc(-50% + 470px)) scale(0.70);
+  }
+
+  .cl-workspace__body {
+    grid-template-columns: 230px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .cl-header {
+    height: 56px;
+    padding: 0 18px;
+  }
+
+  .cl-brand__name {
+    font-size: 21px;
+  }
+
+  .cl-nav {
+    gap: 18px;
+  }
+
+  .cl-nav a {
+    font-size: 12px;
+  }
+
+  .cl-hero {
+    width: min(100% - 24px, 1500px);
+    padding-top: 38px;
+  }
+
+  .cl-hero h1 {
+    font-size: 38px;
+  }
+
+  .cl-hero__copy p {
+    font-size: 14px;
+  }
+
+  .cl-prompt {
+    width: min(94%, 1000px);
+    min-height: 70px;
+  }
+
+  .cl-model-button {
+    padding: 0 10px;
+  }
+
+  .cl-carousel-stage {
+    height: 380px;
+  }
+
+  .cl-slide {
+    width: min(76vw, 320px);
+    height: 340px;
+  }
+
+  .cl-slide.is-prev {
+    transform: translateX(calc(-50% - 72vw)) scale(0.84);
+  }
+
+  .cl-slide.is-next {
+    transform: translateX(calc(-50% + 72vw)) scale(0.84);
+  }
+
+  .cl-slide.is-far-prev,
+  .cl-slide.is-far-next {
+    opacity: 0;
+  }
+
+  .cl-workspace {
+    padding: 48px 16px;
+  }
+
+  .cl-workspace__body {
+    height: auto;
+    min-height: 620px;
+    grid-template-columns: 1fr;
+  }
+
+  .cl-workspace__sidebar {
+    max-height: 260px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .cl-workspace__content {
+    min-height: 520px;
+  }
+
+  .cl-ai-result {
+    padding: 24px 20px 30px;
+  }
+
+  .cl-chat-message {
+    max-width: 88%;
+  }
+}
+
+/* =========================================================
+   Workspace final alignment + composer + model menu fix
+   2026-08-26
+   ========================================================= */
+
+/*
+  右侧三层统一使用 28px 水平基线：
+  conversation header / message area / bottom composer
+*/
+.cl-conversation-header {
+  padding-right: 28px;
+  padding-left: 28px;
+}
+
+.cl-ai-result {
+  padding:
+    24px
+    28px
+    22px;
+}
+
+/*
+  Workspace 底部唯一输入框停靠区
+*/
+.cl-workspace-composer {
+  position: relative;
+  z-index: 40;
+
+  flex: 0 0 auto;
+
+  min-width: 0;
+  min-height: 92px;
+
+  padding:
+    14px
+    28px
+    18px;
+
+  overflow: visible;
+
+  border-top:
+    1px solid
+    var(--line);
+
+  background:
+    rgba(255, 255, 255, 0.98);
+}
+
+/*
+  首页的同一个 clPromptForm 移到这里后，
+  宽度和左右边界与上方聊天内容对齐。
+*/
+.cl-workspace-composer .cl-prompt {
+  z-index: 50;
+
+  width: 100%;
+  min-height: 64px;
+
+  margin: 0;
+  padding:
+    7px
+    8px
+    7px
+    14px;
+
+  overflow: visible;
+
+  border-radius: 19px;
+
+  box-shadow:
+    0 8px 26px
+    rgba(20, 22, 28, 0.07);
+}
+
+.cl-workspace-composer
+.cl-prompt__submit {
+  width: 48px;
+  height: 48px;
+
+  flex-basis: 48px;
+
+  border-radius: 15px;
+
+  font-size: 25px;
+}
+
+/*
+  输入框移动时首页留下的临时占位。
+  宽度保持和 Hero 输入框一致，避免页面布局突然塌陷。
+*/
+.cl-prompt-travel-placeholder {
+  width:
+    min(
+      1000px,
+      calc(100% - 40px)
+    );
+
+  margin:
+    0
+    auto
+    26px;
+}
+
+/* =========================================================
+   Model picker in Workspace
+   ========================================================= */
+
+/*
+  进入 Workspace 后模型菜单必须向上弹，
+  否则底部空间不足时会被工作区边界裁掉。
+*/
+.cl-workspace-composer
+.cl-model-picker {
+  position: relative;
+  z-index: 80;
+
+  overflow: visible;
+}
+
+.cl-workspace-composer
+.cl-model-button {
+  position: relative;
+  z-index: 81;
+}
+
+.cl-workspace-composer
+.cl-model-menu {
+  top: auto;
+  right: auto;
+  bottom:
+    calc(100% + 10px);
+  left: 0;
+
+  z-index: 1000;
+
+  width: 168px;
+
+  border:
+    1px solid
+    rgba(17, 19, 23, 0.07);
+
+  background:
+    rgba(255, 255, 255, 0.995);
+
+  box-shadow:
+    0 20px 48px
+      rgba(20, 22, 28, 0.14),
+    0 3px 12px
+      rgba(20, 22, 28, 0.05);
+
+  /*
+    Workspace 里不使用重 blur，
+    避免 Safari 合成开销，也减少遮挡感。
+  */
+  backdrop-filter: none;
+}
+
+/*
+  允许底部 Composer 在消息层上方显示菜单。
+  真正负责滚动的仍然只有 cl-ai-result。
+*/
+.cl-workspace__content {
+  position: relative;
+}
+
+.cl-ai-result {
+  position: relative;
+  z-index: 1;
+}
+
+.cl-workspace-composer {
+  z-index: 30;
+}
+
+/* =========================================================
+   Workspace visual alignment
+   ========================================================= */
+
+.cl-workspace__sidebar,
+.cl-workspace__content {
+  align-self: stretch;
+}
+
+/*
+  固定侧栏宽度，避免缩放时出现 1-2px 视觉偏移。
+*/
+.cl-workspace__body {
+  grid-template-columns:
+    260px
+    minmax(0, 1fr);
+}
+
+/*
+  Assistant bubble稍微放宽，
+  减少长回复右侧大面积空白，但仍保留聊天感。
+*/
+.cl-chat-message--assistant {
+  max-width:
+    min(
+      84%,
+      820px
+    );
+}
+
+/* =========================================================
+   Responsive workspace composer
+   ========================================================= */
+
+@media (max-width: 980px) {
+  .cl-workspace__body {
+    grid-template-columns:
+      230px
+      minmax(0, 1fr);
+  }
+
+  .cl-workspace-composer {
+    padding-right: 22px;
+    padding-left: 22px;
+  }
+
+  .cl-conversation-header {
+    padding-right: 22px;
+    padding-left: 22px;
+  }
+
+  .cl-ai-result {
+    padding-right: 22px;
+    padding-left: 22px;
+  }
+}
+
+@media (max-width: 760px) {
+  .cl-workspace__body {
+    grid-template-columns: 1fr;
+  }
+
+  .cl-workspace-composer {
+    min-height: 84px;
+
+    padding:
+      12px
+      16px
+      14px;
+  }
+
+  .cl-workspace-composer
+  .cl-prompt {
+    width: 100%;
+    min-height: 60px;
+  }
+
+  .cl-conversation-header {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  .cl-ai-result {
+    padding:
+      22px
+      18px
+      18px;
+  }
+
+  .cl-workspace-composer
+  .cl-model-menu {
+    width: 160px;
+  }
+}
+
+/* =========================================================
+   Multimodal chat messages
+   text / image / video
+   ========================================================= */
+
+.cl-chat-media {
+  width: 100%;
+  margin-top: 14px;
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    rgba(17, 19, 23, 0.07);
+
+  border-radius: 20px;
+
+  background:
+    #f7f7f8;
+}
+
+.cl-chat-media--image,
+.cl-chat-media--video {
+  width: min(620px, 100%);
+}
+
+.cl-chat-media--image img {
+  display: block;
+
+  width: 100%;
+  height: auto;
+
+  aspect-ratio: 4 / 3;
+
+  object-fit: cover;
+
+  background: #f3f3f5;
+}
+
+.cl-chat-media--video video {
+  display: block;
+
+  width: 100%;
+
+  aspect-ratio: 16 / 9;
+
+  object-fit: contain;
+
+  background: #111317;
+}
+
+.cl-chat-media__placeholder {
+  min-height: 250px;
+
+  padding: 32px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 10px;
+
+  text-align: center;
+
+  color: var(--muted);
+
+  background:
+    radial-gradient(
+      circle at 50% 42%,
+      rgba(93, 85, 246, 0.11),
+      transparent 46%
+    ),
+    #f7f7f8;
+}
+
+.cl-chat-media__placeholder strong {
+  color: var(--text);
+
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.cl-chat-media__placeholder
+span:last-child {
+  max-width: 350px;
+
+  color: var(--muted);
+
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.cl-chat-media__icon {
+  width: 46px;
+  height: 46px;
+
+  display: grid;
+  place-items: center;
+
+  margin-bottom: 3px;
+
+  border-radius: 50%;
+
+  color: #ffffff;
+
+  background:
+    linear-gradient(
+      135deg,
+      #6f63ff,
+      #5148e8
+    );
+
+  box-shadow:
+    0 10px 26px
+    rgba(93, 85, 246, 0.22);
+
+  font-size: 15px;
+  line-height: 1;
+}
+
+/*
+  带媒体的 AI 消息允许稍宽，
+  避免图片/视频被压得太窄。
+*/
+.cl-chat-message--assistant:has(
+  .cl-chat-media
+) {
+  width: min(84%, 820px);
+  max-width: min(84%, 820px);
+}
+
+.cl-chat-message--assistant
+.cl-chat-media
++ * {
+  margin-top: 12px;
+}
+
+@media (max-width: 760px) {
+  .cl-chat-message--assistant:has(
+    .cl-chat-media
+  ) {
+    width: 94%;
+    max-width: 94%;
+  }
+
+  .cl-chat-media__placeholder {
+    min-height: 210px;
+    padding: 24px 18px;
+  }
+}
+
+/* =========================================================
+   CL-AIGC creation mode picker
+   用户选择任务类型，不直接暴露底层模型厂商
+   ========================================================= */
+
+.cl-model-button {
+  min-width: 104px;
+  justify-content: center;
+}
+
+.cl-model-menu {
+  width: 274px;
+  padding: 7px;
+}
+
+.cl-model-option {
+  min-height: 58px;
+  height: auto;
+
+  padding:
+    9px
+    10px;
+
+  align-items: center;
+
+  gap: 10px;
+
+  text-align: left;
+}
+
+.cl-mode-option__icon {
+  width: 30px;
+  height: 30px;
+
+  flex: 0 0 30px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 10px;
+
+  background: #f3f3f6;
+
+  color: #4f535d;
+
+  font-size: 12px;
+  font-weight: 720;
+
+  line-height: 1;
+}
+
+.cl-model-option.is-active
+.cl-mode-option__icon {
+  background:
+    rgba(93, 85, 246, 0.11);
+
+  color:
+    var(--accent);
+}
+
+.cl-mode-option__copy {
+  min-width: 0;
+
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.cl-model-option
+.cl-mode-option__copy strong {
+  color: #25272b;
+
+  font-size: 12px;
+  font-weight: 650;
+
+  line-height: 1.25;
+}
+
+.cl-model-option
+.cl-mode-option__copy small {
+  display: block;
+
+  margin: 0;
+
+  color: #9699a1;
+
+  font-size: 10px;
+
+  line-height: 1.4;
+}
+
+.cl-model-option
+.cl-mode-option__copy small::after {
+  display: none;
+  content: none;
+}
+
+.cl-mode-option__check {
+  width: 18px;
+
+  flex: 0 0 18px;
+
+  color:
+    transparent;
+
+  font-size: 12px;
+  font-weight: 760;
+
+  text-align: center;
+}
+
+.cl-model-option.is-active
+.cl-mode-option__check {
+  color:
+    var(--accent);
+}
+
+/*
+  首页向下展开；
+  Workspace 底部仍保持向上展开。
+*/
+.cl-workspace-composer
+.cl-model-menu {
+  width: 274px;
+}
+
+@media (max-width: 760px) {
+  .cl-model-menu,
+  .cl-workspace-composer
+  .cl-model-menu {
+    width:
+      min(
+        274px,
+        calc(100vw - 48px)
+      );
+  }
+
+  .cl-model-button {
+    min-width: 96px;
+  }
+}
+
+.cl-chat-media--image {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.cl-chat-media--image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 20px;
+}
+
+.cl-chat-media__download {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(17, 24, 39, 0.72);
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 20px;
+  font-weight: 700;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: transform 0.18s ease, background 0.18s ease, opacity 0.18s ease;
+  z-index: 2;
+  opacity: 0;
+  transform: translateY(4px);
+  pointer-events: none;
+}
+
+
+/* 鼠标进入图片时显示 */
+.cl-chat-media--image:hover
+.cl-chat-media__download {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* 鼠标移动到下载按钮本身 */
+.cl-chat-media__download:hover {
+  transform: translateY(-2px) scale(1.04);
+  background: rgba(99, 91, 255, 0.92);
+}
+
+/* 点击反馈 */
+.cl-chat-media__download:active {
+  transform: scale(0.96);
+}
+
+/* 触屏设备没有 hover，因此保持按钮可见 */
+@media (hover: none) {
+  .cl-chat-media__download {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+}
+
+.cl-chat-media--video {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  background: #f5f5f7;
+}
+
+.cl-chat-media--video video {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: inherit;
+  background: #000;
+}
+
+.cl-chat-media--video .cl-chat-media__download {
+  position: absolute;
+  right: 16px;
+  bottom: 40px;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(17, 24, 39, 0.72);
+  color: #ffffff;
+  text-decoration: none;
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease,
+    background 0.22s ease;
+  z-index: 3;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.cl-chat-media--video:hover .cl-chat-media__download,
+.cl-chat-media--video:focus-within .cl-chat-media__download {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  z-index: 999;
+}
+
+.cl-chat-media--video .cl-chat-media__download:hover {
+  background: rgba(91, 95, 255, 0.96);
+}
+
+.cl-chat-media--video .cl-chat-media__download svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* =========================================================
+   Workspace desktop full-page layout
+   仅调整工作空间布局，不修改现有功能组件
+   ========================================================= */
+
+@media (min-width: 761px) {
+
+  /*
+    Workspace 本身占满导航栏以下的整个视口。
+  */
+  .cl-workspace {
+    width: 100%;
+    height: calc(100dvh - 58px);
+    min-height: calc(100dvh - 58px);
+
+    padding: 0;
+
+    background: #ffffff;
+
+    border-top:
+      1px solid var(--line);
+
+    scroll-margin-top: 58px;
+  }
+
+  /*
+    去掉原来的 1180px 居中限制。
+  */
+  .cl-workspace__inner {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+
+    margin: 0;
+
+    display: flex;
+    flex-direction: column;
+  }
+
+  /*
+    Workspace 顶部标题区域保留，
+    但压缩成正常工具栏尺寸。
+  */
+  .cl-workspace__header {
+    flex: 0 0 auto;
+
+    min-height: 68px;
+
+    margin: 0;
+    padding: 14px 28px;
+
+    align-items: center;
+
+    border-bottom:
+      1px solid var(--line);
+
+    background:
+      rgba(255, 255, 255, 0.98);
+  }
+
+  .cl-workspace__eyebrow {
+    margin-bottom: 4px;
+  }
+
+  .cl-workspace__header h2 {
+    font-size: 20px;
+  }
+
+  /*
+    左侧历史 + 右侧聊天真正占满剩余高度。
+    去掉原先 620px 卡片效果。
+  */
+  .cl-workspace__body {
+    width: 100%;
+
+    height: auto;
+    min-height: 0;
+
+    flex: 1 1 auto;
+
+    grid-template-columns:
+      260px
+      minmax(0, 1fr);
+
+    border: 0;
+    border-radius: 0;
+
+    box-shadow: none;
+
+    background: #ffffff;
+  }
+
+  /*
+    左侧栏仍然保留现有所有历史记录功能。
+  */
+  .cl-workspace__sidebar {
+    min-height: 0;
+
+    padding: 22px 18px;
+
+    background: #fafafa;
+
+    border-right:
+      1px solid var(--line);
+  }
+
+  /*
+    右侧聊天区域占满。
+  */
+  .cl-workspace__content {
+    min-width: 0;
+    min-height: 0;
+
+    background: #ffffff;
+  }
+
+  /*
+    当前聊天标题继续保留，
+    但内容和下面聊天区统一视觉中心。
+  */
+  .cl-conversation-header {
+    min-height: 68px;
+
+    padding-left:
+      max(
+        32px,
+        calc((100% - 920px) / 2)
+      );
+
+    padding-right:
+      max(
+        32px,
+        calc((100% - 920px) / 2)
+      );
+  }
+
+  /*
+    整个聊天面板仍然占满，
+    只有“消息内容”收拢到约 920px 视觉区域。
+
+    这样不会出现：
+    AI 在最左边，
+    用户在屏幕最右边。
+  */
+  .cl-ai-result {
+    padding-top: 30px;
+    padding-bottom: 30px;
+
+    padding-left:
+      max(
+        32px,
+        calc((100% - 920px) / 2)
+      );
+
+    padding-right:
+      max(
+        32px,
+        calc((100% - 920px) / 2)
+      );
+  }
+
+  /*
+    不改变聊天气泡功能，
+    只控制桌面端最大阅读宽度。
+  */
+  .cl-chat-message {
+    max-width:
+      min(
+        82%,
+        760px
+      );
+  }
+
+  .cl-chat-message--assistant {
+    max-width:
+      min(
+        84%,
+        820px
+      );
+  }
+
+  /*
+    输入区仍然是原来的那个 clPromptForm。
+    这里只让它和聊天内容对齐。
+  */
+  .cl-workspace-composer {
+    padding-top: 14px;
+    padding-bottom: 18px;
+
+    padding-left:
+      max(
+        32px,
+        calc((100% - 920px) / 2)
+      );
+
+    padding-right:
+      max(
+        32px,
+        calc((100% - 920px) / 2)
+      );
+  }
+
+  .cl-workspace-composer .cl-prompt {
+    width: 100%;
+    max-width: 920px;
+
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* =========================================================
+   Workspace desktop layout refinement
+   保留全部现有功能，只优化空间布局
+   ========================================================= */
+
+@media (min-width: 761px) {
+
+  /* ---------- 顶部 Workspace 标题栏压缩 ---------- */
+
+  .cl-workspace__header {
+    min-height: 52px;
+    margin: 0;
+    padding: 10px 28px;
+
+    align-items: center;
+
+    border-bottom:
+      1px solid var(--line);
+
+    background: #ffffff;
+  }
+
+  .cl-workspace__eyebrow {
+    display: none;
+  }
+
+  .cl-workspace__header h2 {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .cl-workspace__status {
+    padding: 7px 11px;
+    font-size: 10px;
+  }
+
+
+  /* ---------- 当前聊天标题栏也压缩 ---------- */
+
+  .cl-conversation-header {
+    min-height: 58px;
+
+    padding:
+      12px
+      28px;
+
+    align-items: center;
+  }
+
+  .cl-conversation-header__label {
+    margin-bottom: 3px;
+  }
+
+
+  /* ---------- 聊天区域恢复整块空间 ---------- */
+
+  .cl-ai-result {
+    width: 100%;
+
+    padding:
+      28px
+      34px
+      30px;
+
+    gap: 22px;
+  }
+
+  /*
+    AI 靠左。
+    保留原有气泡最大宽度，
+    不再整体居中。
+  */
+  .cl-chat-message--assistant {
+    align-self: flex-start;
+
+    width: fit-content;
+
+    max-width:
+      min(
+        72%,
+        820px
+      );
+  }
+
+  /*
+    用户靠右。
+  */
+  .cl-chat-message--user {
+    align-self: flex-end;
+
+    width: fit-content;
+
+    max-width:
+      min(
+        68%,
+        720px
+      );
+  }
+
+
+  /* ---------- 输入区铺满右侧聊天区域 ---------- */
+
+  .cl-workspace-composer {
+    width: 100%;
+
+    padding:
+      14px
+      28px
+      18px;
+  }
+
+  .cl-workspace-composer .cl-prompt {
+    width: 100%;
+    max-width: none;
+
+    margin: 0;
+  }
+}
+
+/* =========================================================
+   Workspace header cleanup
+   去掉重复的“AI 创作工作区”层级
+   ========================================================= */
+
+@media (min-width: 761px) {
+  .cl-workspace__header {
+    display: none;
+  }
+}

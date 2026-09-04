@@ -637,7 +637,6 @@ export class AccountManagementView {
               data?.enterpriseName ||
               "当前企业"
             )} · 这里只展示本企业的 AIGC 子账号。
-            用户映射与外部账号凭据仍由系统管理员管理。
           </p>
         </div>
 

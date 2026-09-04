@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CL-AIGC | 鞋履 AI 创作工作室</title>
+  <link rel="stylesheet" href="/css/cl-aigc-home.css" />
+  <script src="/js/cl-aigc-home.js" defer></script>
+</head>
+<body>
+  <header class="cl-header">
+    <a class="cl-brand" href="/cl-aigc-home.html" aria-label="CL-AIGC 首页">
+      <span class="cl-brand__name">CL-AIGC</span>
+      <span class="cl-brand__beta">BETA</span>
+    </a>
+
+    <nav class="cl-nav" aria-label="CL-AIGC 导航">
+      <a href="#capabilities">功能</a>
+      <a href="#scenarios">应用场景</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="cl-hero">
+      <div class="cl-hero__copy">
+        <h1>面向鞋履行业的 AI 设计工作室</h1>
+        <p>
+          从鞋款概念到商品视觉，快速完成鞋款创意、模特展示、
+          商品主图、视频内容与营销素材生成。
+        </p>
+      </div>
+
+      <section
+        id="capabilities"
+        class="cl-carousel-section"
+        aria-label="CL-AIGC 鞋履创作能力"
+      >
+        <div class="cl-carousel-shell">
+
+          <form id="clPromptForm" class="cl-prompt" autocomplete="off">
+            <div class="cl-model-picker">
+              <button
+                id="clModelButton"
+                class="cl-model-button"
+                type="button"
+                aria-expanded="false"
+              >
+                <span class="cl-model-dot"></span>
+                <span id="clModelLabel">DeepSeek</span>
+                <span class="cl-model-arrow">⌄</span>
+              </button>
+
+              <div
+                id="clModelMenu"
+                class="cl-model-menu"
+                hidden
+              >
+                <button
+                  type="button"
+                  class="cl-model-option is-active"
+                  data-provider="deepseek"
+                >
+                  <span>DeepSeek</span>
+                  <small>当前可用</small>
+                </button>
+
+                <button
+                  type="button"
+                  class="cl-model-option"
+                  data-provider="openai"
+                >
+                  <span>GPT</span>
+                  <small>即将接入</small>
+                </button>
+
+                <button
+                  type="button"
+                  class="cl-model-option"
+                  data-provider="doubao"
+                >
+                  <span>豆包</span>
+                  <small>即将接入</small>
+                </button>
+              </div>
+            </div>
+
+            <input
+              id="clPromptInput"
+              type="text"
+              maxlength="500"
+              placeholder="描述你想创作的鞋履内容，例如：生成一组冬季德训鞋电商主图，米白色背景，轻奢风格..."
+              aria-label="描述你的鞋履创作需求"
+            />
+
+            <button
+              class="cl-prompt__submit"
+              type="submit"
+              aria-label="提交创作需求"
+            >
+              →
+            </button>
+          </form>
+
+          <div
+            id="carouselStage"
+            class="cl-carousel-stage"
+            aria-live="polite"
+          >
+            <article class="cl-slide">
+              <img
+                src="/images/cl-aigc/shoe-sketch.png"
+                alt="鞋款概念设计图"
+                fetchpriority="high"
+              />
+              <div class="cl-slide__meta">
+                <span>鞋款概念</span>
+                <h2>从灵感到鞋款视觉</h2>
+              </div>
+            </article>
+
+            <article class="cl-slide">
+              <img
+                src="/images/cl-aigc/shoe-material.png"
+                alt="鞋履材质与配色效果"
+                loading="lazy"
+              />
+              <div class="cl-slide__meta">
+                <span>材质换色</span>
+                <h2>探索不同材质与配色</h2>
+              </div>
+            </article>
+
+            <article class="cl-slide">
+              <img
+                src="/images/cl-aigc/shoe-tryon.png"
+                alt="鞋履模特穿搭展示"
+                loading="lazy"
+              />
+              <div class="cl-slide__meta">
+                <span>AI 服装</span>
+                <h2>鞋履穿搭与模特展示</h2>
+              </div>
+            </article>
+
+            <article class="cl-slide">
+              <img
+                src="/images/cl-aigc/shoe-product.png"
+                alt="鞋履商品主图"
+                loading="lazy"
+              />
+              <div class="cl-slide__meta">
+                <span>AI 电商</span>
+                <h2>专业商品主图</h2>
+              </div>
+            </article>
+
+            <article class="cl-slide">
+              <img
+                src="/images/cl-aigc/shoe-marketing.png"
+                alt="鞋履营销视觉"
+                loading="lazy"
+              />
+              <div class="cl-slide__meta">
+                <span>视频创作</span>
+                <h2>鞋履营销视觉</h2>
+              </div>
+            </article>
+          </div>
+
+          <div class="cl-carousel-dots" aria-label="轮播位置">
+            <button type="button" data-slide="0" aria-label="鞋款概念"></button>
+            <button type="button" data-slide="1" aria-label="材质换色"></button>
+            <button type="button" data-slide="2" aria-label="AI 服装"></button>
+            <button type="button" data-slide="3" aria-label="AI 电商"></button>
+            <button type="button" data-slide="4" aria-label="视频创作"></button>
+          </div>
+        </div>
+      </section>
+
+    </section>
+
+    <section
+      id="clWorkspace"
+      class="cl-workspace"
+      hidden
+    >
+      <div class="cl-workspace__inner">
+
+        <header class="cl-workspace__header">
+          <div>
+            <span class="cl-workspace__eyebrow">
+              CL-AIGC WORKSPACE
+            </span>
+
+            <h2>AI 创作工作区</h2>
+          </div>
+
+          <div class="cl-workspace__status">
+            <span
+              class="cl-workspace__status-dot"
+              aria-hidden="true"
+            ></span>
+
+            <span id="clWorkspaceModel">
+              DeepSeek
+            </span>
+          </div>
+        </header>
+
+
+        <div class="cl-workspace__body">
+
+          <!-- 左侧：会话列表 -->
+          <aside class="cl-workspace__sidebar">
+
+            <button
+              id="clNewChatButton"
+              class="cl-new-chat"
+              type="button"
+            >
+              <span
+                class="cl-new-chat__icon"
+                aria-hidden="true"
+              >
+                +
+              </span>
+
+              <span>
+                新建聊天
+              </span>
+            </button>
+
+
+            <div class="cl-history">
+
+              <div class="cl-history__header">
+                <span>
+                  聊天记录
+                </span>
+
+                <button
+                  id="clHistoryClear"
+                  type="button"
+                >
+                  清空
+                </button>
+              </div>
+
+
+              <div
+                id="clHistoryList"
+                class="cl-history__list"
+              >
+              </div>
+
+            </div>
+
+          </aside>
+
+
+          <!-- 右侧：当前会话 -->
+          <section class="cl-workspace__content">
+
+            <header class="cl-conversation-header">
+
+              <div>
+                <span class="cl-conversation-header__label">
+                  当前聊天
+                </span>
+
+                <h3 id="clWorkspacePrompt">
+                  新聊天
+                </h3>
+              </div>
+
+            </header>
+
+
+            <div
+              id="clAiResult"
+              class="cl-ai-result"
+              aria-live="polite"
+            >
+              <div class="cl-chat-empty">
+                输入你的创作需求后，
+                CL-AIGC 将在这里与你持续对话。
+              </div>
+            </div>
+
+            <div
+              id="clWorkspaceComposer"
+              class="cl-workspace-composer"
+            ></div>
+
+          </section>
+
+        </div>
+
+      </div>
+    </section>
+  </main>
+</body>
+</html>

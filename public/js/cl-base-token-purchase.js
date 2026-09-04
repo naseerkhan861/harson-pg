@@ -17,7 +17,7 @@ const MEMBERSHIPS = [
     buttonText: "当前方案",
     disabled: true,
     benefits: [
-      "每日签到赠送 10 Token",
+      "每日签到赠送 10 积分",
       "基础创作能力",
       "作品仅限个人用途",
       "标准任务队列"
@@ -29,12 +29,12 @@ const MEMBERSHIPS = [
     levelClass: "is-gold",
     buttonText: "立即成为黄金会员",
     benefits: [
-      "开通即获得 590 Token",
-      "每日签到赠送 20 Token",
+      "开通即获得 590 积分",
+      "每日签到赠送 20 积分",
       "开放全部基础 AI 工具",
       "支持无水印下载",
       "作品可用于商业场景",
-      "会员 Token 有效期 31 天"
+      "会员积分有效期 31 天"
     ]
   },
   {
@@ -43,8 +43,8 @@ const MEMBERSHIPS = [
     levelClass: "is-platinum",
     buttonText: "立即成为铂金会员",
     benefits: [
-      "开通即获得 3,000 Token",
-      "每日签到赠送 30 Token",
+      "开通即获得 3,000 积分",
+      "每日签到赠送 30 积分",
       "开放全部 AI 创作能力",
       "支持无水印下载",
       "作品可用于商业场景",
@@ -58,8 +58,8 @@ const MEMBERSHIPS = [
     buttonText: "立即成为钻石会员",
     recommended: true,
     benefits: [
-      "开通即获得 9,000 Token",
-      "每日签到赠送 50 Token",
+      "开通即获得 9,000 积分",
+      "每日签到赠送 50 积分",
       "开放全部 AI 创作能力",
       "支持无水印下载",
       "作品可用于商业场景",
@@ -784,7 +784,7 @@ function updateSelectedPackage() {
     state.selectedPackage.bonusToken;
 
   elements.selectedToken.textContent =
-    `${formatNumber(totalToken)} Token`;
+    `${formatNumber(totalToken)} 积分`;
 
   elements.selectedPrice.textContent =
     formatCurrency(
@@ -907,7 +907,7 @@ function setTokenDetailsView(
     elements.tokenDetailsError
       .textContent =
         message ||
-        "Token 明细读取失败。";
+        "积分明细读取失败。";
   }
 }
 
@@ -1242,7 +1242,7 @@ async function loadRechargeRecords() {
     ) {
       throw new Error(
         data.message ||
-        "Token 明细读取失败"
+        "积分明细读取失败"
       );
     }
 
@@ -1255,7 +1255,7 @@ async function loadRechargeRecords() {
 
       error instanceof Error
         ? error.message
-        : "Token 明细读取失败"
+        : "积分明细读取失败"
     );
   } finally {
     state.rechargeRequestActive =
@@ -1280,7 +1280,7 @@ function openTokenDetailsModal() {
     !elements.tokenDetailsModal
   ) {
     showToast(
-      "Token 明细弹窗加载失败。"
+      "积分明细弹窗加载失败。"
     );
 
     return;
@@ -1393,7 +1393,7 @@ function bindEvents() {
         "click",
         () => {
           showToast(
-            `当前为测试版，${button.dataset.paymentMethod}支付和真实 Token 充值尚未接入。`
+            `当前为测试版，${button.dataset.paymentMethod}支付和真实积分充值尚未接入。`
           );
         }
       );
