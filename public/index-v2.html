@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, user-scalable=yes"
+  />
+
+  <title>
+    Harson-Base | UI Version 2
+  </title>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap"
+    rel="stylesheet"
+  />
+
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+  />
+
+  <!-- 继续复用整个项目原来的 CSS -->
+  <link
+    rel="stylesheet"
+    href="/css/main.css"
+  />
+
+  <!-- V2 只写自己的覆盖 -->
+  <link
+    rel="stylesheet"
+    href="/css/home-v2.css"
+  />
+</head>
+
+<body
+  data-page="home-v2"
+  class="home-v2"
+>
+
+  <div class="top-bar">
+    <div class="container">
+      <div class="navbar">
+
+        <a
+          class="logo-area page-logo-link"
+          href="/index-v2.html"
+        >
+          <div class="logo-icon">
+            H
+          </div>
+
+          <div class="logo-text">
+            HARSON（BETA）
+            <span>
+              | 数智化平台
+            </span>
+          </div>
+        </a>
+
+        <ul
+          class="nav-links"
+          data-nav
+        ></ul>
+
+        <div class="header-icons">
+          <button
+            id="accountAvatar"
+            class="account-avatar"
+            type="button"
+            title="用户登录"
+          >
+            <span
+              id="accountAvatarText"
+              class="account-avatar-text"
+            >
+              <i
+                class="fa-regular fa-circle-user"
+              ></i>
+            </span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <main>
+
+    <!-- V2 Hero -->
+    <section class="hero v2-hero">
+
+      <div class="container hero-grid">
+
+        <div class="hero-content">
+
+          <span class="hero-badge">
+            智能引擎 · 四大平台
+          </span>
+
+          <h1>
+            定义数智化未来<br />
+            四大平台驱动企业<br />
+            智能化升级
+          </h1>
+
+          <p>
+            Harson-Base 汇聚内容生成、供应链管理、
+            机器人自动化与数字零售，
+            帮助企业提升运营效率与业务增长能力。
+          </p>
+
+          <div class="btn-group">
+
+            <button
+              class="btn-primary"
+              id="explorePlatformsBtn"
+              type="button"
+            >
+              探索核心平台
+              <i class="fas fa-arrow-right"></i>
+            </button>
+
+            <button
+              class="btn-outline"
+              id="contactExpertBtn"
+              type="button"
+            >
+              联系专家顾问
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <!--
+          设计中心后续提供 Hero 图。
+          当前保持空白。
+        -->
+        <div
+          class="v2-hero-visual"
+          aria-hidden="true"
+        ></div>
+
+      </div>
+
+    </section>
+
+
+    <!-- 后面的平台区下一步再开发 -->
+    <section
+      class="platform-section"
+      id="platforms"
+    >
+      <div class="container">
+
+        <div class="section-header">
+
+          <span class="section-kicker">
+            Core Platforms
+          </span>
+
+          <h2>
+            哈森数智化平台矩阵
+          </h2>
+
+          <p>
+            围绕企业关键业务环节，
+            提供独立可用、可扩展的平台能力。
+          </p>
+
+        </div>
+
+        <div
+          class="platform-grid"
+          data-v2-platform-grid
+        ></div>
+
+      </div>
+    </section>
+
+    <!-- =====================================================
+     Industry Ecosystem
+     ===================================================== -->
+
+    <section
+    class="v2-ecosystem"
+    id="ecosystem"
+    >
+
+        <div class="v2-ecosystem-inner">
+
+            <header class="v2-ecosystem-header">
+
+            <span class="v2-ecosystem-kicker">
+                INDUSTRY ECOSYSTEM
+            </span>
+
+            <h2>
+                平台生态·行业深度赋能
+            </h2>
+
+            <p>
+                从内容生产、供应协同、自动化执行到消费者触达，帮助企业在不同业务场景中提升效率与增长能力。
+            </p>
+
+            </header>
+
+
+            <div
+            class="v2-ecosystem-grid"
+            data-v2-ecosystem-grid
+            ></div>
+
+        </div>
+
+    </section>
+
+  </main>
+
+  <!-- =====================================================
+     V2 Footer
+     ===================================================== -->
+
+<footer
+  class="v2-footer"
+  id="v2-footer"
+>
+
+  <div class="v2-footer-inner">
+
+    <!-- =========================
+         Left Brand / Social
+         ========================= -->
+
+    <div class="v2-footer-brand">
+
+      <div class="v2-footer-brand-title">
+
+        <div
+          class="v2-footer-logo"
+          aria-hidden="true"
+        >
+          H
+        </div>
+
+        <h3>
+          关注哈森
+        </h3>
+
+      </div>
+
+
+      <div class="v2-footer-socials">
+
+        <a
+          href="#"
+          class="v2-footer-social"
+          aria-label="微信"
+        >
+          <i class="fab fa-weixin"></i>
+          <span>微信</span>
+        </a>
+
+
+        <a
+          href="#"
+          class="v2-footer-social"
+          aria-label="LinkedIn"
+        >
+          <i class="fab fa-linkedin"></i>
+          <span>LinkedIn</span>
+        </a>
+
+
+        <a
+          href="#"
+          class="v2-footer-social"
+          aria-label="B站"
+        >
+          <i class="fab fa-bilibili"></i>
+          <span>B站</span>
+        </a>
+
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         Footer Columns
+         ========================= -->
+
+    <div class="v2-footer-columns">
+
+      <div class="v2-footer-column">
+
+        <h4>
+          哈森平台
+        </h4>
+
+        <ul>
+          <li>CLAIGC 时尚视觉引擎</li>
+          <li>SCM 智慧供应链</li>
+          <li>iRobot 机器人</li>
+          <li>iStore 智慧零售</li>
+        </ul>
+
+      </div>
+
+
+      <div class="v2-footer-column">
+
+        <h4>
+          解决方案
+        </h4>
+
+        <ul>
+          <li>AI 内容生产</li>
+          <li>供应链协同</li>
+          <li>自动化运营</li>
+          <li>数字零售增长</li>
+        </ul>
+
+      </div>
+
+
+      <div class="v2-footer-column">
+
+        <h4>
+          支持与资源
+        </h4>
+
+        <ul>
+          <li>开发者中心</li>
+          <li>API 文档</li>
+          <li>行业白皮书</li>
+          <li>培训认证</li>
+        </ul>
+
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         Copyright
+         ========================= -->
+
+    <div class="v2-footer-bottom">
+
+      <p>
+        © 2026 哈森Harson | 企业智能应用平台 — 面向内容、供应链、机器人与零售场景的数智化能力矩阵。
+      </p>
+
+    </div>
+
+  </div>
+
+</footer>
+
+
+  <script
+    type="module"
+    src="/js/app.js"
+  ></script>
+
+</body>
+</html>

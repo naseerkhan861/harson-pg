@@ -1,0 +1,2217 @@
+/* =========================================================
+   Harson-Base Home V2
+   Design Center Version 2
+   ========================================================= */
+
+body.home-v2 {
+  --gold: #c8ff00;
+  --gold-light: #dcff59;
+  --gold-dark: #92bd00;
+
+  --gold-gradient:
+    linear-gradient(
+      135deg,
+      var(--gold),
+      var(--gold-light),
+      var(--gold-dark)
+    );
+
+  --bg: #111214;
+  --bg-secondary: #18191c;
+  --bg-card: #202125;
+
+  
+  --text: #f7f7f5;
+  --text-secondary: #a7a7a3;
+
+  background: var(--bg);
+  color: var(--text);
+}
+
+
+/* V2 navigation */
+
+body.home-v2 .top-bar {
+  border-bottom:
+    1px solid
+    rgba(200, 255, 0, 0.08);
+
+  background:
+    rgba(17, 18, 20, 0.92);
+}
+
+
+body.home-v2 .logo-icon {
+  border-color: var(--gold);
+
+  background: var(--gold);
+
+  color: #111214;
+
+  box-shadow: none;
+}
+
+
+body.home-v2 .logo-icon::after {
+  display: none;
+}
+
+
+body.home-v2 .logo-text {
+  color: #ffffff;
+}
+
+
+body.home-v2 .logo-text span {
+  color: var(--gold);
+}
+
+
+body.home-v2 .nav-links a {
+  color:
+    rgba(255, 255, 255, 0.78);
+}
+
+
+body.home-v2 .nav-links a:hover {
+  color: var(--gold);
+}
+
+
+body.home-v2 .account-avatar-text {
+  color: #ffffff;
+}
+
+/* =========================================================
+   V2 Hero
+   整张背景图方案
+   ========================================================= */
+
+body.home-v2 .v2-hero {
+  position: relative;
+
+  /* Safari / 旧浏览器 fallback */
+  min-height: calc(100vh - 78px);
+
+  /* 当前浏览器实际可视高度 */
+  min-height: calc(100dvh - 78px);
+
+  padding: 0;
+  display: block;
+
+  overflow: hidden;
+  border-bottom: none;
+
+  background-color: #111214;
+
+  background-image:
+    url("/images/home-v2/hero.png");
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+
+body.home-v2 .v2-hero::before,
+body.home-v2 .v2-hero::after {
+  content: none;
+  display: none;
+}
+
+
+body.home-v2 .hero-grid {
+  position: relative;
+
+  z-index: 2;
+
+  width:
+    min(
+      1360px,
+      calc(100% - 96px)
+    );
+
+  min-height: calc(100vh - 78px);
+  min-height: calc(100dvh - 78px);
+
+  margin: 0 auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+
+/* =========================================================
+   Hero Content
+   ========================================================= */
+
+
+body.home-v2 .hero-content {
+  width: 100%;
+
+  max-width: 780px;
+
+  margin: 0;
+
+  position: relative;
+
+  z-index: 2;
+}
+
+
+/* =========================================================
+   Hero Title
+   ========================================================= */
+
+body.home-v2 .hero-content h1 {
+  max-width: none;
+
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size:
+    clamp(58px, 5.2vw, 78px);
+
+  line-height: 1.08;
+
+  font-weight: 800;
+
+  letter-spacing: -3px;
+
+  /* 防止“四大平台驱动企业”内部再次断行 */
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   Description
+   ========================================================= */
+
+body.home-v2 .hero-content p {
+  max-width: 650px;
+
+  margin-top: 30px;
+
+  color:
+    rgba(255, 255, 255, 0.68);
+
+  font-size: 17px;
+
+  line-height: 1.8;
+}
+
+
+/* =========================================================
+   Background Artwork Placeholder
+   不再使用右侧独立图片
+   ========================================================= */
+
+body.home-v2 .v2-hero-visual {
+  display: none;
+}
+
+
+/* =========================================================
+   Tablet
+   ========================================================= */
+
+@media (max-width: 1000px) {
+
+  body.home-v2 .hero-grid {
+    width: calc(100% - 64px);
+  }
+
+
+  body.home-v2 .hero-content h1 {
+    font-size: 58px;
+  }
+
+}
+
+
+/* =========================================================
+   Mobile
+   ========================================================= */
+
+@media (max-width: 760px) {
+
+  body.home-v2 .v2-hero {
+    min-height: 660px;
+  }
+
+
+  body.home-v2 .hero-grid {
+    width: calc(100% - 32px);
+
+    min-height: 660px;
+  }
+
+
+  body.home-v2 .hero-content {
+    max-width: 100%;
+  }
+
+
+  body.home-v2 .hero-content h1 {
+    font-size: 44px;
+
+    letter-spacing: -2px;
+
+    /* 手机允许自然换行 */
+    white-space: normal;
+  }
+
+}
+
+
+body.home-v2 .v2-hero-visual {
+  background-image:
+    url("/images/home-v2/hero.png");
+}
+
+
+
+/* =========================================================
+   V2 Core Platforms
+   Exact Design-Matched Layout
+   ========================================================= */
+
+body.home-v2 .platform-section {
+  padding: 86px 0 108px;
+
+  background: #1c1e22;
+  color: #ffffff;
+}
+
+
+/* =========================================================
+   Platform Container
+   设计稿能力卡区域约占视口 88.5%
+   ========================================================= */
+
+body.home-v2
+.platform-section > .container {
+  width: min(1500px, 88.5vw);
+  max-width: none;
+
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+/* =========================================================
+   Section Header
+   ========================================================= */
+
+body.home-v2
+.platform-section
+.section-header {
+  width: min(760px, 100%);
+
+  margin: 0 auto 64px;
+
+  text-align: center;
+}
+
+
+body.home-v2
+.platform-section
+.section-kicker {
+  display: block;
+
+  margin-bottom: 13px;
+
+  color: #ffffff;
+
+  font-size: 17px;
+  line-height: 1;
+
+  font-weight: 800;
+
+  letter-spacing: 0.01em;
+
+  text-transform: uppercase;
+}
+
+
+body.home-v2
+.platform-section
+.section-header h2 {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: clamp(43px, 3.8vw, 56px);
+
+  line-height: 1.06;
+
+  font-weight: 800;
+
+  letter-spacing: -1.8px;
+}
+
+
+body.home-v2
+.platform-section
+.section-header p {
+  max-width: 660px;
+
+  margin: 22px auto 0;
+
+  color: rgba(255, 255, 255, 0.72);
+
+  font-size: 16px;
+
+  line-height: 1.8;
+
+  font-weight: 500;
+}
+
+
+/* =========================================================
+   Platforms Stack
+   ========================================================= */
+
+body.home-v2
+[data-v2-platform-grid] {
+  width: 100%;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 94px;
+}
+
+
+body.home-v2
+.v2-platform-block {
+  width: 100%;
+}
+
+
+/* =========================================================
+   Main Platform Card
+   设计稿主卡约为能力区宽度 86.5%
+   ========================================================= */
+
+body.home-v2
+.v2-platform-featured {
+  width: 86.5%;
+
+  /*
+    设计稿主卡宽高比约 3.78 : 1
+  */
+  aspect-ratio: 3.78 / 1;
+
+  min-height: 0;
+
+  margin: 0 auto clamp(25px, 2.1vw, 34px);
+
+  display: grid;
+
+  grid-template-columns: 50% 50%;
+
+  overflow: hidden;
+
+  border: none;
+
+  border-radius: 6px;
+
+  background: #27262c;
+
+  box-shadow: none;
+}
+
+
+/* =========================================================
+   Main Left Visual
+   ========================================================= */
+
+body.home-v2
+.v2-platform-visual {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+
+  min-height: 0;
+
+  overflow: hidden;
+
+  background: #090a0d;
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  border-right: none;
+}
+
+
+
+
+body.home-v2
+.v2-platform-cl-aigc
+.v2-platform-visual {
+  background-image:
+    url("/images/home-v2/platform-main.png");
+}
+
+body.home-v2
+.v2-platform-cl-scm
+.v2-platform-visual {
+  background-image:
+    url("/images/home-v2/platform-main.png");
+}
+
+body.home-v2
+.v2-platform-cl-irobot
+.v2-platform-visual {
+  background-image:
+    url("/images/home-v2/platform-main.png");
+}
+
+body.home-v2
+.v2-platform-cl-istore
+.v2-platform-visual {
+  background-image:
+    url("/images/home-v2/platform-main.png");
+}
+
+
+
+/* 图片上只有极轻遮罩 */
+
+body.home-v2
+.v2-platform-visual::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  z-index: 1;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.08) 0%,
+      rgba(0, 0, 0, 0) 65%,
+      rgba(0, 0, 0, 0.08) 100%
+    );
+}
+
+
+/* =========================================================
+   Main Title
+   设计稿：左侧偏上，不居中也不贴顶
+   ========================================================= */
+
+body.home-v2
+.v2-platform-visual-overlay {
+  position: absolute;
+
+  left: 6.5%;
+  right: 5%;
+
+  top: 18.5%;
+
+  z-index: 2;
+
+  transform: none;
+
+  text-align: left;
+}
+
+
+body.home-v2
+.v2-platform-eyebrow {
+  display: block;
+
+  margin-bottom: 17px;
+
+  color: rgba(255, 255, 255, 0.96);
+
+  font-size: clamp(15px, 1.18vw, 19px);
+
+  line-height: 1.35;
+
+  font-weight: 650;
+}
+
+
+body.home-v2
+.v2-platform-visual-overlay h3 {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: clamp(42px, 3.45vw, 58px);
+
+  line-height: 1;
+
+  font-weight: 850;
+
+  letter-spacing: -2px;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   Main Right Copy
+   ========================================================= */
+
+body.home-v2
+.v2-platform-copy {
+  height: 100%;
+
+  padding:
+    9%
+    9%
+    8%;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: flex-start;
+
+  justify-content: flex-start;
+
+  background: #27262c;
+}
+
+
+body.home-v2
+.v2-platform-description {
+  max-width: 100%;
+
+  margin: 0;
+
+  color: rgba(255, 255, 255, 0.88);
+
+  font-size: clamp(15px, 1.15vw, 18px);
+
+  line-height: 1.9;
+
+  font-weight: 500;
+}
+
+
+/* =========================================================
+   Main Actions
+   按钮靠近主卡下方
+   ========================================================= */
+
+body.home-v2
+.v2-platform-actions {
+  width: 100%;
+
+  margin-top: auto;
+
+  padding-top: 22px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 18px;
+
+  flex-wrap: wrap;
+}
+
+
+body.home-v2
+.v2-platform-primary,
+body.home-v2
+.v2-platform-secondary {
+  min-height: 44px;
+
+  padding: 0 26px;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 7px;
+
+  font-size: 15px;
+
+  line-height: 1;
+
+  font-weight: 750;
+
+  text-decoration: none;
+}
+
+
+body.home-v2
+.v2-platform-primary {
+  min-width: 174px;
+
+  border: 1px solid #b0ef2d;
+
+  background: #b0ef2d;
+
+  color: #111214;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 6px 16px
+    rgba(176, 239, 45, 0.16);
+
+  transition:
+    transform 180ms ease,
+    filter 180ms ease;
+}
+
+
+body.home-v2
+.v2-platform-primary:hover {
+  transform: translateY(-2px);
+
+  filter: brightness(1.04);
+}
+
+
+body.home-v2
+.v2-platform-secondary {
+  min-width: 116px;
+
+  border: 1px solid #91c63a;
+
+  background: transparent;
+
+  color: #ffffff;
+}
+
+
+/* =========================================================
+   Capability Flow
+   设计稿比例：
+   Card / gap ≈ 321 / 43
+   ========================================================= */
+
+body.home-v2
+.v2-capability-flow {
+  position: relative;
+
+  width: 100%;
+
+  margin: 0;
+
+  display: grid;
+
+  /*
+    4 卡 + 3 箭头区域
+    按设计稿实际比例分配
+  */
+  grid-template-columns:
+    321fr
+    43fr
+    321fr
+    43fr
+    321fr
+    43fr
+    321fr;
+
+  column-gap: 0;
+
+  align-items: stretch;
+}
+
+
+/* =========================================================
+   Capability Card
+   设计稿卡片宽高比约 0.82 : 1
+   ========================================================= */
+
+body.home-v2
+.v2-capability-card {
+  min-width: 0;
+
+  width: 100%;
+
+  aspect-ratio: 0.82 / 1;
+
+  height: auto;
+
+  display: flex;
+
+  flex-direction: column;
+
+  overflow: hidden;
+
+  background: #27262c;
+
+  border: 1px solid #91c63a;
+
+  border-radius: 6px;
+
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease;
+}
+
+
+body.home-v2
+.v2-capability-card:hover {
+  transform: translateY(-3px);
+
+  border-color: #b0ef2d;
+}
+
+
+/* =========================================================
+   Capability Image
+   设计稿图片区约占 54%
+   ========================================================= */
+
+body.home-v2
+.v2-capability-visual {
+  position: relative;
+
+  flex: 0 0 54%;
+
+  width: 100%;
+
+  min-height: 0;
+
+  overflow: hidden;
+
+  background: #111216;
+
+  background-size: cover;
+
+  background-position: center;
+
+  background-repeat: no-repeat;
+
+  border-bottom:
+    1px solid
+    rgba(255, 255, 255, 0.06);
+}
+
+
+/* 后续放图片时不需要改结构 */
+
+
+body.home-v2
+.v2-capability-visual::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  z-index: 1;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.02) 0%,
+      rgba(0, 0, 0, 0.03) 58%,
+      rgba(0, 0, 0, 0.18) 100%
+    );
+}
+
+
+/* =========================================================
+   Capability Title
+   设计稿：图片区上方约 1/4 处
+   ========================================================= */
+
+body.home-v2
+.v2-capability-overlay {
+  position: absolute;
+
+  left: 7%;
+  right: 7%;
+
+  top: 26%;
+
+  z-index: 2;
+
+  text-align: center;
+}
+
+
+body.home-v2
+.v2-capability-overlay h4 {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: clamp(21px, 1.55vw, 27px);
+
+  line-height: 1.16;
+
+  font-weight: 800;
+
+  letter-spacing: -0.5px;
+}
+
+
+body.home-v2
+.v2-capability-en {
+  display: block;
+
+  margin-top: 10px;
+
+  color: rgba(255, 255, 255, 0.94);
+
+  font-size: clamp(11px, 0.82vw, 14px);
+
+  line-height: 1.3;
+
+  font-weight: 650;
+}
+
+/* =========================================================
+   V2 Capability Background Images
+   4 Platforms × 4 Cards
+   ========================================================= */
+
+
+/* =========================================================
+   CL-AIGC
+   ========================================================= */
+
+/* 01 AI 模特生成 */
+body.home-v2
+.v2-platform-cl-aigc
+.v2-capability-card:nth-of-type(1)
+.v2-capability-visual {
+  background-image:
+    url("/images/home-v2/aigc-01.png");
+}
+
+/* 02 服装上身融合 */
+body.home-v2
+.v2-platform-cl-aigc
+.v2-capability-card:nth-of-type(2)
+.v2-capability-visual {
+  background-image:
+    url("/images/home-v2/aigc-02.png");
+}
+
+/* 03 商品视觉扩展 */
+body.home-v2
+.v2-platform-cl-aigc
+.v2-capability-card:nth-of-type(3)
+.v2-capability-visual {
+  background-image:
+    url("/images/home-v2/aigc-03.png");
+}
+
+/* 04 营销素材生产 */
+body.home-v2
+.v2-platform-cl-aigc
+.v2-capability-card:nth-of-type(4)
+.v2-capability-visual {
+  background-image:
+    url("/images/home-v2/aigc-04.png");
+}
+
+
+/* =========================================================
+   CL-SCM
+   ========================================================= */
+
+/* 01 */
+body.home-v2
+.v2-platform-cl-scm
+.v2-capability-card:nth-of-type(1)
+.v2-capability-visual {
+  background-image:
+    url("/images/home-v2/scm-01.png");
+}
+
+/* 02 */
+body.home-v2
+.v2-platform-cl-scm
+.v2-capability-card:nth-of-type(2)
+.v2-capability-visual {
+  background-image:
+    url("/images/home-v2/scm-02.png");
+}
+
+/* 03 */
+body.home-v2
+.v2-platform-cl-scm
+.v2-capability-card:nth-of-type(3)
+.v2-capability-visual {
+  background-image:
+    url("/images/home-v2/scm-03.png");
+}
+
+/* 04 */
+body.home-v2
+.v2-platform-cl-scm
+.v2-capability-card:nth-of-type(4)
+.v2-capability-visual {
+  background-image:
+    url("/images/home-v2/scm-04.png");
+}
+
+
+/* =========================================================
+   CL-iRobot
+   ========================================================= */
+
+/* 01 */
+body.home-v2
+.v2-platform-cl-irobot
+.v2-capability-card:nth-of-type(1)
+.v2-capability-visual {
+  background-image:
+    url("/images/home-v2/robot-01.png");
+}
+
+/* 02 */
+body.home-v2
+.v2-platform-cl-irobot
+.v2-capability-card:nth-of-type(2)
+.v2-capability-visual {
+  background-image:
+    url("/images/home-v2/robot-02.png");
+}
+
+/* 03 */
+body.home-v2
+.v2-platform-cl-irobot
+.v2-capability-card:nth-of-type(3)
+.v2-capability-visual {
+  background-image:
+    url("/images/home-v2/robot-03.png");
+}
+
+/* 04 */
+body.home-v2
+.v2-platform-cl-irobot
+.v2-capability-card:nth-of-type(4)
+.v2-capability-visual {
+  background-image:
+    url("/images/home-v2/robot-04.png");
+}
+
+
+/* =========================================================
+   CL-iStore
+   ========================================================= */
+
+/* 01 */
+body.home-v2
+.v2-platform-cl-istore
+.v2-capability-card:nth-of-type(1)
+.v2-capability-visual {
+  background-image:
+    url("/images/home-v2/aigc-01.png");
+}
+
+/* 02 */
+body.home-v2
+.v2-platform-cl-istore
+.v2-capability-card:nth-of-type(2)
+.v2-capability-visual {
+  background-image:
+    url("/images/home-v2/aigc-02.png");
+}
+
+/* 03 */
+body.home-v2
+.v2-platform-cl-istore
+.v2-capability-card:nth-of-type(3)
+.v2-capability-visual {
+  background-image:
+    url("/images/home-v2/aigc-03.png");
+}
+
+/* 04 */
+body.home-v2
+.v2-platform-cl-istore
+.v2-capability-card:nth-of-type(4)
+.v2-capability-visual {
+  background-image:
+    url("/images/home-v2/aigc-04.png");
+}
+
+
+/* =========================================================
+   SCM / iRobot image crop correction
+   设计中心原图存在边缘留白，放大裁切到铺满
+   ========================================================= */
+
+/* CL-SCM */
+body.home-v2
+.v2-platform-cl-scm
+.v2-capability-visual {
+  background-size: 135% auto;
+  background-position: center center;
+}
+
+
+/* CL-iRobot */
+body.home-v2
+.v2-platform-cl-irobot
+.v2-capability-visual {
+  background-size: 135% auto;
+  background-position: center center;
+}
+
+/* =========================================================
+   Capability Copy
+   ========================================================= */
+
+body.home-v2
+.v2-capability-copy {
+  flex: 1;
+
+  min-height: 0;
+
+  padding:
+    10%
+    6.5%
+    7%;
+
+  display: flex;
+
+  align-items: flex-start;
+
+  background: #27262c;
+}
+
+
+body.home-v2
+.v2-capability-copy p {
+  margin: 0;
+
+  color: rgba(255, 255, 255, 0.91);
+
+  font-size: clamp(14px, 1.08vw, 18px);
+
+  line-height: 1.58;
+
+  font-weight: 500;
+}
+
+
+/* =========================================================
+   Capability Arrows
+   设计稿箭头位于图文分界线略下方
+   ========================================================= */
+
+body.home-v2
+.v2-capability-arrow {
+  position: relative;
+
+  min-width: 0;
+
+  height: 100%;
+
+  z-index: 5;
+}
+
+
+body.home-v2
+.v2-capability-arrow::before {
+  content: "→";
+
+  position: absolute;
+
+  left: 50%;
+
+  top: 62%;
+
+  transform:
+    translate(-50%, -50%);
+
+  width: 26px;
+  height: 26px;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.55);
+
+  border-radius: 50%;
+
+  background: #1c1e22;
+
+  color: rgba(255, 255, 255, 0.92);
+
+  font-size: 13px;
+
+  line-height: 1;
+
+  font-weight: 500;
+}
+
+
+/* =========================================================
+   Tablet
+   ========================================================= */
+
+@media (max-width: 1100px) {
+
+  body.home-v2
+  .platform-section > .container {
+    width: calc(100% - 48px);
+  }
+
+
+  body.home-v2
+  .v2-platform-featured {
+    width: 90%;
+  }
+
+
+  body.home-v2
+  .v2-capability-flow {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+
+    gap: 18px;
+  }
+
+
+  body.home-v2
+  .v2-capability-arrow {
+    display: none;
+  }
+
+
+  body.home-v2
+  .v2-capability-card {
+    aspect-ratio: 0.9 / 1;
+  }
+
+}
+
+
+/* =========================================================
+   Mobile
+   ========================================================= */
+
+@media (max-width: 760px) {
+
+  body.home-v2
+  .platform-section {
+    padding:
+      64px
+      0
+      78px;
+  }
+
+
+  body.home-v2
+  .platform-section > .container {
+    width: calc(100% - 28px);
+  }
+
+
+  body.home-v2
+  .v2-platform-featured {
+    width: 100%;
+
+    aspect-ratio: auto;
+
+    min-height: 0;
+
+    grid-template-columns: 1fr;
+  }
+
+
+  body.home-v2
+  .v2-platform-visual {
+    min-height: 280px;
+  }
+
+
+  body.home-v2
+  .v2-platform-copy {
+    min-height: 240px;
+
+    padding:
+      32px
+      28px;
+  }
+
+
+  body.home-v2
+  .v2-platform-visual-overlay {
+    left: 26px;
+    right: 26px;
+
+    top: 52px;
+  }
+
+
+  body.home-v2
+  .v2-platform-visual-overlay h3 {
+    white-space: normal;
+
+    font-size: 39px;
+  }
+
+
+  body.home-v2
+  .v2-capability-flow {
+    grid-template-columns: 1fr;
+
+    gap: 14px;
+  }
+
+
+  body.home-v2
+  .v2-capability-card {
+    aspect-ratio: auto;
+  }
+
+
+  body.home-v2
+  .v2-capability-visual {
+    height: 230px;
+
+    flex-basis: auto;
+  }
+
+
+  body.home-v2
+  .v2-capability-copy {
+    min-height: 150px;
+
+    padding: 24px 22px;
+  }
+
+
+  body.home-v2
+  .v2-capability-arrow {
+    display: none;
+  }
+
+}
+
+/* =========================================================
+   V2 Industry Ecosystem
+   Design Center Exact Layout
+   ========================================================= */
+
+body.home-v2
+.v2-ecosystem {
+  position: relative;
+
+  margin: 0;
+
+  padding:
+    146px
+    0
+    116px;
+
+  overflow: hidden;
+
+  background: #ffffff;
+
+  color: #111111;
+}
+
+
+/* =========================================================
+   Inner Container
+   ========================================================= */
+
+body.home-v2
+.v2-ecosystem-inner {
+  width:
+    min(
+      1240px,
+      calc(100% - 80px)
+    );
+
+  margin:
+    0
+    auto;
+}
+
+
+/* =========================================================
+   Header
+   ========================================================= */
+
+body.home-v2
+.v2-ecosystem-header {
+  width:
+    min(
+      900px,
+      100%
+    );
+
+  margin:
+    0
+    auto
+    91px;
+
+  text-align:
+    center;
+}
+
+
+body.home-v2
+.v2-ecosystem-kicker {
+  display:
+    block;
+
+  margin:
+    0
+    0
+    22px;
+
+  color:
+    #090909;
+
+  font-size:
+    19px;
+
+  line-height:
+    1;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    0.015em;
+
+  text-transform:
+    uppercase;
+}
+
+
+body.home-v2
+.v2-ecosystem-header h2 {
+  margin:
+    0;
+
+  color:
+    #050505;
+
+  font-size:
+    clamp(
+      44px,
+      3.3vw,
+      54px
+    );
+
+  line-height:
+    1.08;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    -1.8px;
+}
+
+
+body.home-v2
+.v2-ecosystem-header p {
+  max-width:
+    820px;
+
+  margin:
+    54px
+    auto
+    0;
+
+  color:
+    #181818;
+
+  font-size:
+    16px;
+
+  line-height:
+    1.7;
+
+  font-weight:
+    650;
+}
+
+
+/* =========================================================
+   Cards Grid
+   设计稿：
+   4张卡
+   每张约 287 × 370
+   卡间距约 24px
+   ========================================================= */
+
+body.home-v2
+.v2-ecosystem-grid {
+  width:
+    100%;
+
+  display:
+    grid;
+
+  grid-template-columns:
+    repeat(
+      4,
+      minmax(0, 1fr)
+    );
+
+  gap:
+    24px;
+
+  align-items:
+    stretch;
+}
+
+
+/* =========================================================
+   Ecosystem Card
+   ========================================================= */
+
+body.home-v2
+.v2-ecosystem-card {
+  position:
+    relative;
+
+  height:
+    370px;
+
+  min-width:
+    0;
+
+  padding:
+    40px
+    31px
+    34px;
+
+  overflow:
+    hidden;
+
+  background:
+    #292929;
+
+  border:
+    none;
+
+  border-radius:
+    28px;
+
+  box-shadow:
+    none;
+
+  color:
+    #ffffff;
+}
+
+
+/* =========================================================
+   Green Circle
+   ========================================================= */
+
+body.home-v2
+.v2-ecosystem-dot {
+  width:
+    64px;
+
+  height:
+    64px;
+
+  margin:
+    0
+    auto
+    29px;
+
+  border-radius:
+    50%;
+
+  background:
+    #c8ff00;
+}
+
+
+/* =========================================================
+   Card Title
+   ========================================================= */
+
+body.home-v2
+.v2-ecosystem-card h3 {
+  margin:
+    0
+    0
+    16px;
+
+  color:
+    #ffffff;
+
+  text-align:
+    center;
+
+  font-size:
+    22px;
+
+  line-height:
+    1.25;
+
+  font-weight:
+    750;
+
+  letter-spacing:
+    -0.4px;
+}
+
+
+/* =========================================================
+   Card Description
+   ========================================================= */
+
+body.home-v2
+.v2-ecosystem-card p {
+  margin:
+    0;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.72
+    );
+
+  text-align:
+    left;
+
+  font-size:
+    17px;
+
+  line-height:
+    1.62;
+
+  font-weight:
+    400;
+}
+
+
+/* =========================================================
+   Tablet
+   ========================================================= */
+
+@media (max-width: 1100px) {
+
+  body.home-v2
+  .v2-ecosystem {
+    padding:
+      110px
+      0
+      96px;
+  }
+
+
+  body.home-v2
+  .v2-ecosystem-inner {
+    width:
+      calc(
+        100% - 48px
+      );
+  }
+
+
+  body.home-v2
+  .v2-ecosystem-grid {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+
+    gap:
+      20px;
+  }
+
+
+  body.home-v2
+  .v2-ecosystem-card {
+    height:
+      350px;
+  }
+
+}
+
+
+/* =========================================================
+   Mobile
+   ========================================================= */
+
+@media (max-width: 620px) {
+
+  body.home-v2
+  .v2-ecosystem {
+    padding:
+      78px
+      0
+      74px;
+  }
+
+
+  body.home-v2
+  .v2-ecosystem-inner {
+    width:
+      calc(
+        100% - 28px
+      );
+  }
+
+
+  body.home-v2
+  .v2-ecosystem-header {
+    margin-bottom:
+      54px;
+  }
+
+
+  body.home-v2
+  .v2-ecosystem-kicker {
+    font-size:
+      15px;
+
+    margin-bottom:
+      16px;
+  }
+
+
+  body.home-v2
+  .v2-ecosystem-header h2 {
+    font-size:
+      38px;
+  }
+
+
+  body.home-v2
+  .v2-ecosystem-header p {
+    margin-top:
+      28px;
+
+    font-size:
+      15px;
+  }
+
+
+  body.home-v2
+  .v2-ecosystem-grid {
+    grid-template-columns:
+      1fr;
+
+    gap:
+      16px;
+  }
+
+
+  body.home-v2
+  .v2-ecosystem-card {
+    height:
+      auto;
+
+    min-height:
+      330px;
+  }
+
+}
+
+
+/* =========================================================
+   V2 Footer
+   Design Center Exact Layout
+   ========================================================= */
+
+body.home-v2
+.v2-footer {
+  position: relative;
+
+  min-height: 650px;
+
+  margin: 0;
+
+  padding:
+    168px
+    0
+    54px;
+
+  overflow: hidden;
+
+  background:
+    #1b1b1b;
+
+  color:
+    #ffffff;
+
+  /*
+    设计稿顶部：
+    左右低，中间高
+  */
+  clip-path:
+    polygon(
+      0 7.5%,
+      48.5% 0,
+      100% 8%,
+      100% 100%,
+      0 100%
+    );
+}
+
+
+/* =========================================================
+   Inner
+   ========================================================= */
+
+body.home-v2
+.v2-footer-inner {
+  position: relative;
+
+  width:
+    min(
+      1800px,
+      calc(100% - 210px)
+    );
+
+  min-height: 430px;
+
+  margin:
+    0
+    auto;
+
+  display: grid;
+
+  grid-template-columns:
+    1.25fr
+    1.6fr;
+
+  column-gap: 140px;
+
+  align-items: start;
+}
+
+
+/* =========================================================
+   Left Brand
+   ========================================================= */
+
+body.home-v2
+.v2-footer-brand {
+  padding-top: 20px;
+}
+
+
+body.home-v2
+.v2-footer-brand-title {
+  display: flex;
+
+  align-items: center;
+
+  gap: 15px;
+}
+
+
+/* Green H */
+
+body.home-v2
+.v2-footer-logo {
+  width: 62px;
+  height: 62px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background:
+    #c8ff00;
+
+  color:
+    #111111;
+
+  font-size: 27px;
+
+  line-height: 1;
+
+  font-weight: 850;
+}
+
+
+body.home-v2
+.v2-footer-brand-title h3 {
+  margin: 0;
+
+  color:
+    #ffffff;
+
+  font-size: 29px;
+
+  line-height: 1.1;
+
+  font-weight: 800;
+
+  letter-spacing: -0.5px;
+}
+
+
+/* =========================================================
+   Social
+   ========================================================= */
+
+body.home-v2
+.v2-footer-socials {
+  margin-top: 38px;
+
+  padding-left: 78px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 48px;
+}
+
+
+body.home-v2
+.v2-footer-social {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 11px;
+
+  color:
+    rgba(255, 255, 255, 0.74);
+
+  font-size: 17px;
+
+  line-height: 1;
+
+  font-weight: 650;
+
+  text-decoration: none;
+
+  transition:
+    color 180ms ease;
+}
+
+
+body.home-v2
+.v2-footer-social:hover {
+  color:
+    #ffffff;
+}
+
+
+/* 微信 */
+
+body.home-v2
+.v2-footer-social
+.fa-weixin {
+  color:
+    #4ac73c;
+
+  font-size: 25px;
+}
+
+
+/* LinkedIn */
+
+body.home-v2
+.v2-footer-social
+.fa-linkedin {
+  color:
+    #0a9bd8;
+
+  font-size: 25px;
+}
+
+
+/* Bilibili */
+
+body.home-v2
+.v2-footer-social
+.fa-bilibili {
+  color:
+    #149ac8;
+
+  font-size: 25px;
+}
+
+
+/* =========================================================
+   Right Columns
+   ========================================================= */
+
+body.home-v2
+.v2-footer-columns {
+  display: grid;
+
+  grid-template-columns:
+    1.15fr
+    0.9fr
+    1fr;
+
+  gap:
+    68px;
+}
+
+
+body.home-v2
+.v2-footer-column h4 {
+  margin:
+    0
+    0
+    36px;
+
+  color:
+    #ffffff;
+
+  font-size:
+    25px;
+
+  line-height:
+    1.2;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    -0.4px;
+}
+
+
+body.home-v2
+.v2-footer-column ul {
+  margin: 0;
+
+  padding: 0;
+
+  list-style: none;
+}
+
+
+body.home-v2
+.v2-footer-column li {
+  margin:
+    0
+    0
+    23px;
+
+  color:
+    rgba(255, 255, 255, 0.62);
+
+  font-size:
+    18px;
+
+  line-height:
+    1.35;
+
+  font-weight:
+    450;
+}
+
+
+body.home-v2
+.v2-footer-column li:last-child {
+  margin-bottom: 0;
+}
+
+
+/* =========================================================
+   Copyright
+   ========================================================= */
+
+body.home-v2
+.v2-footer-bottom {
+  position: absolute;
+
+  left: 19%;
+  right: 6%;
+
+  bottom: 8px;
+}
+
+
+body.home-v2
+.v2-footer-bottom p {
+  margin: 0;
+
+  color:
+    rgba(255, 255, 255, 0.34);
+
+  font-size: 18px;
+
+  line-height:
+    1.5;
+
+  font-weight: 500;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   Tablet
+   ========================================================= */
+
+@media (max-width: 1200px) {
+
+  body.home-v2
+  .v2-footer {
+    min-height: 620px;
+
+    padding-top: 150px;
+  }
+
+
+  body.home-v2
+  .v2-footer-inner {
+    width:
+      calc(100% - 96px);
+
+    grid-template-columns:
+      1fr
+      1.7fr;
+
+    column-gap:
+      70px;
+  }
+
+
+  body.home-v2
+  .v2-footer-columns {
+    gap:
+      36px;
+  }
+
+
+  body.home-v2
+  .v2-footer-column li {
+    font-size:
+      16px;
+  }
+
+
+  body.home-v2
+  .v2-footer-bottom {
+    left:
+      10%;
+  }
+
+}
+
+
+/* =========================================================
+   Mobile
+   ========================================================= */
+
+@media (max-width: 760px) {
+
+  body.home-v2
+  .v2-footer {
+    min-height: auto;
+
+    padding:
+      120px
+      0
+      46px;
+
+    clip-path:
+      polygon(
+        0 35px,
+        50% 0,
+        100% 35px,
+        100% 100%,
+        0 100%
+      );
+  }
+
+
+  body.home-v2
+  .v2-footer-inner {
+    width:
+      calc(100% - 40px);
+
+    min-height:
+      0;
+
+    display:
+      block;
+  }
+
+
+  body.home-v2
+  .v2-footer-socials {
+    padding-left:
+      0;
+
+    gap:
+      24px;
+
+    flex-wrap:
+      wrap;
+  }
+
+
+  body.home-v2
+  .v2-footer-columns {
+    margin-top:
+      64px;
+
+    grid-template-columns:
+      1fr
+      1fr;
+
+    gap:
+      44px
+      30px;
+  }
+
+
+  body.home-v2
+  .v2-footer-bottom {
+    position:
+      static;
+
+    margin-top:
+      64px;
+  }
+
+
+  body.home-v2
+  .v2-footer-bottom p {
+    white-space:
+      normal;
+
+    font-size:
+      14px;
+  }
+
+}

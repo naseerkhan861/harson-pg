@@ -1,5 +1,8 @@
 import { HomeViewModel } from "./viewmodels/homeViewModel.js";
 import { HomeView } from "./views/homeView.js";
+import {
+  HomeV2View
+} from "./views/homeV2View.js";
 import { AuthViewModel } from "./viewmodels/authViewModel.js";
 import { AuthView } from "./views/authView.js";
 import { AccountManagementViewModel } from "./viewmodels/accountManagementViewModel.js";
@@ -28,6 +31,20 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
       forceHomeTopOnRefresh();
     }, 80);
+  }
+
+
+  if (
+    document.body.dataset.page ===
+    "home-v2"
+  ) {
+    const vm =
+      new HomeViewModel();
+
+    const view =
+      new HomeV2View(vm);
+
+    view.render();
   }
 
   if (document.body.dataset.page === "auth") {
