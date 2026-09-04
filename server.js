@@ -9,6 +9,8 @@ const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 const authRoutes = require("./src/routes/authRoutes");
 const aigcAccountRoutes = require("./src/routes/aigcAccountRoutes");
+const aiRoutes =
+  require("./src/routes/aiRoutes");
 const masterOwnerModel = require(
   "./src/models/aigcMasterOwnerCsvModel"
 );
@@ -28,7 +30,11 @@ app.use(
       useDefaults: true,
       directives: {
         "default-src": ["'self'"],
-        "script-src": ["'self'", "https://cdnjs.cloudflare.com"],
+        "script-src": [
+          "'self'",
+          "'wasm-unsafe-eval'",
+          "https://cdnjs.cloudflare.com"
+        ],
         "style-src": [
           "'self'",
           "'unsafe-inline'",
@@ -47,7 +53,9 @@ app.use(
           "https://image.yibaiaigc.com",
           "https://yb-ai.oss-accelerate.aliyuncs.com"
         ],
-        "connect-src": ["'self'"],
+        "connect-src": [
+          "'self'",
+          "blob:",],
         "frame-src": [
           "'self'",
           "blob:",
@@ -90,6 +98,37 @@ app.use(
     }
   }),
   aigcAccountRoutes
+);
+
+app.use(
+  "/api/ai",
+
+  rateLimit({
+    windowMs:
+      15 * 60 * 1000,
+
+    max: 30,
+
+    message: {
+      success: false,
+
+      message:
+        "AI 请求过于频繁，请稍后重试。"
+    }
+  }),
+
+  aiRoutes
+);
+
+app.get(
+  "/dashboard-meta.html",
+  (req, res) => {
+    return sendDashboardPage(
+      req,
+      res,
+      "dashboard-meta.html"
+    );
+  }
 );
 
 app.get(
@@ -219,6 +258,10 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+app.get("/index-mecha", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index-mecha.html"));
+});
+
 app.get("/login", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
@@ -239,7 +282,15 @@ app.get("/account-management", (req, res) => {
 */
 
 app.get("/dashboard", (req, res) => {
-  res.redirect("/dashboard-black-gold");
+  res.redirect("/dashboard-meta");
+});
+
+app.get("/dashboard-meta", (req, res) => {
+  return sendDashboardPage(
+    req,
+    res,
+    "dashboard-meta.html"
+  );
 });
 
 app.get("/dashboard-black-gold", (req, res) => {
@@ -251,8 +302,9 @@ app.get("/dashboard-mecha", (req, res) => {
 });
 
 app.get("/aigc", (req, res) => {
-  return sendAdminOnlyPage(req, res, "aigc.html");
+  res.redirect("/aigc-workspace");
 });
+
 
 app.get(
   "/aigc-workspace",

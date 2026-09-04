@@ -1,0 +1,318 @@
+/* =========================================================
+   Harson-Base Meta UI
+   Shared Theme
+   ========================================================= */
+
+body.meta-ui {
+  --meta-accent: #c8ff00;
+  --meta-accent-light: #dcff59;
+  --meta-accent-dark: #92bd00;
+
+  --meta-bg: #111214;
+  --meta-bg-secondary: #18191c;
+  --meta-bg-card: #202125;
+  --meta-bg-card-hover: #26272b;
+
+  --meta-text: #f7f7f5;
+  --meta-text-secondary: #a7a7a3;
+  --meta-text-muted: #777873;
+
+  --meta-border: rgba(255, 255, 255, 0.08);
+  --meta-border-accent: rgba(200, 255, 0, 0.16);
+
+  --meta-radius-sm: 6px;
+  --meta-radius-md: 10px;
+  --meta-radius-lg: 16px;
+
+  --meta-shadow:
+    0 18px 45px
+    rgba(0, 0, 0, 0.22);
+
+  margin: 0;
+
+  background: var(--meta-bg);
+  color: var(--meta-text);
+
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+
+/* =========================================================
+   Page
+   ========================================================= */
+
+body.meta-ui *,
+body.meta-ui *::before,
+body.meta-ui *::after {
+  box-sizing: border-box;
+}
+
+body.meta-ui a {
+  color: inherit;
+}
+
+body.meta-ui main {
+  background: var(--meta-bg);
+}
+
+
+/* =========================================================
+   Header
+   ========================================================= */
+
+body.meta-ui .top-bar {
+  border-bottom:
+    1px solid
+    rgba(200, 255, 0, 0.08);
+
+  background:
+    rgba(17, 18, 20, 0.92);
+
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+body.meta-ui .logo-icon {
+  border-color: var(--meta-accent);
+
+  background: var(--meta-accent);
+
+  color: #111214;
+
+  box-shadow: none;
+}
+
+body.meta-ui .logo-icon::after {
+  display: none;
+}
+
+body.meta-ui .logo-text {
+  color: #ffffff;
+}
+
+body.meta-ui .logo-text span {
+  color: var(--meta-accent);
+}
+
+body.meta-ui .nav-links a {
+  color: rgba(255, 255, 255, 0.78);
+
+  transition:
+    color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+body.meta-ui .nav-links a:hover {
+  color: var(--meta-accent);
+}
+
+body.meta-ui .account-avatar-text {
+  color: #ffffff;
+}
+
+
+/* =========================================================
+   Typography
+   ========================================================= */
+
+body.meta-ui h1,
+body.meta-ui h2,
+body.meta-ui h3,
+body.meta-ui h4 {
+  color: var(--meta-text);
+
+  letter-spacing: -0.02em;
+}
+
+body.meta-ui p {
+  color: var(--meta-text-secondary);
+}
+
+
+/* =========================================================
+   Cards
+   ========================================================= */
+
+body.meta-ui .meta-card {
+  border:
+    1px solid
+    var(--meta-border);
+
+  border-radius:
+    var(--meta-radius-lg);
+
+  background:
+    var(--meta-bg-card);
+
+  box-shadow:
+    var(--meta-shadow);
+}
+
+
+/* =========================================================
+   Buttons
+   ========================================================= */
+
+body.meta-ui .meta-btn-primary {
+  min-height: 44px;
+
+  padding:
+    0 22px;
+
+  border: 0;
+
+  border-radius:
+    var(--meta-radius-sm);
+
+  background:
+    var(--meta-accent);
+
+  color: #111214;
+
+  font: inherit;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+body.meta-ui .meta-btn-primary:hover {
+  background:
+    var(--meta-accent-light);
+
+  transform:
+    translateY(-1px);
+}
+
+
+body.meta-ui .meta-btn-secondary {
+  min-height: 44px;
+
+  padding:
+    0 22px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.16);
+
+  border-radius:
+    var(--meta-radius-sm);
+
+  background:
+    transparent;
+
+  color:
+    var(--meta-text);
+
+  font: inherit;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+body.meta-ui .meta-btn-secondary:hover {
+  border-color:
+    var(--meta-accent);
+
+  color:
+    var(--meta-accent);
+
+  background:
+    rgba(200, 255, 0, 0.04);
+}
+
+
+/* =========================================================
+   Form Controls
+   ========================================================= */
+
+body.meta-ui input,
+body.meta-ui select,
+body.meta-ui textarea {
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.12);
+
+  border-radius:
+    var(--meta-radius-sm);
+
+  background:
+    #18191c;
+
+  color:
+    var(--meta-text);
+
+  font: inherit;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+body.meta-ui input:focus,
+body.meta-ui select:focus,
+body.meta-ui textarea:focus {
+  border-color:
+    var(--meta-accent);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(200, 255, 0, 0.08);
+}
+
+body.meta-ui input::placeholder,
+body.meta-ui textarea::placeholder {
+  color:
+    var(--meta-text-muted);
+}
+
+
+/* =========================================================
+   Tables
+   ========================================================= */
+
+body.meta-ui table {
+  color:
+    var(--meta-text);
+}
+
+body.meta-ui th {
+  color:
+    var(--meta-text-secondary);
+}
+
+body.meta-ui th,
+body.meta-ui td {
+  border-color:
+    var(--meta-border);
+}
+
+
+/* =========================================================
+   Accent
+   ========================================================= */
+
+body.meta-ui .meta-accent {
+  color:
+    var(--meta-accent);
+}
+
+body.meta-ui .meta-surface {
+  background:
+    var(--meta-bg-secondary);
+}

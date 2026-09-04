@@ -1,0 +1,921 @@
+/* =========================================================
+   Harson-Base Meta UI
+   Account Management
+   ========================================================= */
+
+
+/* =========================================================
+   Page
+   ========================================================= */
+
+body.meta-ui[data-page="account-management"] {
+  min-height: 100vh;
+
+  background:
+    #111214;
+
+  color:
+    var(--meta-text);
+}
+
+
+/* Remove legacy gold grid */
+
+body.meta-ui[data-page="account-management"]::before {
+  content: none;
+}
+
+
+/* =========================================================
+   Main Area
+   ========================================================= */
+
+body.meta-ui .account-page {
+  min-height:
+    calc(100vh - 78px);
+
+  padding:
+    56px 0 80px;
+
+  background:
+    #111214;
+
+  overflow: visible;
+}
+
+
+/* Remove legacy glow */
+
+body.meta-ui .account-page::before,
+body.meta-ui .account-page::after {
+  content: none;
+}
+
+
+/* =========================================================
+   Hero Card
+   ========================================================= */
+
+body.meta-ui .account-hero-card {
+  padding:
+    34px;
+
+  margin-bottom:
+    26px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.08);
+
+  border-radius:
+    10px;
+
+  background:
+    #18191c;
+
+  box-shadow:
+    none;
+}
+
+
+body.meta-ui .account-hero-card::before,
+body.meta-ui .account-hero-card::after {
+  content: none;
+}
+
+
+body.meta-ui .account-hero-card h1 {
+  margin:
+    8px 0 10px;
+
+  color:
+    #ffffff;
+
+  font-size:
+    clamp(36px, 4vw, 50px);
+
+  line-height:
+    1.06;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    -1.8px;
+
+  text-shadow:
+    none;
+}
+
+
+body.meta-ui .account-hero-card p {
+  color:
+    rgba(255, 255, 255, 0.58);
+
+  font-weight:
+    500;
+}
+
+
+/* =========================================================
+   Metric Cards
+   ========================================================= */
+
+body.meta-ui .metric-card {
+  padding:
+    24px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.08);
+
+  border-radius:
+    8px;
+
+  background:
+    #202125;
+
+  box-shadow:
+    none;
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+body.meta-ui .metric-card::before {
+  content: none;
+}
+
+
+body.meta-ui .metric-card:hover {
+  border-color:
+    rgba(200, 255, 0, 0.2);
+
+  background:
+    #232429;
+
+  transform:
+    translateY(-2px);
+}
+
+
+body.meta-ui .metric-card strong {
+  color:
+    #ffffff;
+
+  font-size:
+    32px;
+
+  font-weight:
+    800;
+}
+
+
+body.meta-ui .metric-card span {
+  color:
+    rgba(255, 255, 255, 0.52);
+
+  font-weight:
+    500;
+}
+
+
+/* Highlight first metric */
+
+body.meta-ui
+.account-user-metrics
+.metric-card:first-child {
+  border-color:
+    rgba(200, 255, 0, 0.22);
+
+  background:
+    rgba(200, 255, 0, 0.045);
+}
+
+
+/* =========================================================
+   Panels
+   ========================================================= */
+
+body.meta-ui .account-panel {
+  padding:
+    28px;
+
+  margin-bottom:
+    24px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.08);
+
+  border-radius:
+    10px;
+
+  background:
+    #18191c;
+
+  box-shadow:
+    none;
+}
+
+
+body.meta-ui .account-panel::before {
+  content: none;
+}
+
+
+body.meta-ui .account-panel h2 {
+  color:
+    #ffffff;
+
+  font-weight:
+    750;
+}
+
+
+body.meta-ui .account-panel h3 {
+  color:
+    var(--meta-accent);
+
+  font-weight:
+    700;
+}
+
+
+body.meta-ui .account-panel p,
+body.meta-ui .muted {
+  color:
+    rgba(255, 255, 255, 0.56);
+
+  font-weight:
+    500;
+}
+
+
+/* =========================================================
+   Identity Cards
+   ========================================================= */
+
+body.meta-ui .account-identity-grid > div {
+  padding:
+    18px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.08);
+
+  border-radius:
+    7px;
+
+  background:
+    #202125;
+}
+
+
+body.meta-ui .account-identity-grid span,
+body.meta-ui .account-unbound-details span {
+  color:
+    rgba(255, 255, 255, 0.46);
+
+  font-weight:
+    500;
+}
+
+
+body.meta-ui .account-identity-grid strong {
+  color:
+    #ffffff;
+}
+
+
+/* =========================================================
+   Forms
+   ========================================================= */
+
+body.meta-ui .management-form input,
+body.meta-ui .management-form select,
+body.meta-ui .management-form textarea {
+  width:
+    100%;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.11);
+
+  border-radius:
+    6px;
+
+  background:
+    #202125;
+
+  color:
+    #ffffff;
+
+  font-weight:
+    500;
+}
+
+
+body.meta-ui .management-form input:focus,
+body.meta-ui .management-form select:focus,
+body.meta-ui .management-form textarea:focus {
+  border-color:
+    var(--meta-accent);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(200, 255, 0, 0.07);
+}
+
+
+/* =========================================================
+   Buttons
+   ========================================================= */
+
+body.meta-ui .management-form button,
+body.meta-ui .demo-token-edit-btn {
+  min-height:
+    40px;
+
+  padding:
+    0 18px;
+
+  border:
+    none;
+
+  border-radius:
+    6px;
+
+  background:
+    var(--meta-accent);
+
+  color:
+    #111214;
+
+  font-weight:
+    700;
+
+  box-shadow:
+    none;
+
+  cursor:
+    pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+body.meta-ui .management-form button:hover,
+body.meta-ui .demo-token-edit-btn:hover {
+  background:
+    var(--meta-accent-light);
+
+  transform:
+    translateY(-1px);
+
+  box-shadow:
+    none;
+}
+
+
+/* =========================================================
+   Tables
+   ========================================================= */
+
+body.meta-ui .table-wrap {
+  overflow-x:
+    auto;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.08);
+
+  border-radius:
+    7px;
+}
+
+
+body.meta-ui .account-panel table {
+  background:
+    #18191c;
+}
+
+
+body.meta-ui .account-panel th {
+  padding:
+    14px 12px;
+
+  border-bottom:
+    1px solid
+    rgba(255, 255, 255, 0.08);
+
+  background:
+    #202125;
+
+  color:
+    rgba(255, 255, 255, 0.64);
+
+  font-weight:
+    650;
+}
+
+
+body.meta-ui .account-panel td {
+  padding:
+    14px 12px;
+
+  border-bottom:
+    1px solid
+    rgba(255, 255, 255, 0.06);
+
+  color:
+    rgba(255, 255, 255, 0.66);
+
+  font-weight:
+    500;
+}
+
+
+body.meta-ui .account-panel tr:hover td {
+  background:
+    rgba(200, 255, 0, 0.035);
+
+  color:
+    #ffffff;
+}
+
+
+/* =========================================================
+   Status / Badges
+   ========================================================= */
+
+body.meta-ui .account-data-badge {
+  min-height:
+    28px;
+
+  padding:
+    0 11px;
+
+  border:
+    1px solid
+    rgba(200, 255, 0, 0.22);
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(200, 255, 0, 0.06);
+
+  color:
+    var(--meta-accent);
+
+  font-size:
+    11px;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    0.04em;
+}
+
+
+body.meta-ui .account-data-badge-muted {
+  border-color:
+    rgba(255, 255, 255, 0.12);
+
+  background:
+    rgba(255, 255, 255, 0.04);
+
+  color:
+    rgba(255, 255, 255, 0.52);
+}
+
+
+/* =========================================================
+   Messages / Sync Notices
+   ========================================================= */
+
+body.meta-ui .account-demo-notice,
+body.meta-ui .account-sync-banner {
+  padding:
+    14px 16px;
+
+  border:
+    1px solid
+    rgba(200, 255, 0, 0.16);
+
+  border-radius:
+    7px;
+
+  background:
+    rgba(200, 255, 0, 0.04);
+
+  color:
+    rgba(255, 255, 255, 0.62);
+
+  font-weight:
+    500;
+}
+
+
+body.meta-ui .account-demo-notice strong,
+body.meta-ui .account-sync-banner strong {
+  color:
+    var(--meta-accent);
+}
+
+
+/* =========================================================
+   Mapping Cards
+   ========================================================= */
+
+body.meta-ui .mapping-card {
+  padding:
+    18px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.08);
+
+  border-radius:
+    7px;
+
+  background:
+    #202125;
+
+  color:
+    rgba(255, 255, 255, 0.62);
+}
+
+
+/* =========================================================
+   Empty State
+   ========================================================= */
+
+body.meta-ui .account-empty-state {
+  padding:
+    34px 20px;
+
+  border:
+    1px dashed
+    rgba(255, 255, 255, 0.14);
+
+  border-radius:
+    7px;
+
+  background:
+    #202125;
+
+  color:
+    rgba(255, 255, 255, 0.5);
+}
+
+
+/* =========================================================
+   Loading
+   ========================================================= */
+
+body.meta-ui .account-loading-dot {
+  border-color:
+    rgba(200, 255, 0, 0.16);
+
+  border-top-color:
+    var(--meta-accent);
+}
+
+
+/* =========================================================
+   Responsive
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+  body.meta-ui .account-page {
+    padding:
+      40px 0 60px;
+  }
+
+
+  body.meta-ui .account-hero-card {
+    padding:
+      28px;
+  }
+
+
+  body.meta-ui .account-panel {
+    padding:
+      24px;
+  }
+
+}
+
+
+@media (max-width: 600px) {
+
+  body.meta-ui .account-page {
+    padding:
+      28px 0 48px;
+  }
+
+
+  body.meta-ui .account-hero-card {
+    padding:
+      22px;
+  }
+
+
+  body.meta-ui .account-panel {
+    padding:
+      20px;
+  }
+
+
+  body.meta-ui .account-identity-grid {
+    grid-template-columns:
+      1fr;
+  }
+
+}
+
+/* =========================================================
+   Remove Legacy Black-Gold Colors
+   ========================================================= */
+
+body.meta-ui[data-page="account-management"] {
+  /* Override legacy variables from main.css */
+  --gold: #c8ff00;
+  --gold-light: #dcff59;
+  --gold-dark: #92bd00;
+
+  --gold-gradient:
+    linear-gradient(
+      135deg,
+      #c8ff00,
+      #dcff59,
+      #92bd00
+    );
+
+  --border:
+    rgba(255, 255, 255, 0.08);
+
+  --bg-card:
+    #202125;
+
+  --text:
+    #f7f7f5;
+
+  --text-secondary:
+    #a7a7a3;
+}
+
+
+/* =========================================================
+   Hero Badge
+   ========================================================= */
+
+body.meta-ui
+.account-hero-card
+.hero-badge {
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  min-height:
+    34px;
+
+  padding:
+    0 14px;
+
+  border:
+    1px solid
+    rgba(200, 255, 0, 0.22);
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(200, 255, 0, 0.06);
+
+  color:
+    #c8ff00;
+
+  font-size:
+    13px;
+
+  font-weight:
+    700;
+
+  box-shadow:
+    none;
+
+  text-shadow:
+    none;
+}
+
+
+/* =========================================================
+   Hero Actions
+   ========================================================= */
+
+body.meta-ui
+.account-hero-actions {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    14px;
+
+  flex-wrap:
+    wrap;
+}
+
+
+/* Primary dashboard button */
+
+body.meta-ui
+.account-hero-actions
+.btn-primary {
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  min-height:
+    46px;
+
+  padding:
+    0 22px;
+
+  border:
+    none;
+
+  border-radius:
+    6px;
+
+  background:
+    #c8ff00;
+
+  color:
+    #111214;
+
+  font-size:
+    14px;
+
+  font-weight:
+    700;
+
+  text-decoration:
+    none;
+
+  box-shadow:
+    none;
+
+  cursor:
+    pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+body.meta-ui
+.account-hero-actions
+.btn-primary:hover {
+  background:
+    #dcff59;
+
+  color:
+    #111214;
+
+  transform:
+    translateY(-1px);
+
+  box-shadow:
+    none;
+}
+
+
+/* Secondary / logout button */
+
+body.meta-ui
+.account-hero-actions
+.btn-outline,
+body.meta-ui
+.account-hero-card
+.btn-outline {
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  min-height:
+    46px;
+
+  padding:
+    0 22px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.16);
+
+  border-radius:
+    6px;
+
+  background:
+    transparent;
+
+  color:
+    rgba(255, 255, 255, 0.76);
+
+  font-size:
+    14px;
+
+  font-weight:
+    650;
+
+  box-shadow:
+    none;
+
+  cursor:
+    pointer;
+
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+
+body.meta-ui
+.account-hero-actions
+.btn-outline:hover,
+body.meta-ui
+.account-hero-card
+.btn-outline:hover {
+  border-color:
+    #c8ff00;
+
+  background:
+    rgba(200, 255, 0, 0.04);
+
+  color:
+    #c8ff00;
+
+  transform:
+    none;
+
+  box-shadow:
+    none;
+}
+
+
+/* =========================================================
+   Remaining Legacy Gold Elements
+   ========================================================= */
+
+body.meta-ui
+.account-page a:not(.page-logo-link):not(.nav-links a) {
+  text-shadow:
+    none;
+}
+
+
+body.meta-ui
+.account-panel-heading h3,
+body.meta-ui
+.account-panel h3 {
+  color:
+    #c8ff00;
+}
+
+
+body.meta-ui
+.account-demo-notice,
+body.meta-ui
+.account-sync-banner {
+  border-color:
+    rgba(200, 255, 0, 0.16);
+
+  background:
+    rgba(200, 255, 0, 0.04);
+}
