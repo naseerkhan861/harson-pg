@@ -399,12 +399,12 @@ body.home-v2
 
 body.home-v2
 .v2-platform-featured {
-  width: 86.5%;
+  width: 100%;
 
   /*
     设计稿主卡宽高比约 3.78 : 1
   */
-  aspect-ratio: 3.78 / 1;
+  aspect-ratio: 4.37 / 1;
 
   min-height: 0;
 
@@ -516,16 +516,16 @@ body.home-v2
 .v2-platform-visual-overlay {
   position: absolute;
 
-  left: 6.5%;
-  right: 5%;
+  left: 0;
+  right: 0;
 
-  top: 18.5%;
+  top: 30%;
 
   z-index: 2;
 
   transform: none;
 
-  text-align: left;
+  text-align: center;
 }
 
 

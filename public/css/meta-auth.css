@@ -1,0 +1,595 @@
+/* =========================================================
+   Harson-Base Meta UI
+   Authentication Page
+   ========================================================= */
+
+
+/* =========================================================
+   Page Background
+   ========================================================= */
+
+body.meta-ui[data-page="auth"] {
+  min-height: 100vh;
+
+  background:
+    radial-gradient(
+      circle at 75% 20%,
+      rgba(200, 255, 0, 0.055),
+      transparent 28%
+    ),
+    #111214;
+
+  color: var(--meta-text);
+}
+
+
+/* Remove legacy black-gold grid */
+
+body.meta-ui[data-page="auth"]::before {
+  content: none;
+}
+
+
+/* =========================================================
+   Main
+   ========================================================= */
+
+body.meta-ui .auth-page {
+  min-height: 100vh;
+
+  padding: 56px 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: transparent;
+}
+
+
+/* Remove old gold glow */
+
+body.meta-ui .auth-page::before,
+body.meta-ui .auth-page::after {
+  content: none;
+}
+
+
+/* =========================================================
+   Outer Container
+   ========================================================= */
+
+body.meta-ui .auth-card {
+  width: min(1120px, 100%);
+
+  padding: 48px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.08);
+
+  border-radius: 10px;
+
+  background:
+    #18191c;
+
+  box-shadow:
+    0 28px 80px
+    rgba(0, 0, 0, 0.32);
+
+  overflow: visible;
+}
+
+
+/* Legacy pseudo element off */
+
+body.meta-ui .auth-card::before {
+  content: none;
+}
+
+
+/* =========================================================
+   Brand
+   ========================================================= */
+
+body.meta-ui .meta-auth-brand {
+  display: flex;
+  align-items: center;
+
+  gap: 13px;
+
+  margin-bottom: 36px;
+}
+
+
+body.meta-ui .meta-auth-logo {
+  width: 38px;
+  height: 38px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 38px;
+
+  border-radius: 6px;
+
+  background:
+    var(--meta-accent);
+
+  color: #111214;
+
+  font-size: 19px;
+  font-weight: 800;
+}
+
+
+body.meta-ui .meta-auth-brand-name {
+  color: #ffffff;
+
+  font-size: 15px;
+  font-weight: 700;
+}
+
+
+body.meta-ui .meta-auth-brand-sub {
+  margin-left: 5px;
+
+  color:
+    var(--meta-accent);
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   Page Heading
+   ========================================================= */
+
+body.meta-ui .auth-card > h1 {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size:
+    clamp(36px, 4vw, 54px);
+
+  line-height: 1.05;
+
+  font-weight: 800;
+
+  letter-spacing: -2px;
+
+  text-shadow: none;
+}
+
+
+body.meta-ui .meta-auth-intro {
+  margin:
+    14px 0 38px;
+
+  color:
+    rgba(255, 255, 255, 0.58);
+
+  font-size: 15px;
+
+  font-weight: 500;
+}
+
+
+/* =========================================================
+   Back Link
+   ========================================================= */
+
+body.meta-ui .back-link {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 8px;
+
+  margin-bottom: 28px;
+
+  padding: 0;
+
+  border: none;
+
+  border-radius: 0;
+
+  background: transparent;
+
+  color:
+    rgba(255, 255, 255, 0.62);
+
+  font-size: 14px;
+  font-weight: 600;
+
+  text-decoration: none;
+
+  transition:
+    color 0.2s ease;
+}
+
+
+body.meta-ui .back-link:hover {
+  color:
+    var(--meta-accent);
+
+  border: none;
+
+  background: transparent;
+
+  transform: none;
+}
+
+
+/* =========================================================
+   Login / Register Layout
+   ========================================================= */
+
+body.meta-ui .auth-grid {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 0.85fr)
+    minmax(0, 1.15fr);
+
+  gap: 24px;
+
+  align-items: stretch;
+}
+
+
+/* =========================================================
+   Form Cards
+   ========================================================= */
+
+body.meta-ui .auth-form {
+  padding: 30px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.08);
+
+  border-radius: 8px;
+
+  background:
+    #202125;
+
+  box-shadow: none;
+
+  overflow: hidden;
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+
+/* Remove old rotating gold border */
+
+body.meta-ui .auth-form::before,
+body.meta-ui .auth-form::after {
+  content: none;
+}
+
+
+body.meta-ui .auth-form:hover {
+  border-color:
+    rgba(200, 255, 0, 0.22);
+
+  background:
+    #222328;
+
+  box-shadow: none;
+
+  transform: none;
+}
+
+
+/* =========================================================
+   Form Typography
+   ========================================================= */
+
+body.meta-ui .auth-form h2 {
+  margin:
+    0 0 26px;
+
+  color: #ffffff;
+
+  font-size: 22px;
+
+  font-weight: 750;
+
+  letter-spacing: -0.5px;
+}
+
+
+body.meta-ui .auth-form label {
+  display: block;
+
+  margin-bottom: 18px;
+
+  color:
+    rgba(255, 255, 255, 0.72);
+
+  font-size: 13px;
+
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   Inputs
+   ========================================================= */
+
+body.meta-ui .auth-form input,
+body.meta-ui .auth-form select,
+body.meta-ui .select-wrap select {
+  width: 100%;
+
+  height: 48px;
+
+  margin-top: 8px;
+
+  padding:
+    0 14px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.11);
+
+  border-radius: 6px;
+
+  background:
+    #18191c;
+
+  color:
+    #ffffff;
+
+  font-size: 14px;
+
+  font-family: inherit;
+
+  font-weight: 500;
+
+  outline: none;
+
+  box-shadow: none;
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+body.meta-ui .auth-form input:hover,
+body.meta-ui .auth-form select:hover {
+  border-color:
+    rgba(255, 255, 255, 0.2);
+}
+
+
+body.meta-ui .auth-form input:focus,
+body.meta-ui .auth-form select:focus,
+body.meta-ui .select-wrap select:focus {
+  border-color:
+    var(--meta-accent);
+
+  background:
+    #18191c;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(200, 255, 0, 0.07);
+}
+
+
+/* =========================================================
+   Select
+   ========================================================= */
+
+body.meta-ui .select-wrap select {
+  margin-top: 0;
+
+  padding-right: 40px;
+}
+
+
+body.meta-ui .select-wrap::after {
+  color:
+    var(--meta-accent);
+}
+
+
+/* =========================================================
+   Buttons
+   ========================================================= */
+
+body.meta-ui .auth-form button {
+  width: 100%;
+
+  height: 48px;
+
+  margin-top: 4px;
+
+  border: none;
+
+  border-radius: 6px;
+
+  background:
+    var(--meta-accent);
+
+  color:
+    #111214;
+
+  font-size: 15px;
+
+  font-weight: 750;
+
+  letter-spacing: 0;
+
+  cursor: pointer;
+
+  box-shadow: none;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+body.meta-ui .auth-form button:hover {
+  background:
+    var(--meta-accent-light);
+
+  transform:
+    translateY(-1px);
+
+  box-shadow: none;
+}
+
+
+/* =========================================================
+   Message
+   ========================================================= */
+
+body.meta-ui .auth-message {
+  margin:
+    0 0 24px;
+
+  padding:
+    13px 15px;
+
+  border-radius: 6px;
+
+  background:
+    #202125;
+
+  box-shadow: none;
+}
+
+
+body.meta-ui .auth-message.success {
+  border:
+    1px solid
+    rgba(98, 214, 137, 0.28);
+
+  background:
+    rgba(98, 214, 137, 0.08);
+
+  color:
+    #8addaa;
+}
+
+
+body.meta-ui .auth-message.error {
+  border:
+    1px solid
+    rgba(240, 100, 100, 0.28);
+
+  background:
+    rgba(240, 100, 100, 0.08);
+
+  color:
+    #ff9999;
+}
+
+
+/* =========================================================
+   Inline Register Fields
+   ========================================================= */
+
+body.meta-ui .auth-inline-fields {
+  display: grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap: 14px;
+
+  margin-bottom: 18px;
+}
+
+
+body.meta-ui .inline-field > span {
+  color:
+    rgba(255, 255, 255, 0.72);
+
+  font-size: 13px;
+
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   Tablet
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+  body.meta-ui .auth-page {
+    padding:
+      40px 24px;
+  }
+
+
+  body.meta-ui .auth-card {
+    padding: 34px;
+  }
+
+
+  body.meta-ui .auth-grid {
+    grid-template-columns:
+      1fr;
+  }
+
+}
+
+
+/* =========================================================
+   Mobile
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+  body.meta-ui .auth-page {
+    padding:
+      24px 16px;
+  }
+
+
+  body.meta-ui .auth-card {
+    padding:
+      26px 20px;
+  }
+
+
+  body.meta-ui .auth-card > h1 {
+    font-size: 36px;
+
+    letter-spacing: -1px;
+  }
+
+
+  body.meta-ui .auth-form {
+    padding:
+      24px 20px;
+  }
+
+
+  body.meta-ui .auth-inline-fields {
+    grid-template-columns:
+      1fr;
+  }
+
+
+  body.meta-ui .meta-auth-brand-sub {
+    display: block;
+
+    margin:
+      3px 0 0;
+  }
+
+}

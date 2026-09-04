@@ -117,6 +117,17 @@ app.use(
 );
 
 app.get(
+  "/dashboard-meta.html",
+  (req, res) => {
+    return sendDashboardPage(
+      req,
+      res,
+      "dashboard-meta.html"
+    );
+  }
+);
+
+app.get(
   "/dashboard-black-gold.html",
   (req, res) => {
     return sendDashboardPage(
@@ -267,7 +278,15 @@ app.get("/account-management", (req, res) => {
 */
 
 app.get("/dashboard", (req, res) => {
-  res.redirect("/dashboard-black-gold");
+  res.redirect("/dashboard-meta");
+});
+
+app.get("/dashboard-meta", (req, res) => {
+  return sendDashboardPage(
+    req,
+    res,
+    "dashboard-meta.html"
+  );
 });
 
 app.get("/dashboard-black-gold", (req, res) => {
@@ -279,8 +298,9 @@ app.get("/dashboard-mecha", (req, res) => {
 });
 
 app.get("/aigc", (req, res) => {
-  return sendAdminOnlyPage(req, res, "aigc.html");
+  res.redirect("/aigc-workspace");
 });
+
 
 app.get(
   "/aigc-workspace",
