@@ -118,7 +118,7 @@ Default admin:
 
 ```text
 Email: admin@harson.local
-Password: HarsonAdmin123!
+Password: ********************
 ```
 
 For production, change these values through environment variables before seeding:
