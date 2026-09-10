@@ -919,3 +919,46 @@ body.meta-ui
   background:
     rgba(200, 255, 0, 0.04);
 }
+
+/* 登录提示页 - 前往登录按钮 */
+
+body.meta-ui
+.account-hero-card > a.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 46px;
+  padding: 0 22px;
+
+  border:
+    1px solid
+    rgba(200, 255, 0, 0.38);
+
+  border-radius: 6px;
+
+  background:
+    rgba(200, 255, 0, 0.10);
+
+  color: #c8ff00;
+
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+
+  box-shadow: none;
+}
+
+
+body.meta-ui
+.account-hero-card > a.btn-primary:hover {
+  background:
+    rgba(200, 255, 0, 0.16);
+
+  border-color:
+    rgba(200, 255, 0, 0.62);
+
+  color: #dcff59;
+
+  box-shadow: none;
+}
