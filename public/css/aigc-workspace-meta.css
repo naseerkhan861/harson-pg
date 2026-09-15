@@ -2784,3 +2784,85 @@ display: none;
 margin-left: -8px;
 }
 }
+
+/* =========================================================
+   Workspace Knowledge Base
+   ========================================================= */
+
+.knowledge-base-link {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 7px;
+
+  height: 36px;
+
+  margin-right: 14px;
+
+  padding:
+    0 18px 0 4px;
+
+  border-right:
+    1px solid
+    rgba(255, 255, 255, 0.09);
+
+  color:
+    rgba(255, 255, 255, 0.62);
+
+  font-size: 13px;
+  font-weight: 500;
+
+  text-decoration: none;
+  white-space: nowrap;
+
+  transition:
+    color 0.18s ease;
+}
+
+
+.knowledge-base-icon {
+  width: 19px;
+  height: 19px;
+
+  fill: none;
+
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+
+  flex: 0 0 19px;
+}
+
+
+.knowledge-base-link:hover {
+  color: #c8ff00;
+}
+
+
+/* 键盘操作时也有提示 */
+
+.knowledge-base-link:focus-visible {
+  color: #c8ff00;
+
+  outline:
+    1px solid
+    rgba(200, 255, 0, 0.5);
+
+  outline-offset: 5px;
+
+  border-radius: 4px;
+}
+
+
+/* 窄屏减少占用 */
+
+@media (max-width: 1100px) {
+
+  .knowledge-base-link {
+    margin-right: 8px;
+
+    padding-right: 12px;
+  }
+
+}
