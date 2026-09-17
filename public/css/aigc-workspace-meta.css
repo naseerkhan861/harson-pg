@@ -42,10 +42,6 @@ button {
     transparent;
 }
 
-/* 每个一级菜单恢复成独立块 */
-
-/* 当前选中的模块 */
-
 .local-page[hidden],
 .state-panel[hidden],
 .aigc-frame[hidden] {
@@ -856,9 +852,8 @@ grid-template-columns:
 }
 
 .catalog-card h3 {
-padding:
-      10px 9px 11px;
-
+    height: 42px;
+    padding: 0 10px;
     font-size: 12px;
 }
 }
@@ -1031,51 +1026,6 @@ display: flex;
   white-space: nowrap;
 }
 
-@media (max-width: 1500px) {
-.all-tools-grid {
-grid-template-columns:
-      repeat(6, minmax(0, 1fr));
-}
-}
-
-@media (max-width: 1280px) {
-.all-tools-grid {
-grid-template-columns:
-      repeat(5, minmax(0, 1fr));
-}
-}
-
-@media (max-width: 1040px) {
-.all-tools-grid {
-grid-template-columns:
-      repeat(4, minmax(0, 1fr));
-}
-}
-
-@media (max-width: 760px) {
-.all-tools-grid {
-grid-template-columns:
-      repeat(3, minmax(0, 1fr));
-}
-}
-
-@media (max-width: 520px) {
-.all-tools-grid {
-grid-template-columns:
-      repeat(2, minmax(0, 1fr));
-
-    gap: 8px;
-}
-
-.catalog-card h3 {
-height: 42px;
-
-    padding:
-      0 10px;
-
-    font-size: 12px;
-}
-}
 
 .home-page {
 padding: 10px;
@@ -1367,39 +1317,37 @@ margin:
 }
 
 .home-hot-grid {
-display: grid;
-
-  grid-template-columns:
-    repeat(4, minmax(0, 1fr));
-
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  overflow: visible;
 }
 
 /* 最新工具：横向单排展示，桌面端约 4 张 */
 
 .home-latest-grid {
-display: grid;
+  display: grid;
 
   grid-auto-flow: column;
-
-  grid-auto-columns:
-    calc((100% - 36px) / 4);
+  grid-auto-columns: 180px;
 
   grid-template-columns: none;
 
   gap: 12px;
+  align-items: start;
 
   overflow-x: auto;
   overflow-y: hidden;
 
   padding:
-    0 0 8px;
+    0 0 10px;
 
   scroll-snap-type: x proximity;
 
   scrollbar-width: thin;
+
   scrollbar-color:
-    rgba(200, 255, 0, 0.35)
+    rgba(200, 255, 0, 0.28)
     transparent;
 }
 
@@ -1464,13 +1412,9 @@ transform:
    ========================= */
 
 .home-tool-media {
-position: relative;
-
+  position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;
-
   overflow: hidden;
-
   background: #0b0b0b;
 }
 
@@ -1496,22 +1440,31 @@ content: "";
     );
 }
 
-.home-tool-media img {
-display: block;
+.home-tool-media img,
+.home-tool-media video {
+  position: absolute;
+  inset: 0;
+
+  display: block;
 
   width: 100%;
   height: 100%;
 
   object-fit: cover;
-  object-position: center 20%;
+  object-position: center;
 
-  transition:
-    transform 0.35s ease;
+  margin: 0;
+  padding: 0;
+  border: 0;
+
+  transition: transform 0.35s ease;
 }
 
 .home-tool-card:hover
-.home-tool-media img {
-transform:
+.home-tool-media img,
+.home-tool-card:hover
+.home-tool-media video {
+  transform:
     scale(1.025);
 }
 
@@ -1520,10 +1473,8 @@ transform:
    ========================= */
 
 .home-tool-badge {
-position: absolute;
-
-  z-index: 2;
-
+  position: absolute;
+  z-index: 3;
   top: 10px;
   right: 10px;
 
@@ -1533,20 +1484,16 @@ position: absolute;
 
   min-width: 42px;
   height: 23px;
+  padding: 0 9px;
 
   border-radius: 5px;
 
-  padding:
-    0 9px;
-
   font-size: 10px;
   font-weight: 800;
-
   line-height: 1;
 
   box-shadow:
-    0 3px 10px
-    rgba(0, 0, 0, 0.28);
+    0 3px 10px rgba(0, 0, 0, 0.28);
 }
 
 .badge-hot {
@@ -1675,10 +1622,6 @@ height: 330px;
 width: min(560px, 62%);
 }
 
-.home-hot-grid {
-grid-template-columns:
-      repeat(2, minmax(0, 1fr));
-}
 }
 
 @media (max-width: 760px) {
@@ -1822,10 +1765,6 @@ display: block;
 filter: none !important;
   opacity: 1 !important;
 }
-
-/* =========================================================
- 
-   ========================================================= */
 
 .all-tools-filters {
 margin: 0 0 14px;
@@ -2865,4 +2804,163 @@ margin-left: -8px;
     padding-right: 12px;
   }
 
+}
+
+/* =========================================================
+   工具卡片视频封面 - 强制铺满
+   ========================================================= */
+
+/* HOT / NEW 始终压在视频上面 */
+
+/* =========================================================
+   Workspace 首页工具卡片最终比例
+   热门工具：16:9
+   最新工具：3:4
+   ========================================================= */
+
+
+/* -------------------------
+   热门工具：横向大卡
+   ------------------------- */
+
+.home-hot-grid .home-tool-media {
+  aspect-ratio: 16 / 9;
+}
+
+/* -------------------------
+   最新工具：竖版小视频
+   ------------------------- */
+
+.home-latest-grid .home-tool-media {
+  aspect-ratio: 3 / 4;
+}
+
+/* 热门工具：标题行 + NEW/HOT 放到标题右侧 */
+
+.home-tool-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+
+  gap: 8px;
+
+  margin-bottom: 8px;
+}
+
+.home-tool-title-row h3 {
+  margin: 0;
+}
+
+.home-tool-title-row .home-tool-badge {
+  position: static;
+
+  flex: 0 0 auto;
+
+  padding: 2px 7px;
+
+  border-radius: 5px;
+
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+/* 封面右上角不再放标签 */
+
+.home-tool-media .home-tool-badge {
+  display: none;
+}
+
+/* =========================================================
+   AI 创作工具 - YiBai 风格竖版动态卡片
+   ========================================================= */
+
+.home-latest-grid .home-tool-card {
+  min-width: 180px;
+
+  height: auto;
+  min-height: 0;
+
+  align-self: start;
+
+  scroll-snap-align: start;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.09);
+
+  border-radius: 8px;
+
+  background: #18191c;
+
+  overflow: hidden;
+
+  box-shadow: none;
+}
+
+
+/* 竖版封面：180 × 240 */
+
+.home-latest-grid .home-tool-media {
+  width: 100%;
+
+  aspect-ratio: 3 / 4;
+
+  overflow: hidden;
+
+  background: #0b0b0b;
+}
+
+
+/* 标题区域 */
+
+.home-latest-grid .home-tool-body {
+  min-height: 0;
+  height: auto;
+
+  padding:
+    11px 12px;
+
+  background: #18191c;
+}
+
+
+/* 标题 */
+
+.home-latest-grid .home-tool-body h3 {
+  margin: 0;
+
+  overflow: hidden;
+
+  color: #f5f5f5;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  line-height: 1.4;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+/* AI 创作工具不显示介绍文字 */
+
+.home-latest-grid .home-tool-body > p {
+  display: none;
+}
+
+
+/* Hover */
+
+.home-latest-grid .home-tool-card:hover {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    rgba(200, 255, 0, 0.34);
+
+  box-shadow:
+    0 8px 22px
+    rgba(0, 0, 0, 0.26);
 }
