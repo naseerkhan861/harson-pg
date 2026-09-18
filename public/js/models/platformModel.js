@@ -119,6 +119,7 @@ export const platformModel = {
       description: "面向连锁门店、品牌零售和线上线下一体化运营，支持门店分析、会员运营与全渠道转化提升。",
       badge: "智慧零售",
       actionLabel: "查看零售能力",
+      link: "/cl-istore.html",
       icon: "fas fa-store",
       badgeIcon: "fas fa-chart-line",
       features: [
