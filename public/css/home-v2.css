@@ -90,10 +90,7 @@ body.home-v2 .account-avatar-text {
 body.home-v2 .v2-hero {
   position: relative;
 
-  /* Safari / 旧浏览器 fallback */
   min-height: calc(100vh - 78px);
-
-  /* 当前浏览器实际可视高度 */
   min-height: calc(100dvh - 78px);
 
   padding: 0;
@@ -103,6 +100,20 @@ body.home-v2 .v2-hero {
   border-bottom: none;
 
   background-color: #111214;
+}
+
+
+/* =========================================================
+   Hero background entrance animation
+   ========================================================= */
+
+body.home-v2 .v2-hero::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  z-index: 0;
 
   background-image:
     url("/images/home-v2/hero.webp");
@@ -110,13 +121,40 @@ body.home-v2 .v2-hero {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+
+  opacity: 1;
+  mask-image: none;
+  -webkit-mask-image: none;
+
+
+  transform: scale(1.045);
+
+  animation:
+    heroBackgroundEnter
+    2.4s
+    cubic-bezier(0.22, 1, 0.36, 1)
+    forwards;
+
+  will-change: transform;
 }
 
 
-body.home-v2 .v2-hero::before,
 body.home-v2 .v2-hero::after {
   content: none;
   display: none;
+}
+
+
+@keyframes heroBackgroundEnter {
+
+  from {
+    transform: scale(1.045);
+  }
+
+  to {
+    transform: scale(1);
+  }
+
 }
 
 
@@ -182,6 +220,18 @@ body.home-v2 .hero-content h1 {
 
   /* 防止“四大平台驱动企业”内部再次断行 */
   white-space: nowrap;
+
+  opacity: 0;
+
+  transform:
+    translateY(22px);
+
+  animation:
+    heroTitleEnter
+    900ms
+    cubic-bezier(0.22, 1, 0.36, 1)
+    180ms
+    forwards;
 }
 
 
@@ -200,6 +250,59 @@ body.home-v2 .hero-content p {
   font-size: 17px;
 
   line-height: 1.8;
+
+  opacity: 0;
+
+  transform:
+    translateY(16px);
+
+  animation:
+    heroDescriptionEnter
+    900ms
+    cubic-bezier(0.22, 1, 0.36, 1)
+    340ms
+    forwards;
+}
+
+/* =========================================================
+   Hero text entrance
+   ========================================================= */
+
+@keyframes heroTitleEnter {
+
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(22px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+
+}
+
+
+@keyframes heroDescriptionEnter {
+
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+
 }
 
 
@@ -264,13 +367,6 @@ body.home-v2 .v2-hero-visual {
   }
 
 }
-
-
-body.home-v2 .v2-hero-visual {
-  background-image:
-    url("/images/home-v2/hero.webp");
-}
-
 
 
 /* =========================================================
@@ -443,14 +539,24 @@ body.home-v2
 
   background: #090a0d;
 
-  background-size: cover;
+  background-size: 100% auto;
   background-position: center;
   background-repeat: no-repeat;
 
   border-right: none;
+
+  transition:
+    background-size 900ms
+      cubic-bezier(0.22, 1, 0.36, 1),
+    filter 500ms ease;
 }
 
 
+body.home-v2
+.v2-platform-featured:hover
+.v2-platform-visual {
+  background-size: 103% auto;
+}
 
 
 body.home-v2
@@ -767,7 +873,7 @@ body.home-v2
 
 body.home-v2
 .v2-capability-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-4px);
 
   border-color: #b0ef2d;
 }
@@ -801,6 +907,25 @@ body.home-v2
   border-bottom:
     1px solid
     rgba(255, 255, 255, 0.06);
+
+  transform: scale(1);
+  transform-origin: center center;
+
+  transition:
+    transform 750ms
+      cubic-bezier(0.22, 1, 0.36, 1),
+    filter 450ms ease;
+
+  will-change: transform;
+}
+
+
+body.home-v2
+.v2-capability-card:hover
+.v2-capability-visual {
+  transform: scale(1.065);
+
+  filter: brightness(1.04);
 }
 
 
@@ -846,6 +971,19 @@ body.home-v2
   z-index: 2;
 
   text-align: center;
+
+  transform: translateY(0);
+
+  transition:
+    transform 500ms
+      cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+
+body.home-v2
+.v2-capability-card:hover
+.v2-capability-overlay {
+  transform: translateY(-3px);
 }
 
 
@@ -2213,5 +2351,297 @@ body.home-v2
     font-size:
       14px;
   }
+
+}
+
+
+/* =========================================================
+   Homepage scroll reveal
+   ========================================================= */
+
+/* 普通区块 */
+
+body.home-v2.reveal-ready
+.home-reveal-unit {
+  opacity: 0;
+
+  transform:
+    translateY(34px);
+
+  transition:
+    opacity 800ms
+      cubic-bezier(0.22, 1, 0.36, 1),
+    transform 900ms
+      cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+
+body.home-v2.reveal-ready
+.home-reveal-unit.is-visible {
+  opacity: 1;
+
+  transform:
+    translateY(0);
+}
+
+/* =========================================================
+   Capability hover after scroll reveal
+   ========================================================= */
+
+body.home-v2.reveal-ready
+.home-reveal-flow.is-visible
+.v2-capability-card:hover {
+  transform: translateY(-4px);
+  border-color: #b0ef2d;
+}
+
+
+body.home-v2.reveal-ready
+.home-reveal-flow.is-visible
+.v2-capability-card:hover
+.v2-capability-visual {
+  transform: scale(1.065);
+  filter: brightness(1.04);
+}
+
+
+body.home-v2.reveal-ready
+.home-reveal-flow.is-visible
+.v2-capability-card:hover
+.v2-capability-overlay {
+  transform: translateY(-3px);
+}
+
+
+/* =========================================================
+   Capability cards
+   ========================================================= */
+
+body.home-v2.reveal-ready
+.home-reveal-flow
+.v2-capability-card,
+body.home-v2.reveal-ready
+.home-reveal-flow
+.v2-capability-arrow {
+  opacity: 0;
+
+  transform:
+    translateY(28px);
+
+  transition:
+    opacity 700ms
+      cubic-bezier(0.22, 1, 0.36, 1),
+    transform 800ms
+      cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+
+/* 第一张 */
+
+body.home-v2.reveal-ready
+.home-reveal-flow.is-visible
+:nth-child(1) {
+  opacity: 1;
+
+  transform:
+    translateY(0);
+
+  transition-delay: 60ms;
+}
+
+
+/* 第一根箭头 */
+
+body.home-v2.reveal-ready
+.home-reveal-flow.is-visible
+:nth-child(2) {
+  opacity: 1;
+
+  transform:
+    translateY(0);
+
+  transition-delay: 120ms;
+}
+
+
+/* 第二张 */
+
+body.home-v2.reveal-ready
+.home-reveal-flow.is-visible
+:nth-child(3) {
+  opacity: 1;
+
+  transform:
+    translateY(0);
+
+  transition-delay: 180ms;
+}
+
+
+/* 第二根箭头 */
+
+body.home-v2.reveal-ready
+.home-reveal-flow.is-visible
+:nth-child(4) {
+  opacity: 1;
+
+  transform:
+    translateY(0);
+
+  transition-delay: 240ms;
+}
+
+
+/* 第三张 */
+
+body.home-v2.reveal-ready
+.home-reveal-flow.is-visible
+:nth-child(5) {
+  opacity: 1;
+
+  transform:
+    translateY(0);
+
+  transition-delay: 300ms;
+}
+
+
+/* 第三根箭头 */
+
+body.home-v2.reveal-ready
+.home-reveal-flow.is-visible
+:nth-child(6) {
+  opacity: 1;
+
+  transform:
+    translateY(0);
+
+  transition-delay: 360ms;
+}
+
+
+/* 第四张 */
+
+body.home-v2.reveal-ready
+.home-reveal-flow.is-visible
+:nth-child(7) {
+  opacity: 1;
+
+  transform:
+    translateY(0);
+
+  transition-delay: 420ms;
+}
+
+
+/* =========================================================
+   Ecosystem scroll reveal
+   ========================================================= */
+
+body.home-v2.reveal-ready
+.home-ecosystem-reveal {
+  opacity: 0;
+
+  transform:
+    translateY(30px);
+
+  transition:
+    opacity 750ms
+      cubic-bezier(0.22, 1, 0.36, 1),
+    transform 850ms
+      cubic-bezier(0.22, 1, 0.36, 1);
+
+  transition-delay:
+    calc(
+      var(--reveal-index) * 90ms
+    );
+}
+
+
+body.home-v2.reveal-ready
+.home-ecosystem-reveal.is-visible {
+  opacity: 1;
+
+  transform:
+    translateY(0);
+}
+
+
+/* 进入后的小圆点稍微强调一下 */
+
+body.home-v2.reveal-ready
+.home-ecosystem-reveal
+.v2-ecosystem-dot {
+  transform:
+    scale(0.7);
+
+  opacity: 0.45;
+
+  transition:
+    transform 500ms
+      cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 500ms ease;
+
+  transition-delay:
+    calc(
+      var(--reveal-index) * 90ms
+      + 250ms
+    );
+}
+
+
+body.home-v2.reveal-ready
+.home-ecosystem-reveal.is-visible
+.v2-ecosystem-dot {
+  transform:
+    scale(1);
+
+  opacity: 1;
+}
+
+
+/* =========================================================
+   Reduced Motion
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  body.home-v2 .v2-hero::before,
+  body.home-v2 .hero-content h1,
+  body.home-v2 .hero-content p {
+    animation: none;
+
+    opacity: 1;
+
+    transform: none;
+  }
+
+
+  body.home-v2
+  .home-reveal-unit,
+
+  body.home-v2
+  .home-reveal-flow
+  .v2-capability-card,
+
+  body.home-v2
+  .home-reveal-flow
+  .v2-capability-arrow,
+
+  body.home-v2
+  .home-ecosystem-reveal,
+
+  body.home-v2
+  .home-ecosystem-reveal
+  .v2-ecosystem-dot {
+    opacity: 1;
+
+    transform: none;
+
+    transition: none;
+  }
+
+  
+
 
 }

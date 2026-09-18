@@ -933,6 +933,8 @@ async function getCompanyTaskSnapshot(
         }
       );
 
+      
+
   if (
     !isSuccessfulResponse(
       taskResponse
@@ -1319,13 +1321,6 @@ async function getMemberTaskSnapshot(
 
 
 
-/**
- * 从 YiBai 用户端读取企业任务，
- * 并保存到本地任务快照。
- *
- * 只有管理员明确触发同步时
- * 才应调用此方法。
- */
 async function syncCompanyTaskSnapshot(
   masterAccountId,
   {
@@ -1339,36 +1334,406 @@ async function syncCompanyTaskSnapshot(
       "AIGC企业主账号ID"
     );
 
-  const snapshot =
-    await getCompanyTaskSnapshot(
-      normalizedMasterAccountId,
-      {
-        dateEnd,
-        pageSize,
-
-        /*
-         * 同步操作由管理员明确触发，
-         * 因此允许建立用户端登录。
-         */
-        allowLogin: true
-      }
+  const effectivePageSize =
+    Math.min(
+      Math.max(
+        Number(pageSize) || 100,
+        1
+      ),
+      100
     );
 
-  const storageResult =
-    taskSnapshotModel.upsertTasks({
+  function taskDateKey(task) {
+    const value =
+      String(
+        task?.dateEnd ||
+        task?.dateCreate ||
+        task?.syncedAt ||
+        ""
+      ).trim();
+
+    const match =
+      value.match(
+        /^(\d{4}-\d{2}-\d{2})/
+      );
+
+    return match
+      ? match[1]
+      : "";
+  }
+
+  function todayDateKey() {
+    const now =
+      new Date();
+
+    const year =
+      now.getFullYear();
+
+    const month =
+      String(
+        now.getMonth() + 1
+      ).padStart(
+        2,
+        "0"
+      );
+
+    const day =
+      String(
+        now.getDate()
+      ).padStart(
+        2,
+        "0"
+      );
+
+    return `${year}-${month}-${day}`;
+  }
+
+  function buildDateRange(
+    startDateKey,
+    endDateKey
+  ) {
+    const start =
+      new Date(
+        `${startDateKey}T00:00:00Z`
+      );
+
+    const end =
+      new Date(
+        `${endDateKey}T00:00:00Z`
+      );
+
+    if (
+      Number.isNaN(
+        start.getTime()
+      ) ||
+      Number.isNaN(
+        end.getTime()
+      )
+    ) {
+      return [];
+    }
+
+    if (
+      start.getTime() >
+      end.getTime()
+    ) {
+      return [
+        endDateKey
+      ];
+    }
+
+    const dates = [];
+
+    const cursor =
+      new Date(
+        start.getTime()
+      );
+
+    let safetyCount = 0;
+
+    while (
+      cursor.getTime() <=
+        end.getTime() &&
+      safetyCount < 3660
+    ) {
+      dates.push(
+        cursor
+          .toISOString()
+          .slice(
+            0,
+            10
+          )
+      );
+
+      cursor.setUTCDate(
+        cursor.getUTCDate() + 1
+      );
+
+      safetyCount += 1;
+    }
+
+    return dates;
+  }
+
+
+  /*
+   * 如果调用方明确指定 dateEnd，
+   * 只同步指定日期。
+   */
+  if (dateEnd) {
+    const snapshot =
+      await getCompanyTaskSnapshot(
+        normalizedMasterAccountId,
+        {
+          dateEnd,
+          pageSize:
+            effectivePageSize,
+
+          allowLogin:
+            true
+        }
+      );
+
+    const storageResult =
+      taskSnapshotModel
+        .upsertTasks({
+          masterAccountId:
+            normalizedMasterAccountId,
+
+          tasks:
+            snapshot.tasks
+        });
+
+    return {
       masterAccountId:
         normalizedMasterAccountId,
 
-      tasks:
-        snapshot.tasks
-    });
+      summary:
+        snapshot.summary,
+
+      storage: {
+        insertedCount:
+          storageResult.insertedCount,
+
+        updatedCount:
+          storageResult.updatedCount,
+
+        totalProcessed:
+          storageResult.totalProcessed
+      },
+
+      syncedTaskCount:
+        snapshot.tasks.length
+    };
+  }
+
+
+  /*
+   * 先查看本地已经同步到哪一天。
+   */
+  let existingTasks =
+    taskSnapshotModel
+      .listTasksByMasterAccountId(
+        normalizedMasterAccountId
+      );
+
+  let latestLocalDate =
+    existingTasks.length
+      ? taskDateKey(
+          existingTasks[0]
+        )
+      : "";
+
+  let allowLogin = true;
+
+  const collectedTasks = [];
+
+
+  /*
+   * 本地完全没有记录时，
+   * 先调用一次不带日期的接口，
+   * 获取上游允许返回的初始 100 条。
+   */
+  if (!latestLocalDate) {
+    const initialSnapshot =
+      await getCompanyTaskSnapshot(
+        normalizedMasterAccountId,
+        {
+          pageSize:
+            effectivePageSize,
+
+          allowLogin:
+            true
+        }
+      );
+
+    collectedTasks.push(
+      ...initialSnapshot.tasks
+    );
+
+    allowLogin = false;
+
+    if (
+      initialSnapshot.tasks.length
+    ) {
+      latestLocalDate =
+        taskDateKey(
+          initialSnapshot
+            .tasks[0]
+        );
+    }
+  }
+
+
+  /*
+   * 如果初始接口也没有任何数据，
+   * 至少检查今天。
+   */
+  if (!latestLocalDate) {
+    latestLocalDate =
+      todayDateKey();
+  }
+
+  const today =
+    todayDateKey();
+
+  /*
+   * 从本地最新一天重新读取，
+   * 一直到今天。
+   *
+   * 最新一天也重新同步，
+   * 是为了更新当天新增任务、
+   * 处理中任务以及退款状态。
+   */
+  const datesToSync =
+    buildDateRange(
+      latestLocalDate,
+      today
+    );
+
+
+  for (
+    const currentDate
+    of datesToSync
+  ) {
+    const dailySnapshot =
+      await getCompanyTaskSnapshot(
+        normalizedMasterAccountId,
+        {
+          dateEnd:
+            currentDate,
+
+          pageSize:
+            effectivePageSize,
+
+          allowLogin
+        }
+      );
+
+    allowLogin = false;
+    /*
+     * 如果某一天刚好达到 100 条，
+     * 说明这一天仍可能存在接口上限。
+     */
+    if (
+      dailySnapshot
+        .tasks.length >=
+      effectivePageSize
+    ) {
+      console.warn(
+        "[CL-AIGC 创作记录同步] 单日任务达到接口上限",
+        {
+          dateEnd:
+            currentDate,
+
+          count:
+            dailySnapshot
+              .tasks.length
+        }
+      );
+    }
+
+    collectedTasks.push(
+      ...dailySnapshot.tasks
+    );
+  }
+
+
+  /*
+   * 相同任务 ID 去重。
+   */
+  const uniqueTasks =
+    deduplicateTasks(
+      collectedTasks
+    );
+
+
+  /*
+   * 写入本地快照。
+   * upsert 不会删除以前的旧任务。
+   */
+  const storageResult =
+    taskSnapshotModel
+      .upsertTasks({
+        masterAccountId:
+          normalizedMasterAccountId,
+
+        tasks:
+          uniqueTasks
+      });
+
+
+  /*
+   * 再读取完整本地快照，
+   * 返回当前完整统计。
+   */
+  existingTasks =
+    taskSnapshotModel
+      .listTasksByMasterAccountId(
+        normalizedMasterAccountId
+      );
+
+  const deductedTokens =
+    existingTasks.reduce(
+      (
+        total,
+        task
+      ) =>
+        total +
+        Number(
+          task.point || 0
+        ),
+      0
+    );
+
+  const refundedTokens =
+    existingTasks.reduce(
+      (
+        total,
+        task
+      ) =>
+        total +
+        Number(
+          task.refundedPoint || 0
+        ),
+      0
+    );
 
   return {
     masterAccountId:
       normalizedMasterAccountId,
 
-    summary:
-      snapshot.summary,
+    summary: {
+      totalTasks:
+        existingTasks.length,
+
+      successfulTasks:
+        existingTasks.filter(
+          task =>
+            task.status === "O"
+        ).length,
+
+      failedTasks:
+        existingTasks.filter(
+          task =>
+            task.status === "R"
+        ).length,
+
+      processingTasks:
+        existingTasks.filter(
+          task =>
+            task.status !== "O" &&
+            task.status !== "R"
+        ).length,
+
+      deductedTokens,
+
+      refundedTokens,
+
+      netUsedTokens:
+        deductedTokens -
+        refundedTokens
+    },
 
     storage: {
       insertedCount:
@@ -1382,7 +1747,10 @@ async function syncCompanyTaskSnapshot(
     },
 
     syncedTaskCount:
-      snapshot.tasks.length
+      uniqueTasks.length,
+
+    syncedDates:
+      datesToSync
   };
 }
 

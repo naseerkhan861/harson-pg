@@ -7,7 +7,8 @@ export class HomeV2View {
     this.renderNav();
     this.renderPlatforms();
     this.renderEcosystem();
-    }
+    this.initScrollReveal();
+  }
 
   renderNav() {
     const nav = document.querySelector(
@@ -87,6 +88,147 @@ export class HomeV2View {
         )
         .join("");
     }
+
+  initScrollReveal() {
+    const sectionHeader =
+      document.querySelector(
+        ".platform-section .section-header"
+      );
+
+    const featuredCards =
+      document.querySelectorAll(
+        ".v2-platform-featured"
+      );
+
+    const capabilityFlows =
+      document.querySelectorAll(
+        ".v2-capability-flow"
+      );
+
+    const ecosystemHeader =
+      document.querySelector(
+        ".v2-ecosystem .section-header"
+      );
+
+    const ecosystemCards =
+      document.querySelectorAll(
+        ".v2-ecosystem-card"
+      );
+
+
+    if (sectionHeader) {
+      sectionHeader.classList.add(
+        "home-reveal-unit"
+      );
+    }
+
+
+    featuredCards.forEach(card => {
+      card.classList.add(
+        "home-reveal-unit"
+      );
+    });
+
+
+    capabilityFlows.forEach(flow => {
+      flow.classList.add(
+        "home-reveal-flow"
+      );
+    });
+
+    if (ecosystemHeader) {
+      ecosystemHeader.classList.add(
+        "home-reveal-unit"
+      );
+    }
+
+    ecosystemCards.forEach(
+      (card, index) => {
+        card.classList.add(
+          "home-ecosystem-reveal"
+        );
+
+        card.style.setProperty(
+          "--reveal-index",
+          index
+        );
+      }
+    );
+
+
+    const revealElements =
+    document.querySelectorAll(
+      `
+        .home-reveal-unit,
+        .home-reveal-flow,
+        .home-ecosystem-reveal
+      `
+    );
+
+
+    if (!revealElements.length) {
+      return;
+    }
+
+
+    /* 系统设置了“减少动态效果”时直接显示 */
+    const reduceMotion =
+      window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+
+
+    if (
+      reduceMotion ||
+      !("IntersectionObserver" in window)
+    ) {
+      revealElements.forEach(element => {
+        element.classList.add(
+          "is-visible"
+        );
+      });
+
+      return;
+    }
+
+
+    document.body.classList.add(
+      "reveal-ready"
+    );
+
+
+    const observer =
+      new IntersectionObserver(
+        entries => {
+          entries.forEach(entry => {
+            if (!entry.isIntersecting) {
+              return;
+            }
+
+
+            entry.target.classList.add(
+              "is-visible"
+            );
+
+
+            observer.unobserve(
+              entry.target
+            );
+          });
+        },
+        {
+          threshold: 0.15,
+
+          rootMargin:
+            "0px 0px -60px 0px"
+        }
+      );
+
+
+    revealElements.forEach(element => {
+      observer.observe(element);
+    });
+  }
 
   platformTemplate(platform) {
     const actionLink =
