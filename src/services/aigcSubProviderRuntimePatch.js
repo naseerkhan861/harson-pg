@@ -22,6 +22,7 @@ function install() {
     "../utils/aigcSubCredentialCrypto"
   );
   const yibaiAigcClient = require("./yibaiAigcClient");
+  const aigcFrameTicketService = require("./aigcFrameTicketService");
 
   /*
    * 先保存原有主账号 Session 方法。
@@ -808,6 +809,34 @@ function install() {
   sessionService.getCachedTokenBalanceForUser =
     getCachedTokenBalanceForUser;
   sessionService.logoutUserAigcSession = logoutUserAigcSession;
+
+  /*
+   * 登出后同步吊销网关访问（frame 启动票据 + 网关会话）。
+   * 包装在最外层，覆盖 master-owner 与子账号两条路径；
+   * revokeGatewayAccessQuietly 静默失败，网关未部署或不可达
+   * 时绝不阻断登出流程。
+   */
+  const patchedLogoutUserAigcSession =
+    sessionService.logoutUserAigcSession;
+
+  sessionService.logoutUserAigcSession =
+    async function logoutWithGatewayRevoke(
+      clBaseUserId
+    ) {
+      const result = await patchedLogoutUserAigcSession(
+        clBaseUserId
+      );
+
+      try {
+        aigcFrameTicketService.revokeGatewayAccessQuietly(
+          clBaseUserId
+        );
+      } catch {
+        /* 吊销失败不影响登出结果 */
+      }
+
+      return result;
+    };
 
   installed = true;
 }

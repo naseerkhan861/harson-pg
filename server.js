@@ -11,6 +11,9 @@ const authRoutes = require("./src/routes/authRoutes");
 const aigcAccountRoutes = require("./src/routes/aigcAccountRoutes");
 const aiRoutes =
   require("./src/routes/aiRoutes");
+const aigcInternalRoutes = require(
+  "./src/routes/aigcInternalRoutes"
+);
 const masterOwnerModel = require(
   "./src/models/aigcMasterOwnerCsvModel"
 );
@@ -60,7 +63,17 @@ app.use(
           "'self'",
           "blob:",
           "https://cl-base.yibaiaigc.com",
-          "https://yibaiaigc.com"
+          "https://yibaiaigc.com",
+          // Gateway frame origin (image tab only) when enabled;
+          // default CSP is unchanged. Direct provider entries stay
+          // for instant rollback.
+          ...(process.env.YIBAI_FRAME_PUBLIC_ORIGIN
+            ? [
+                String(
+                  process.env.YIBAI_FRAME_PUBLIC_ORIGIN
+                ).replace(/\/+$/, "")
+              ]
+            : [])
         ],
         "frame-ancestors": ["'self'"],
         "upgrade-insecure-requests": null
@@ -85,6 +98,20 @@ app.use(
     }
   }),
   authRoutes
+);
+
+/*
+  app <-> gateway internal API (compose network only).
+
+  Registered BEFORE the /api/aigc rate-limited mount so these
+  machine-to-machine calls (ticket redemption, route allowlist)
+  bypass the public 120/15min limiter and response sanitizer.
+  Every call must present x-harson-internal-secret; block this
+  path from the public internet in nginx.
+*/
+app.use(
+  "/api/aigc/internal",
+  aigcInternalRoutes
 );
 
 app.use(

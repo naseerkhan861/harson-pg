@@ -8,6 +8,10 @@ const yibaiAigcClient = require(
   "../services/yibaiAigcClient"
 );
 
+const aigcFrameTicketService = require(
+  "../services/aigcFrameTicketService"
+);
+
 const DEFAULT_HOST =
   "https://cl-base.yibaiaigc.com";
 
@@ -58,6 +62,21 @@ function isMockEnabled() {
       "false"
     ).toLowerCase() ===
     "true"
+  );
+}
+
+/*
+  网关对外源（例如 https://ai.harson-base.com）。
+  未配置时返回空字符串，所有模块 iframe 直连 YiBai，
+  行为与现在完全一致。仅 image-generator 模块会使用网关。
+*/
+function getFramePublicOrigin() {
+  return String(
+    process.env.YIBAI_FRAME_PUBLIC_ORIGIN ||
+      ""
+  ).replace(
+    /\/+$/,
+    ""
   );
 }
 
@@ -195,7 +214,8 @@ async function resolveModuleRouterUrl(
  */
 async function buildFrameUrl({
   moduleName,
-  token
+  token,
+  userId
 }) {
   const moduleRoute =
     await resolveModuleRouterUrl(
@@ -232,6 +252,57 @@ async function buildFrameUrl({
     throw new Error(
       `“${moduleRoute.menuName}”入口地址无效，请联系管理员`
     );
+  }
+
+  /*
+    网关模式（仅 image-generator 模块）：上游地址校验通过后，
+    只把“源”换成网关，路径保持不变；provider token 改放进
+    一次性启动票据，由网关赎回后附加到发往上游的重定向上。
+    未配置网关、或非 image-generator 模块时走原有直连逻辑，
+    返回值不变（其余模块始终直连 YiBai）。
+  */
+  const framePublicOrigin =
+    getFramePublicOrigin();
+
+  if (
+    framePublicOrigin &&
+    userId &&
+    moduleRoute.moduleName ===
+      "image-generator"
+  ) {
+    const issued =
+      aigcFrameTicketService.issueTicket(
+        {
+          userId,
+          module:
+            moduleRoute.moduleName,
+          providerToken: token
+        }
+      );
+
+    const launchUrl =
+      new URL(
+        "/__harson/launch",
+        `${framePublicOrigin}/`
+      );
+
+    launchUrl.searchParams.set(
+      "ticket",
+      issued.ticket
+    );
+
+    launchUrl.searchParams.set(
+      "next",
+      `${url.pathname}?embed=2`
+    );
+
+    return {
+      moduleName:
+        moduleRoute.moduleName,
+
+      frameUrl:
+        launchUrl.toString()
+    };
   }
 
   url.searchParams.set(
@@ -412,7 +483,10 @@ async function getSession(
         moduleName,
 
         token:
-          session.token
+          session.token,
+
+        userId:
+          req.user.id
       });
 
     return res.json({
@@ -532,7 +606,10 @@ async function refreshSession(
         moduleName,
 
         token:
-          session.token
+          session.token,
+
+        userId:
+          req.user.id
       });
 
     return res.json({
@@ -574,5 +651,9 @@ async function refreshSession(
 module.exports = {
   getSession,
   refreshSession,
-  getTokenBalance
+  getTokenBalance,
+  resolveModuleRouterUrl,
+  MODULE_DEFINITIONS_KEYS: Object.keys(
+    MODULE_DEFINITIONS
+  )
 };
