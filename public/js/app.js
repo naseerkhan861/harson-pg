@@ -1320,7 +1320,6 @@ async function initEnterpriseDashboardAnalytics() {
           : "CL-AIGC 任务";
 
       titleText.append(
-        title,
         taskId
       );
 
