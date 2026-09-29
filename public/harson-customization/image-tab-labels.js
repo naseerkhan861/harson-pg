@@ -194,6 +194,43 @@
     flush();
   }
 
+  /*
+    Diagnostic: lists elements whose text exactly matches a known original
+    label but were NOT renamed (e.g. bare Vue slot-fallback text nodes that
+    selectors cannot reach). Run in the iframe console:
+      window.HarsonImageLabels.dumpUnmatched()
+  */
+  function describeChain(element, depth = 4) {
+    const parts = [];
+    let current = element;
+    while (current && depth > 0 && current !== document.body) {
+      const cls = typeof current.className === "string" ? current.className : "";
+      parts.push(current.tagName + (cls ? "." + cls.trim().split(/\s+/).join(".") : ""));
+      current = current.parentElement;
+      depth -= 1;
+    }
+    return parts.join(" <- ");
+  }
+
+  function dumpUnmatched() {
+    const results = [];
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) {
+      const alias = aliasFor(node.data);
+      if (!alias) continue;
+      const parent = node.parentElement;
+      if (!parent || records.has(parent)) continue;
+      if (parent.closest(blocked)) continue;
+      results.push({
+        text: String(node.data).trim(),
+        alias,
+        element: describeChain(parent)
+      });
+    }
+    return results;
+  }
+
   window.HarsonImageLabels = Object.freeze({
     setEnabled(value) {
       enabled = value === true;
@@ -207,7 +244,8 @@
         renamedElements: Array.from(hosts).filter(node =>
           node.isConnected && records.get(node).renamed).length
       };
-    }
+    },
+    dumpUnmatched
   });
   if (document.body) start();
   else document.addEventListener("DOMContentLoaded", start, { once: true });

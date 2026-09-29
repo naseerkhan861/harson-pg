@@ -90,7 +90,7 @@
   }
 
   const config = Object.freeze({
-    version: "all-pages-2",
+    version: "all-pages-3",
     expectedOrigin: "https://ai.harson-base.com",
     // Applied inside every YiBai module frame served by the gateway.
     modules: Object.freeze([
@@ -105,15 +105,25 @@
     sidebarSelector: ".MainLayout-nav .NavList-list-item > span.label",
     aliases: Object.freeze(aliases),
     // Only model-label surfaces. Never select the whole page, prompts or forms.
-    // Public component names checked 2026-09-21; see the deployment guide.
+    // Verified against the live provider bundle 2026-09-29: header_fix and
+    // ToolLayout-header no longer exist in the current build; tabs are plain
+    // Quasar q-tab__label, tooltips are q-tooltip, and the tool heading is a
+    // bare Vue slot-fallback text node (handled via dumpUnmatched diagnostics).
     selectors: Object.freeze([
       ".MainLayout-nav .NavList-list-item > span.label",
+      // Legacy-build selectors kept (harmless if absent):
       ".SubLayout-draw .ToolLayout-header",
       ".SubLayout-draw .header_fix > span",
       ".SubLayout-draw .header_fix .q-tab__label",
       ".SubLayout-draw .header_fix .IcTab",
+      // Current build (2026-09-29):
+      ".SubLayout-draw .q-tab__label",
+      ".SubLayout-draw .IcTabs",
+      ".q-tooltip",
+      ".q-tooltip *",
       ".SubLayout-draw .IcbsMenuSelect-header-content",
       ".SubLayout-draw .IcbsSelect-header-select .q-field__native > span",
+      ".IcbsMenuSelect-header-content",
       ".IcbsSelect-header-popup .IcbsSelect-header-popup-option-label",
       ".IcbsMenuSelect-menu-card .IcbsMenuSelect-menu-item-label",
       ".DemoCard .DemoCard-banner > span",
