@@ -95,7 +95,7 @@ PHASE B — UPLOAD TO SERVER + REBUILD
 ================================================================================
 Goal: copy new code laptop -> server, rebuild the Docker image, restart the app.
 
-6) Rsync the code to the server  (run on LAPTOP)
+6) Rsync the code to the server  (run on LAPTOP) (passcl2026 kay sath 07 aur phir !)
    ----------------------------------------------------------------
    cd /home/edison/HarsonRepo/harson-pg
 
