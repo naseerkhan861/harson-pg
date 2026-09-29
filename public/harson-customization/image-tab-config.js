@@ -7,9 +7,11 @@
   // YiBai UI actually renders (悠船 prefixes, SeeDance casing, no-space
   // variants). Matching is trim + case-insensitive, with a fallback that
   // ignores internal spaces entirely ("HappyHorse" === "Happy Horse").
+  // Duplicate keys in names.txt: the LAST row wins (Happy Horse and
+  // FLUX Krea both appear twice).
   const aliases = {
     // --- image families (names.txt) ---
-    "FLUX Krea": "CLImage-1.0",
+    "FLUX Krea": "CLImage", // last row wins over the earlier CLImage-1.0 row
     "FLUX.1 Kontext": "CLImage-1.1",
     "FLUX.1 Kontext pro": "CLImage-1.1",
     "FLUX.1 Kontext max": "CLImage-1.1",
@@ -32,7 +34,8 @@
     "Seedance 2.0": "CLVideo-2.0",
     "Seedance": "CLVideo",
     "Seedance 2.5": "CLVideo-3.0",
-    "Happy Horse": "CLVideo-1.0", // names.txt has CLVideo and CLVideo-1.0; last row wins
+    "Seedream": "CLVideo",
+    "Happy Horse": "CLVideo-1.0",
     "暂未上架": "CLVideo-2.1",
 
     // --- display spellings seen on the live UI (same targets) ---
@@ -50,8 +53,6 @@
     "SeeDance 2.0": "CLVideo-2.0",
     "SeeDance 2.5": "CLVideo-3.0",
     "SeeDance": "CLVideo",
-    "seedance 2.0": "CLVideo-2.0",
-    "seedance 2.5": "CLVideo-3.0",
     "HappyHorse": "CLVideo-1.0",
     "GPT-Image-2": "CLImage-4.0",
     "GPT-Image-2.5": "CLImage-4.1",
@@ -59,23 +60,9 @@
     "GPT image 2.5": "CLImage-4.1"
   };
 
-  // Seedream is the English spelling of the 即梦 family on some surfaces.
-  for (const [source, alias] of [
-    ["Seedream", "CLImage"],
-    ["Seedream 4.0", "CLImage-3.0"],
-    ["Seedream 4.5", "CLImage-3.1"],
-    ["Seedream 5.0 Lite", "CLImage-3.2"],
-    ["Seedream 5.0 Pro", "CLImage-3.3"],
-    ["即梦 Seedream", "CLImage"],
-    ["即梦Seedream", "CLImage"]
-  ]) {
-    aliases[source] = alias;
-  }
-
   // No-space variants (即梦4.0, 全能图片2, MidjourneyV7 handled above, ...).
   for (const version of ["4.0", "4.5", "5.0 Lite", "5.0 Pro"]) {
     aliases["即梦" + version] = aliases["即梦 " + version];
-    aliases["Seedream" + version] = aliases["Seedream " + version];
   }
   for (const [source, alias] of [
     ["全能图片 pro", aliases["全能图片 Pro"]],
@@ -90,7 +77,7 @@
   }
 
   const config = Object.freeze({
-    version: "all-pages-3",
+    version: "all-pages-4",
     expectedOrigin: "https://ai.harson-base.com",
     // Applied inside every YiBai module frame served by the gateway.
     modules: Object.freeze([
