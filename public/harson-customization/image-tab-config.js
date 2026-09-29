@@ -26,6 +26,7 @@
     "image-2.5": "CLImage-4.1",
     "GPT-image-2": "CLImage-4.0",
     "GPT-image-2.5": "CLImage-4.1",
+    "gpt-image-2.5": "CLImage-4.1",
     "全能图片": "CLImage-5.0",
     "全能图片 Pro": "CLImage-5.1",
     "全能图片 2": "CLImage-5.2",
