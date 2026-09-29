@@ -46,7 +46,11 @@ const correspondences = {
   "Seedream 4.0": "即梦 4.0",
   "Seedream 4.5": "即梦 4.5",
   "Seedream 5.0 Lite": "即梦 5.0 Lite",
-  "Seedream 5.0 Pro": "即梦 5.0 Pro"
+  "Seedream 5.0 Pro": "即梦 5.0 Pro",
+  "Seedream4.0": "即梦 4.0",
+  "Seedream4.5": "即梦 4.5",
+  "Seedream5.0 Lite": "即梦 5.0 Lite",
+  "Seedream5.0 Pro": "即梦 5.0 Pro"
 };
 
 // Bare version strings, valid ONLY within the verified Seedream

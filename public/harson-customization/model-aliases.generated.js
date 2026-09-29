@@ -3,7 +3,7 @@
   Source: config/display-names/names.txt
   Policy: config/display-names/display-correspondence.cjs
   Rebuild: npm run aliases:build   Verify: npm run aliases:check
-  Schema: 1   Mapping hash: 163edfb1025d
+  Schema: 1   Mapping hash: 2ab8de10fab3
 */
 (function (root, factory) {
   if (typeof module === "object" && module.exports) {
@@ -14,7 +14,7 @@
 })(typeof self !== "undefined" ? self : this, function () {
   return {
   "schemaVersion": 1,
-  "mappingHash": "163edfb1025d",
+  "mappingHash": "2ab8de10fab3",
   "exact": {
     "flux krea": "CLImage",
     "flux.1 kontex (pro/max)": "CLImage-1.1",
@@ -67,7 +67,11 @@
     "seedream 4.0": "即梦 4.0",
     "seedream 4.5": "即梦 4.5",
     "seedream 5.0 lite": "即梦 5.0 lite",
-    "seedream 5.0 pro": "即梦 5.0 pro"
+    "seedream 5.0 pro": "即梦 5.0 pro",
+    "seedream4.0": "即梦 4.0",
+    "seedream4.5": "即梦 4.5",
+    "seedream5.0 lite": "即梦 5.0 lite",
+    "seedream5.0 pro": "即梦 5.0 pro"
   },
   "seedreamVersionKeys": {
     "4.0": "即梦 4.0",

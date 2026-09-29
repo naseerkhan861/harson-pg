@@ -907,6 +907,60 @@ function observeAllToolsImages(
   );
 }
 
+/*
+  Resolves a tool's display alias at the presentation boundary only
+  (runbook §12). tool.name itself stays untouched — it remains the
+  functional key into TOOL_FILTERS.
+
+  Composite catalog titles carry an approved descriptive suffix that is
+  preserved after the model part is resolved (runbook §12.2).
+*/
+const CATALOG_SUFFIXED_LABELS = Object.freeze({
+  "Seedance 2.5 视频": ["Seedance 2.5", " 视频"],
+  "Seedance 2.0 视频": ["Seedance 2.0", " 视频"]
+});
+
+function getToolDisplayName(
+  tool
+) {
+  const resolver =
+    window.HarsonModelAliasResolver;
+
+  if (
+    !resolver ||
+    typeof resolver.resolveDisplayName !==
+      "function"
+  ) {
+    return tool.name;
+  }
+
+  const direct = resolver.resolveDisplayName(
+    tool.name
+  );
+
+  if (direct) {
+    return direct;
+  }
+
+  const suffixed =
+    CATALOG_SUFFIXED_LABELS[
+      tool.name
+    ];
+
+  if (suffixed) {
+    const modelAlias =
+      resolver.resolveDisplayName(
+        suffixed[0]
+      );
+
+    if (modelAlias) {
+      return modelAlias + suffixed[1];
+    }
+  }
+
+  return tool.name;
+}
+
 function renderAllTools() {
   if (
     !elements.allToolsGrid
@@ -994,7 +1048,9 @@ function renderAllTools() {
           tool.cover;
 
         image.alt =
-          tool.name;
+          getToolDisplayName(
+            tool
+          );
 
         image.loading =
           "lazy";
@@ -1036,7 +1092,9 @@ function renderAllTools() {
         );
 
       title.textContent =
-        tool.name;
+        getToolDisplayName(
+          tool
+        );
 
       card.append(
         cover,
