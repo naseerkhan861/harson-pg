@@ -130,13 +130,26 @@ test("non-string bodies pass through untouched", () => {
 
 /* ---------------- bounded HTML injection ---------------- */
 
-test("valid HTML gets the adapter script tags before </head>", () => {
+test("valid HTML gets all four assets in dependency order before </head>", () => {
   const result = inject(HTML);
 
-  assert.ok(result.includes(
-    `<script defer src="${ASSET_PREFIX}/image-tab-config.js"></script>`
-  ));
-  assert.ok(result.includes('id="harson-image-tab-labels"'));
+  const order = [
+    result.indexOf(`${ASSET_PREFIX}/model-aliases.generated.js`),
+    result.indexOf(`${ASSET_PREFIX}/model-alias-resolver.js`),
+    result.indexOf(`${ASSET_PREFIX}/image-tab-config.js`),
+    result.indexOf('id="harson-image-tab-labels"')
+  ];
+
+  for (const position of order) {
+    assert.ok(position > 0, "every asset must be injected");
+  }
+
+  assert.deepEqual(
+    [...order].sort((a, b) => a - b),
+    order,
+    "data -> resolver -> config -> renderer order must hold"
+  );
+
   assert.ok(result.indexOf("<script") < result.indexOf("</head>"));
   assert.ok(result.startsWith("<!DOCTYPE html>"));
 });

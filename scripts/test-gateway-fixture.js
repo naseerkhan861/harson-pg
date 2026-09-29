@@ -499,6 +499,38 @@ async function main() {
     );
 
     /* 2. display assets served without a session (versioned, cacheable) */
+    const dataAsset =
+      await request(
+        `${GATEWAY_ORIGIN}/__harson_custom/image-tab-1/model-aliases.generated.js`
+      );
+
+    check(
+      "generated alias data served at reserved prefix",
+      dataAsset.status ===
+        200 &&
+        dataAsset.body
+          .toString()
+          .includes(
+            "HarsonModelAliases"
+          )
+    );
+
+    const resolverAsset =
+      await request(
+        `${GATEWAY_ORIGIN}/__harson_custom/image-tab-1/model-alias-resolver.js`
+      );
+
+    check(
+      "shared resolver served at reserved prefix",
+      resolverAsset.status ===
+        200 &&
+        resolverAsset.body
+          .toString()
+          .includes(
+            "HarsonModelAliasResolver"
+          )
+    );
+
     const configAsset =
       await request(
         `${GATEWAY_ORIGIN}/__harson_custom/image-tab-1/image-tab-config.js`
@@ -511,7 +543,7 @@ async function main() {
         configAsset.body
           .toString()
           .includes(
-            "CLImage-2.0"
+            "all-pages-5"
           )
     );
 
@@ -632,13 +664,25 @@ async function main() {
     );
 
     check(
-      "config + labels scripts injected for image-generator",
+      "all four assets injected in dependency order",
       html.includes(
-        "/__harson_custom/image-tab-1/image-tab-config.js"
+        "/__harson_custom/image-tab-1/model-aliases.generated.js"
       ) &&
         html.includes(
+          "/__harson_custom/image-tab-1/model-alias-resolver.js"
+        ) &&
+        html.includes(
+          "/__harson_custom/image-tab-1/image-tab-config.js"
+        ) &&
+        html.includes(
           'id="harson-image-tab-labels"'
-        )
+        ) &&
+        html.indexOf("model-aliases.generated.js") <
+          html.indexOf("model-alias-resolver.js") &&
+        html.indexOf("model-alias-resolver.js") <
+          html.indexOf("image-tab-config.js") &&
+        html.indexOf("image-tab-config.js") <
+          html.indexOf("harson-image-tab-labels")
     );
 
     check(

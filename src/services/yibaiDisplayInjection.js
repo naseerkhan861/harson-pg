@@ -19,7 +19,11 @@ function injectImageTabAssets(html, {
 
   const end = html.search(/<\/head\s*>/i);
   if (end < 0) return html;
+  // Dependency order (runbook §13.1): generated data -> shared resolver
+  // -> adapter config -> DOM renderer. Ordered defer execution.
   const tags =
+    `<script defer src="${ASSET_PREFIX}/model-aliases.generated.js"></script>` +
+    `<script defer src="${ASSET_PREFIX}/model-alias-resolver.js"></script>` +
     `<script defer src="${ASSET_PREFIX}/image-tab-config.js"></script>` +
     `<script defer id="${SCRIPT_MARKER}" data-harson-module="${moduleName}" ` +
     `src="${ASSET_PREFIX}/image-tab-labels.js"></script>`;
