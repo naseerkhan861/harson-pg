@@ -1,7 +1,8 @@
 "use strict";
 
 /*
-  Dependency-free checks for the image-tab display layer.
+  Checks for the injection helper and adapter configuration.
+  Alias DATA behavior is covered by tests/model-alias-resolver.test.cjs.
   Run from the repository root:  node --test tests/image-tab-injection.test.cjs
 */
 
@@ -31,71 +32,41 @@ function inject(html, overrides) {
   });
 }
 
-/* ---------------- mapping (source: tab_customization/names.txt) ---------------- */
-
-test("config exposes the names.txt aliases", () => {
-  for (const [source, alias] of [
-    ["FLUX Krea", "CLImage"], // duplicate key: last row wins
-    ["FLUX.1 Kontext pro", "CLImage-1.1"],
-    ["FLUX.1 Kontext max", "CLImage-1.1"],
-    ["Midjourney V7", "CLImage-2.0"],
-    ["Midjourney", "CLImage"],
-    ["悠船MJ V7", "CLImage-2.0"],
-    ["即梦", "CLImage"],
-    ["即梦 4.0", "CLImage-3.0"],
-    ["即梦 4.5", "CLImage-3.1"],
-    ["即梦 5.0 Lite", "CLImage-3.2"],
-    ["即梦 5.0 Pro", "CLImage-3.3"],
-    ["image-2", "CLImage-4.0"],
-    ["image-2.5", "CLImage-4.1"],
-    ["GPT-image-2", "CLImage-4.0"],
-    ["GPT-image-2.5", "CLImage-4.1"],
-    ["gpt-image-2.5", "CLImage-4.1"],
-    ["全能图片", "CLImage-5.0"],
-    ["全能图片 Pro", "CLImage-5.1"],
-    ["全能图片 2", "CLImage-5.2"],
-    ["Seedance 2.0", "CLVideo-2.0"],
-    ["Seedance", "CLVideo"],
-    ["Seedance 2.5", "CLVideo-3.0"],
-    ["Seedream", "CLVideo"],
-    ["Happy Horse", "CLVideo-1.0"],
-    ["暂未上架", "CLVideo-2.1"]
-  ]) {
-    assert.equal(config.aliases[source], alias);
-  }
-});
-
-test("related display spellings map to the same family aliases", () => {
-  assert.equal(config.aliases["悠船Midjourney V7"], "CLImage-2.0");
-  assert.equal(config.aliases["悠船 MJ V7"], "CLImage-2.0");
-  assert.equal(config.aliases["悠船M| V7"], "CLImage-2.0");
-  assert.equal(config.aliases["全能图片 pro"], "CLImage-5.1");
-  assert.equal(config.aliases["全能图片2"], "CLImage-5.2");
-  assert.equal(config.aliases["kontext-pro"], "CLImage-1.1");
-  assert.equal(config.aliases["GPT-Image-2.5"], "CLImage-4.1");
-});
-
-test("no-space variants resolve; bare versions stay unmapped", () => {
-  assert.equal(config.aliases["即梦4.0"], "CLImage-3.0");
-  assert.equal(config.aliases["4.5"], undefined);
-  assert.equal(config.aliases["CLImage-1.0"], undefined);
-  assert.equal(config.aliases["Seedream 4.5"], undefined);
-});
-
-test("unknown labels are not aliased (no substring guessing)", () => {
-  assert.equal(config.aliases["悠船"], undefined);
-  assert.equal(config.aliases["FLUX"], undefined);
-  assert.equal(config.aliases["SeeDance 2.0 VIP"], undefined);
-  assert.equal(config.aliases["高清放大 2.0"], undefined);
-  assert.equal(config.aliases["爆款视频复刻"], undefined);
-});
+/* ---------------- configuration ---------------- */
 
 test("config is scoped to the gateway origin and all YiBai modules", () => {
   assert.equal(config.expectedOrigin, "https://ai.harson-base.com");
   assert.ok(config.modules.includes("image-generator"));
   assert.ok(config.modules.includes("video-generator"));
   assert.ok(config.sidebarSelector.includes("NavList-list-item"));
-  assert.ok(config.selectors.length > 0);
+});
+
+test("verified selector coverage from the runbook is present", () => {
+  for (const required of [
+    ".MainLayout-nav .NavList-list-item > span.label",
+    ".ToolLayout-header",
+    ".DefaultLayout-header",
+    ".header_fix > span",
+    ".header_fix .IcTabs > .IcTab",
+    ".SubLayout-draw .q-tab__label",
+    ".q-tooltip"
+  ]) {
+    assert.ok(
+      config.selectors.includes(required),
+      `${required} must be targeted`
+    );
+  }
+
+  // Floating headers must NOT be scoped under SubLayout-draw (runbook §2.4).
+  for (const scoped of [
+    ".SubLayout-draw .header_fix",
+    ".SubLayout-draw .ToolLayout-header"
+  ]) {
+    assert.ok(
+      !config.selectors.includes(scoped),
+      `${scoped} over-scopes floating headers`
+    );
+  }
 });
 
 /* ---------------- module handling ---------------- */
@@ -159,14 +130,13 @@ test("non-string bodies pass through untouched", () => {
 
 /* ---------------- bounded HTML injection ---------------- */
 
-test("valid HTML gets both deferred script tags before </head>", () => {
+test("valid HTML gets the adapter script tags before </head>", () => {
   const result = inject(HTML);
 
   assert.ok(result.includes(
     `<script defer src="${ASSET_PREFIX}/image-tab-config.js"></script>`
   ));
   assert.ok(result.includes('id="harson-image-tab-labels"'));
-  assert.ok(result.includes('data-harson-module="image-generator"'));
   assert.ok(result.indexOf("<script") < result.indexOf("</head>"));
   assert.ok(result.startsWith("<!DOCTYPE html>"));
 });
