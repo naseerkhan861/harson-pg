@@ -68,7 +68,7 @@ function isMockEnabled() {
 /*
   网关对外源（例如 https://ai.harson-base.com）。
   未配置时返回空字符串，所有模块 iframe 直连 YiBai，
-  行为与现在完全一致。仅 image-generator 模块会使用网关。
+  行为与现在完全一致。配置后所有模块经网关加载。
 */
 function getFramePublicOrigin() {
   return String(
@@ -255,20 +255,17 @@ async function buildFrameUrl({
   }
 
   /*
-    网关模式（仅 image-generator 模块）：上游地址校验通过后，
-    只把“源”换成网关，路径保持不变；provider token 改放进
-    一次性启动票据，由网关赎回后附加到发往上游的重定向上。
-    未配置网关、或非 image-generator 模块时走原有直连逻辑，
-    返回值不变（其余模块始终直连 YiBai）。
+    网关模式：上游地址校验通过后，只把“源”换成网关，路径保持
+    不变；provider token 改放进一次性启动票据，由网关赎回后附加
+    到发往上游的重定向上。未配置网关时所有模块走原有直连逻辑，
+    返回值不变。
   */
   const framePublicOrigin =
     getFramePublicOrigin();
 
   if (
     framePublicOrigin &&
-    userId &&
-    moduleRoute.moduleName ===
-      "image-generator"
+    userId
   ) {
     const issued =
       aigcFrameTicketService.issueTicket(

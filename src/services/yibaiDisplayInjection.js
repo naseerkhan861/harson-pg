@@ -12,7 +12,7 @@ function injectImageTabAssets(html, {
   moduleName,
   contentType = ""
 } = {}) {
-  if (!enabled || moduleName !== "image-generator" ||
+  if (!enabled || !moduleName ||
       !/^text\/html(?:\s*;|\s*$)/i.test(contentType) ||
       typeof html !== "string" || Buffer.byteLength(html, "utf8") > MAX_HTML_BYTES ||
       html.includes(`id="${SCRIPT_MARKER}"`)) return html;
@@ -21,7 +21,7 @@ function injectImageTabAssets(html, {
   if (end < 0) return html;
   const tags =
     `<script defer src="${ASSET_PREFIX}/image-tab-config.js"></script>` +
-    `<script defer id="${SCRIPT_MARKER}" data-harson-module="image-generator" ` +
+    `<script defer id="${SCRIPT_MARKER}" data-harson-module="${moduleName}" ` +
     `src="${ASSET_PREFIX}/image-tab-labels.js"></script>`;
   return html.slice(0, end) + tags + html.slice(end);
 }

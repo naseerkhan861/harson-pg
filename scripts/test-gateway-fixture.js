@@ -511,7 +511,7 @@ async function main() {
         configAsset.body
           .toString()
           .includes(
-            "HarsonMD"
+            "CLImage-2.0"
           )
     );
 
@@ -668,7 +668,7 @@ async function main() {
       )
     );
 
-    /* 7. module isolation: upscaler session gets NO injection */
+    /* 7. other modules also injected, tagged with their own module */
     const other = await withSession(
       "upscaler",
       "/aigc/upscaler?embed=2"
@@ -685,11 +685,14 @@ async function main() {
       );
 
     check(
-      "non-image module through gateway: HTML untouched",
+      "upscaler session injected with its own module marker",
       otherHtml.status ===
         200 &&
-        otherHtml.body.toString() ===
-          HTML_BODY
+        otherHtml.body
+          .toString()
+          .includes(
+            'data-harson-module="upscaler"'
+          )
     );
 
     /* 8. JSON passthrough (extra path) + no-store */

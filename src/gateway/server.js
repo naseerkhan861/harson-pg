@@ -858,8 +858,7 @@ async function handleProxyResponse(
 
   const shouldInject =
     imageAliasesEnabled() &&
-    session.moduleName ===
-      "image-generator" &&
+    Boolean(session.moduleName) &&
     isHtmlResponse(
       proxyRes.headers
     ) &&

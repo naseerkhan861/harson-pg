@@ -2,47 +2,110 @@
   "use strict";
 
   // Display strings only. These are NOT provider model IDs or API values.
-  const models = [
-    { source: "悠船Midjourney V7", alias: "HarsonMD" },
-    { source: "全能图片", alias: "Harson-ZP" },
-    { source: "即梦", alias: "Harson-SD" },
-    { source: "GPT-image-2", alias: "HarsonIM2" },
-    { source: "FLUX.1 Kontext", alias: "HarsonFK1" },
-    { source: "FLUX Krea", alias: "HarsonFK" }
-  ].map(Object.freeze);
+  // Source of truth: tab_customization/names.txt (left = original label,
+  // right = display alias), extended with the display spellings the live
+  // YiBai UI actually renders (悠船 prefixes, SeeDance casing, no-space
+  // variants). Matching is trim + case-insensitive, with a fallback that
+  // ignores internal spaces entirely ("HappyHorse" === "Happy Horse").
+  const aliases = {
+    // --- image families (names.txt) ---
+    "FLUX Krea": "CLImage-1.0",
+    "FLUX.1 Kontext": "CLImage-1.1",
+    "FLUX.1 Kontext pro": "CLImage-1.1",
+    "FLUX.1 Kontext max": "CLImage-1.1",
+    "Midjourney V7": "CLImage-2.0",
+    "Midjourney": "CLImage",
+    "即梦": "CLImage",
+    "即梦 4.0": "CLImage-3.0",
+    "即梦 4.5": "CLImage-3.1",
+    "即梦 5.0 Lite": "CLImage-3.2",
+    "即梦 5.0 Pro": "CLImage-3.3",
+    "image-2": "CLImage-4.0",
+    "image-2.5": "CLImage-4.1",
+    "GPT-image-2": "CLImage-4.0",
+    "GPT-image-2.5": "CLImage-4.1",
+    "全能图片": "CLImage-5.0",
+    "全能图片 Pro": "CLImage-5.1",
+    "全能图片 2": "CLImage-5.2",
 
-  const aliases = Object.fromEntries(models.map(m => [m.source, m.alias]));
-  // Alternate display spellings seen in the screenshots/public UI components.
-  // Keep version information: different provider variants must remain distinct.
-  Object.assign(aliases, {
-    "悠船MJ V7": "HarsonMD",
-    "悠船 MJ V7": "HarsonMD",
-    "image-2": "HarsonIM2",
-    "即梦 Seedream": "Harson-SD",
-    "Seedream": "Harson-SD",
-    "全能图片 pro": "Harson-ZP pro",
-    "全能图片2": "Harson-ZP 2",
-    "kontext-pro": "HarsonFK1 pro",
-    "kontext-max": "HarsonFK1 max"
-  });
+    // --- video families (names.txt) ---
+    "Seedance 2.0": "CLVideo-2.0",
+    "Seedance": "CLVideo",
+    "Seedance 2.5": "CLVideo-3.0",
+    "Happy Horse": "CLVideo-1.0", // names.txt has CLVideo and CLVideo-1.0; last row wins
+    "暂未上架": "CLVideo-2.1",
 
-  for (const version of ["4.0", "4.5", "5.0 lite", "5.0 pro"]) {
-    for (const family of ["即梦", "Seedream", "即梦Seedream"]) {
-      for (const separator of ["", " "]) {
-        aliases[family + separator + version] = "Harson-SD " + version;
-      }
-    }
+    // --- display spellings seen on the live UI (same targets) ---
+    "悠船Midjourney V7": "CLImage-2.0",
+    "悠船 Midjourney V7": "CLImage-2.0",
+    "悠船MJ V7": "CLImage-2.0",
+    "悠船 MJ V7": "CLImage-2.0",
+    "悠船M| V7": "CLImage-2.0",
+    "悠船M｜ V7": "CLImage-2.0",
+    "MidjourneyV7": "CLImage-2.0",
+    "Kontext Pro": "CLImage-1.1",
+    "kontext-pro": "CLImage-1.1",
+    "Kontext Max": "CLImage-1.1",
+    "kontext-max": "CLImage-1.1",
+    "SeeDance 2.0": "CLVideo-2.0",
+    "SeeDance 2.5": "CLVideo-3.0",
+    "SeeDance": "CLVideo",
+    "seedance 2.0": "CLVideo-2.0",
+    "seedance 2.5": "CLVideo-3.0",
+    "HappyHorse": "CLVideo-1.0",
+    "GPT-Image-2": "CLImage-4.0",
+    "GPT-Image-2.5": "CLImage-4.1",
+    "GPT image 2": "CLImage-4.0",
+    "GPT image 2.5": "CLImage-4.1"
+  };
+
+  // Seedream is the English spelling of the 即梦 family on some surfaces.
+  for (const [source, alias] of [
+    ["Seedream", "CLImage"],
+    ["Seedream 4.0", "CLImage-3.0"],
+    ["Seedream 4.5", "CLImage-3.1"],
+    ["Seedream 5.0 Lite", "CLImage-3.2"],
+    ["Seedream 5.0 Pro", "CLImage-3.3"],
+    ["即梦 Seedream", "CLImage"],
+    ["即梦Seedream", "CLImage"]
+  ]) {
+    aliases[source] = alias;
+  }
+
+  // No-space variants (即梦4.0, 全能图片2, MidjourneyV7 handled above, ...).
+  for (const version of ["4.0", "4.5", "5.0 Lite", "5.0 Pro"]) {
+    aliases["即梦" + version] = aliases["即梦 " + version];
+    aliases["Seedream" + version] = aliases["Seedream " + version];
+  }
+  for (const [source, alias] of [
+    ["全能图片 pro", aliases["全能图片 Pro"]],
+    ["全能图片Pro", aliases["全能图片 Pro"]],
+    ["全能图片2", aliases["全能图片 2"]],
+    ["FLUX.1 Kontext Pro", aliases["FLUX.1 Kontext pro"]],
+    ["FLUX.1 Kontext Max", aliases["FLUX.1 Kontext max"]],
+    ["FLUX.1Kontext", aliases["FLUX.1 Kontext"]],
+    ["FLUXKrea", aliases["FLUX Krea"]]
+  ]) {
+    aliases[source] = alias;
   }
 
   const config = Object.freeze({
-    version: "image-tab-1",
+    version: "all-pages-2",
     expectedOrigin: "https://ai.harson-base.com",
-    moduleName: "image-generator",
+    // Applied inside every YiBai module frame served by the gateway.
+    modules: Object.freeze([
+      "image-generator",
+      "upscaler",
+      "video-generator",
+      "pattern-design",
+      "prompt-generator",
+      "clothing",
+      "e-commerce"
+    ]),
     sidebarSelector: ".MainLayout-nav .NavList-list-item > span.label",
-    models: Object.freeze(models),
     aliases: Object.freeze(aliases),
     // Only model-label surfaces. Never select the whole page, prompts or forms.
-    // Public component names checked on 2026-09-21; see the deployment guide.
+    // Public component names checked 2026-09-21; see the deployment guide.
     selectors: Object.freeze([
       ".MainLayout-nav .NavList-list-item > span.label",
       ".SubLayout-draw .ToolLayout-header",

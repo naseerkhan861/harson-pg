@@ -31,72 +31,101 @@ function inject(html, overrides) {
   });
 }
 
-/* ---------------- mapping ---------------- */
+/* ---------------- mapping (source: tab_customization/names.txt) ---------------- */
 
-test("config exposes the six requested aliases", () => {
+test("config exposes the names.txt aliases", () => {
   for (const [source, alias] of [
-    ["悠船Midjourney V7", "HarsonMD"],
-    ["全能图片", "Harson-ZP"],
-    ["即梦", "Harson-SD"],
-    ["GPT-image-2", "HarsonIM2"],
-    ["FLUX.1 Kontext", "HarsonFK1"],
-    ["FLUX Krea", "HarsonFK"]
+    ["FLUX Krea", "CLImage-1.0"],
+    ["FLUX.1 Kontext pro", "CLImage-1.1"],
+    ["FLUX.1 Kontext max", "CLImage-1.1"],
+    ["Midjourney V7", "CLImage-2.0"],
+    ["Midjourney", "CLImage"],
+    ["即梦", "CLImage"],
+    ["即梦 4.0", "CLImage-3.0"],
+    ["即梦 4.5", "CLImage-3.1"],
+    ["即梦 5.0 Lite", "CLImage-3.2"],
+    ["即梦 5.0 Pro", "CLImage-3.3"],
+    ["image-2", "CLImage-4.0"],
+    ["image-2.5", "CLImage-4.1"],
+    ["GPT-image-2", "CLImage-4.0"],
+    ["GPT-image-2.5", "CLImage-4.1"],
+    ["全能图片", "CLImage-5.0"],
+    ["全能图片 Pro", "CLImage-5.1"],
+    ["全能图片 2", "CLImage-5.2"],
+    ["Seedance 2.0", "CLVideo-2.0"],
+    ["Seedance", "CLVideo"],
+    ["Seedance 2.5", "CLVideo-3.0"],
+    ["Happy Horse", "CLVideo-1.0"],
+    ["暂未上架", "CLVideo-2.1"]
   ]) {
     assert.equal(config.aliases[source], alias);
   }
 });
 
 test("related display spellings map to the same family aliases", () => {
-  assert.equal(config.aliases["悠船MJ V7"], "HarsonMD");
-  assert.equal(config.aliases["悠船 MJ V7"], "HarsonMD");
-  assert.equal(config.aliases["image-2"], "HarsonIM2");
-  assert.equal(config.aliases["Seedream"], "Harson-SD");
-  assert.equal(config.aliases["即梦 Seedream"], "Harson-SD");
-  assert.equal(config.aliases["全能图片 pro"], "Harson-ZP pro");
-  assert.equal(config.aliases["全能图片2"], "Harson-ZP 2");
-  assert.equal(config.aliases["kontext-pro"], "HarsonFK1 pro");
-  assert.equal(config.aliases["kontext-max"], "HarsonFK1 max");
+  assert.equal(config.aliases["悠船Midjourney V7"], "CLImage-2.0");
+  assert.equal(config.aliases["悠船 MJ V7"], "CLImage-2.0");
+  assert.equal(config.aliases["悠船M| V7"], "CLImage-2.0");
+  assert.equal(config.aliases["Seedream"], "CLImage");
+  assert.equal(config.aliases["Seedream 5.0 Pro"], "CLImage-3.3");
+  assert.equal(config.aliases["即梦 Seedream"], "CLImage");
+  assert.equal(config.aliases["全能图片 pro"], "CLImage-5.1");
+  assert.equal(config.aliases["全能图片2"], "CLImage-5.2");
+  assert.equal(config.aliases["kontext-pro"], "CLImage-1.1");
+  assert.equal(config.aliases["GPT-Image-2.5"], "CLImage-4.1");
 });
 
-test("versioned Seedream variants keep their versions; bare versions stay unmapped", () => {
-  assert.equal(config.aliases["Seedream 4.5"], "Harson-SD 4.5");
-  assert.equal(config.aliases["即梦5.0 pro"], "Harson-SD 5.0 pro");
-  assert.equal(config.aliases["即梦Seedream5.0 lite"], "Harson-SD 5.0 lite");
+test("no-space variants resolve; bare versions stay unmapped", () => {
+  assert.equal(config.aliases["即梦4.0"], "CLImage-3.0");
+  assert.equal(config.aliases["Seedream5.0 Lite"], "CLImage-3.2");
   assert.equal(config.aliases["4.5"], undefined);
-  assert.equal(config.aliases["HarsonFK1"], undefined);
+  assert.equal(config.aliases["CLImage-1.0"], undefined);
 });
 
 test("unknown labels are not aliased (no substring guessing)", () => {
   assert.equal(config.aliases["悠船"], undefined);
   assert.equal(config.aliases["FLUX"], undefined);
-  assert.equal(config.aliases["SeeDance 2.5"], undefined);
+  assert.equal(config.aliases["SeeDance 2.0 VIP"], undefined);
+  assert.equal(config.aliases["高清放大 2.0"], undefined);
+  assert.equal(config.aliases["爆款视频复刻"], undefined);
 });
 
-test("config is scoped to the gateway origin and image module", () => {
+test("config is scoped to the gateway origin and all YiBai modules", () => {
   assert.equal(config.expectedOrigin, "https://ai.harson-base.com");
-  assert.equal(config.moduleName, "image-generator");
+  assert.ok(config.modules.includes("image-generator"));
+  assert.ok(config.modules.includes("video-generator"));
   assert.ok(config.sidebarSelector.includes("NavList-list-item"));
   assert.ok(config.selectors.length > 0);
 });
 
-/* ---------------- module isolation ---------------- */
+/* ---------------- module handling ---------------- */
 
-test("injection only applies to the image-generator module", () => {
+test("injection applies to every module, tagged with its module name", () => {
   for (const moduleName of [
+    "image-generator",
     "video-generator",
     "upscaler",
     "pattern-design",
     "clothing",
     "e-commerce"
   ]) {
-    assert.equal(
-      inject(HTML, { moduleName }),
-      HTML,
-      `${moduleName} must not be touched`
-    );
-  }
+    const result = inject(HTML, { moduleName });
 
-  assert.notEqual(inject(HTML), HTML);
+    assert.notEqual(
+      result,
+      HTML,
+      `${moduleName} must receive the scripts`
+    );
+
+    assert.ok(result.includes(
+      `data-harson-module="${moduleName}"`
+    ));
+  }
+});
+
+test("injection refuses a missing module name", () => {
+  assert.equal(inject(HTML, { moduleName: "" }), HTML);
+  assert.equal(inject(HTML, { moduleName: undefined }), HTML);
 });
 
 test("injection only applies when explicitly enabled", () => {

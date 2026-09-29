@@ -5,7 +5,8 @@
   const script = document.currentScript;
   if (!config || window.HarsonImageLabels || !script ||
       location.origin !== config.expectedOrigin ||
-      script.dataset.harsonModule !== config.moduleName) return;
+      !Array.isArray(config.modules) ||
+      !config.modules.includes(script.dataset.harsonModule)) return;
 
   // Manual slots let icons/badges remain the SAME provider-owned DOM elements.
   // Unassigned source text stays unchanged in the light DOM; only its rendered
@@ -32,17 +33,34 @@
   let queued = false;
   let observer;
 
-  function aliasFor(text) {
-    const value = String(text || "").trim().replace(/\s+/g, " ");
-    return Object.hasOwn(config.aliases, value) ? config.aliases[value] : null;
+  // Lookup indexes: exact-normalized (trim + collapsed whitespace,
+  // case-insensitive), then a loose fallback that also ignores internal
+  // spaces entirely ("HappyHorse" === "Happy Horse"). First entry wins a
+  // collision deterministically; unknown text is never aliased.
+  const exactIndex = new Map();
+  const looseIndex = new Map();
+  for (const [source, alias] of Object.entries(config.aliases)) {
+    const exact = String(source).trim().replace(/\s+/g, " ").toLowerCase();
+    const loose = exact.replace(/\s+/g, "");
+    if (!exactIndex.has(exact)) exactIndex.set(exact, alias);
+    if (!looseIndex.has(loose)) looseIndex.set(loose, alias);
   }
 
+  function aliasFor(text) {
+    const value = String(text || "").trim().replace(/\s+/g, " ").toLowerCase();
+    if (!value) return null;
+    if (exactIndex.has(value)) return exactIndex.get(value);
+    return looseIndex.get(value.replace(/\s+/g, "")) || null;
+  }
+
+  // Active only on pages whose sidebar actually contains known model
+  // labels — verifies the real page context module-independently, and
+  // keeps pages without mapped models (upscaler versions etc.) untouched.
   function sidebarMatches() {
-    const found = new Set(Array.from(document.querySelectorAll(config.sidebarSelector),
-      node => aliasFor(node.textContent)));
-    // Image and pattern tools can share URLs. Check the actual six-row image
-    // sidebar, not a guessed route prefix or the currently selected model.
-    return config.models.every(model => found.has(model.alias));
+    for (const node of document.querySelectorAll(config.sidebarSelector)) {
+      if (aliasFor(node.textContent)) return true;
+    }
+    return false;
   }
 
   function getRecord(node) {
