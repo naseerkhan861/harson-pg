@@ -962,3 +962,19 @@ body.meta-ui
 
   box-shadow: none;
 }
+
+body.meta-ui .account-work-table-wrap {
+  max-height: 560px;
+  overflow-x: auto;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+
+/* 滚动时固定表头 */
+body.meta-ui .account-work-table-wrap th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #202125;
+}

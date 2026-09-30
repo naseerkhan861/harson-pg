@@ -1089,7 +1089,7 @@ export class AccountManagementView {
         ${
           works.length
             ? `
-              <div class="table-wrap">
+              <div class="table-wrap account-work-table-wrap">
                 ${this.worksTable(
                   works
                 )}
@@ -2711,8 +2711,6 @@ export class AccountManagementView {
         ${this.rows(
           [
             "创作封面",
-            "任务标题",
-            "任务类型",
             "状态",
             "扣除 Token",
             "返还 Token",
@@ -2729,10 +2727,7 @@ export class AccountManagementView {
                     data-image-url="${this.escapeHtml(
                       item.imageUrl
                     )}"
-                    data-image-title="${this.escapeHtml(
-                      item.title ||
-                      "AIGC 创作任务"
-                    )}"
+                    data-image-title="AIGC 创作任务"
                     aria-label="放大查看创作封面"
                     title="点击放大查看"
                   >
@@ -2741,10 +2736,7 @@ export class AccountManagementView {
                       src="${this.escapeHtml(
                         item.imageUrl
                       )}"
-                      alt="${this.escapeHtml(
-                        item.title ||
-                        "AIGC 创作任务"
-                      )}封面"
+                      alt="AIGC 创作任务封面"
                       width="72"
                       height="72"
                       loading="lazy"
@@ -2758,12 +2750,6 @@ export class AccountManagementView {
                     暂无图片
                   </span>
                 `,
-
-              item.title ||
-                "AIGC 创作任务",
-
-              item.workType ||
-                "AIGC",
 
               item.statusLabel ||
                 this.realTaskStatusLabel(
