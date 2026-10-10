@@ -1,14 +1,14 @@
 "use strict";
 
-const aigcAccountModel = require("../models/aigcAccountCsvModel");
+const aigcAccountModel = require("../models/aigcAccountMongoModel");
 const masterProviderConfigModel = require(
-  "../models/aigcMasterProviderConfigCsvModel"
+  "../models/aigcMasterProviderConfigMongoModel"
 );
 const subProviderConfigModel = require(
-  "../models/aigcSubProviderConfigCsvModel"
+  "../models/aigcSubProviderConfigMongoModel"
 );
 const subTokenCacheModel = require(
-  "../models/aigcSubTokenCacheCsvModel"
+  "../models/aigcSubTokenCacheMongoModel"
 );
 const credentialCrypto = require(
   "../utils/aigcSubCredentialCrypto"
@@ -66,9 +66,9 @@ function withLock(subAccountId, task) {
   return current;
 }
 
-function getSubContext(subAccountId) {
+async function getSubContext(subAccountId) {
   const normalizedSubAccountId = requireText(subAccountId, "AIGC子账号ID");
-  const data = aigcAccountModel.listAdminData();
+  const data = await aigcAccountModel.listAdminData();
   const subAccount = data.subs.find(
     item =>
       item.id === normalizedSubAccountId &&
@@ -86,7 +86,7 @@ function getSubContext(subAccountId) {
     throw new Error("AIGC 子账号所属主账号不存在或已停用");
   }
   const masterProvider =
-    masterProviderConfigModel.getProviderConfigByMasterAccountId(
+    await masterProviderConfigModel.getProviderConfigByMasterAccountId(
       masterAccount.id
     );
   if (!masterProvider) {
@@ -148,7 +148,7 @@ function validateCompanyRelationship(masterProvider, subSession) {
   }
 }
 
-function validateProviderUniqueness({
+async function validateProviderUniqueness({
   providerAccount,
   subAccountId,
   masterProvider
@@ -163,9 +163,8 @@ function validateProviderUniqueness({
   ) {
     throw new Error("外部子账号不能与所属外部主账号使用同一个登录账号");
   }
-  const duplicate = subProviderConfigModel
-    .listSubProviderConfigs()
-    .find(
+  const configs = await subProviderConfigModel.listSubProviderConfigs();
+  const duplicate = configs.find(
       item =>
         item.subAccountId !== subAccountId &&
         String(item.providerAccount || "").trim().toLowerCase() ===
@@ -176,9 +175,10 @@ function validateProviderUniqueness({
   }
 }
 
-function listSubProviderBindings() {
-  const data = aigcAccountModel.listAdminData();
-  return subProviderConfigModel.listSubProviderConfigs().map(binding => {
+async function listSubProviderBindings() {
+  const data = await aigcAccountModel.listAdminData();
+  const bindings = await subProviderConfigModel.listSubProviderConfigs();
+  return bindings.map(binding => {
     const subAccount = data.subs.find(
       item => item.id === binding.subAccountId
     );
@@ -212,8 +212,8 @@ async function bindSubProviderAndSync({
   const normalizedPointsField = normalizePointsField(pointsField);
 
   return withLock(normalizedSubAccountId, async () => {
-    const context = getSubContext(normalizedSubAccountId);
-    validateProviderUniqueness({
+    const context = await getSubContext(normalizedSubAccountId);
+    await validateProviderUniqueness({
       providerAccount: normalizedProviderAccount,
       subAccountId: normalizedSubAccountId,
       masterProvider: context.masterProvider
@@ -241,7 +241,7 @@ async function bindSubProviderAndSync({
       password: normalizedPassword
     });
 
-    subProviderConfigModel.upsertSubProviderConfig({
+    await subProviderConfigModel.upsertSubProviderConfig({
       subAccountId: normalizedSubAccountId,
       masterAccountId: context.masterAccount.id,
       providerAccount: normalizedProviderAccount,
@@ -249,13 +249,13 @@ async function bindSubProviderAndSync({
       ...encryptedCredential
     });
 
-    subTokenCacheModel.upsertTokenCache({
+    await subTokenCacheModel.upsertTokenCache({
       subAccountId: normalizedSubAccountId,
       providerAccount: normalizedProviderAccount,
       token: providerSession.token
     });
 
-    const binding = subProviderConfigModel.updateProviderSyncSnapshot({
+    const binding = await subProviderConfigModel.updateProviderSyncSnapshot({
       subAccountId: normalizedSubAccountId,
       syncedTokenBalance: providerSession.syncedTokenBalance,
       providerMemberId: providerSession.providerMemberId,
@@ -274,15 +274,15 @@ async function bindSubProviderAndSync({
 async function syncBoundSubProvider(subAccountId) {
   const normalizedSubAccountId = requireText(subAccountId, "AIGC子账号ID");
   return withLock(normalizedSubAccountId, async () => {
-    const context = getSubContext(normalizedSubAccountId);
+    const context = await getSubContext(normalizedSubAccountId);
     const providerConfig =
-      subProviderConfigModel.getProviderConfigBySubAccountId(
+      await subProviderConfigModel.getProviderConfigBySubAccountId(
         normalizedSubAccountId
       );
     if (!providerConfig) {
       throw new Error("当前 AIGC 子账号尚未绑定外部子账号");
     }
-    validateProviderUniqueness({
+    await validateProviderUniqueness({
       providerAccount: providerConfig.providerAccount,
       subAccountId: normalizedSubAccountId,
       masterProvider: context.masterProvider
@@ -313,13 +313,13 @@ async function syncBoundSubProvider(subAccountId) {
     );
     validateCompanyRelationship(context.masterProvider, providerSession);
 
-    subTokenCacheModel.upsertTokenCache({
+    await subTokenCacheModel.upsertTokenCache({
       subAccountId: normalizedSubAccountId,
       providerAccount: providerConfig.providerAccount,
       token: providerSession.token
     });
 
-    const binding = subProviderConfigModel.updateProviderSyncSnapshot({
+    const binding = await subProviderConfigModel.updateProviderSyncSnapshot({
       subAccountId: normalizedSubAccountId,
       syncedTokenBalance: providerSession.syncedTokenBalance,
       providerMemberId: providerSession.providerMemberId,
@@ -340,7 +340,7 @@ async function unbindSubProvider(subAccountId) {
   return withLock(normalizedSubAccountId, async () => {
     let providerLogout = "not_required";
     try {
-      const cachedToken = subTokenCacheModel.getTokenCache(
+      const cachedToken = await subTokenCacheModel.getTokenCache(
         normalizedSubAccountId
       );
       if (cachedToken?.token) {
@@ -353,8 +353,8 @@ async function unbindSubProvider(subAccountId) {
       providerLogout = "failed";
     }
 
-    subTokenCacheModel.removeTokenCache(normalizedSubAccountId);
-    const removed = subProviderConfigModel.removeSubProviderConfig(
+    await subTokenCacheModel.removeTokenCache(normalizedSubAccountId);
+    const removed = await subProviderConfigModel.removeSubProviderConfig(
       normalizedSubAccountId
     );
 

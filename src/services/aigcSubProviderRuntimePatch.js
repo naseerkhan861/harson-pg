@@ -8,15 +8,19 @@ function install() {
   }
 
   const sessionService = require("./aigcSessionService");
-  const accountModel = require("../models/aigcAccountCsvModel");
-  const masterOwnerModel = require("../models/aigcMasterOwnerCsvModel");
-  const activeSessionModel = require("../models/aigcActiveSessionCsvModel");
-  const taskSnapshotModel = require("../models/aigcTaskSnapshotCsvModel");
+  const accountMongoModel = require(
+    "../models/aigcAccountMongoModel"
+  );
+  const accountModel = require("../models/aigcAccountMongoModel");
+  const masterOwnerModel = require("../models/aigcMasterOwnerMongoModel");
+  const activeSessionModel = require("../models/aigcActiveSessionMongoModel");
+  const taskSnapshotModel = require("../models/aigcTaskSnapshotMongoModel");
+  const masterProviderConfigModel = require("../models/aigcMasterProviderConfigMongoModel");
   const subProviderConfigModel = require(
-    "../models/aigcSubProviderConfigCsvModel"
+    "../models/aigcSubProviderConfigMongoModel"
   );
   const subTokenCacheModel = require(
-    "../models/aigcSubTokenCacheCsvModel"
+    "../models/aigcSubTokenCacheMongoModel"
   );
   const subCredentialCrypto = require(
     "../utils/aigcSubCredentialCrypto"
@@ -160,14 +164,14 @@ function install() {
     };
   }
 
-  function resolveRole(clBaseUserId, { allowSessionFallback = false } = {}) {
+  async function resolveRole(clBaseUserId, { allowSessionFallback = false } = {}) {
     const normalizedUserId = requireText(
       clBaseUserId,
       "Harson-Base用户ID"
     );
 
-    const subMapping = accountModel.getMyMapping(normalizedUserId);
-    const ownerMapping = masterOwnerModel.getActiveMappingByUserId(
+    const subMapping = await accountModel.getMyMapping(normalizedUserId);
+    const ownerMapping = await masterOwnerModel.getActiveMappingByUserId(
       normalizedUserId
     );
 
@@ -195,7 +199,7 @@ function install() {
 
     if (allowSessionFallback) {
       const existingSession =
-        activeSessionModel.getSessionByUserId(normalizedUserId);
+        await activeSessionModel.getSessionByUserId(normalizedUserId);
 
       if (
         existingSession?.aigcSubAccountId &&
@@ -203,7 +207,7 @@ function install() {
           "master-owner:"
         )
       ) {
-        const data = accountModel.listAdminData();
+        const data = await accountModel.listAdminData();
         const subAccount = data.subs.find(
           item =>
             String(item.id) ===
@@ -236,7 +240,7 @@ function install() {
     throw new Error("当前 Harson-Base 账号尚未绑定 AIGC 账号");
   }
 
-  function resolveSubContext(roleContext) {
+  async function resolveSubContext(roleContext) {
     const subAccount = roleContext.subMapping?.aigcSubAccount;
     const masterAccount = roleContext.subMapping?.masterAccount;
     const mapping = roleContext.subMapping?.mapping;
@@ -256,8 +260,15 @@ function install() {
       throw new Error("AIGC 子账号、主账号和用户映射关系不一致");
     }
 
+    // Prevent stale child credentials from resurrecting a revoked enterprise session.
+    const masterProviderConfig = await masterProviderConfigModel
+      .getProviderConfigByMasterAccountId(masterAccount.id);
+    if (!masterProviderConfig) {
+      throw new Error("所属企业已解除外部主账号绑定，不能重新建立 AIGC Session");
+    }
+
     const providerConfig =
-      subProviderConfigModel.getProviderConfigBySubAccountId(
+      await subProviderConfigModel.getProviderConfigBySubAccountId(
         subAccount.id
       );
 
@@ -285,21 +296,21 @@ function install() {
     });
   }
 
-  function markSubSessionActive(context) {
-    activeSessionModel.markSessionActive({
+  async function markSubSessionActive(context) {
+    await activeSessionModel.markSessionActive({
       clBaseUserId: context.clBaseUserId,
       aigcSubAccountId: context.subAccount.id,
       masterAccountId: context.masterAccount.id
     });
   }
 
-  function buildSubSessionResult(context, token, source, memberResult) {
+  async function buildSubSessionResult(context, token, source, memberResult) {
     const balanceData = readTokenBalance(
       memberResult,
       context.providerConfig
     );
 
-    markSubSessionActive(context);
+    await markSubSessionActive(context);
 
     return {
       token,
@@ -333,13 +344,13 @@ function install() {
       "AIGC子账号Token"
     );
 
-    subTokenCacheModel.upsertTokenCache({
+    await subTokenCacheModel.upsertTokenCache({
       subAccountId: context.subAccount.id,
       providerAccount: context.providerConfig.providerAccount,
       token
     });
 
-    return buildSubSessionResult(
+    return await buildSubSessionResult(
       context,
       token,
       "sub_login",
@@ -348,13 +359,13 @@ function install() {
   }
 
   async function getSubToken(roleContext) {
-    const context = resolveSubContext(roleContext);
+    const context = await resolveSubContext(roleContext);
 
     return withSubLock(context.subAccount.id, async () => {
       let cachedToken = null;
 
       try {
-        cachedToken = subTokenCacheModel.getTokenCache(
+        cachedToken = await subTokenCacheModel.getTokenCache(
           context.subAccount.id
         );
       } catch (error) {
@@ -362,7 +373,7 @@ function install() {
           "AIGC 子账号 Token 缓存读取失败，将重新登录：",
           error.message
         );
-        subTokenCacheModel.removeTokenCache(context.subAccount.id);
+        await subTokenCacheModel.removeTokenCache(context.subAccount.id);
       }
 
       if (
@@ -370,7 +381,7 @@ function install() {
         cachedToken.providerAccount !==
           context.providerConfig.providerAccount
       ) {
-        subTokenCacheModel.removeTokenCache(context.subAccount.id);
+        await subTokenCacheModel.removeTokenCache(context.subAccount.id);
         cachedToken = null;
       }
 
@@ -391,16 +402,16 @@ function install() {
           }
 
           if (validatedToken !== cachedToken.token) {
-            subTokenCacheModel.upsertTokenCache({
+            await subTokenCacheModel.upsertTokenCache({
               subAccountId: context.subAccount.id,
               providerAccount: context.providerConfig.providerAccount,
               token: validatedToken
             });
           } else {
-            subTokenCacheModel.touchTokenCache(context.subAccount.id);
+            await subTokenCacheModel.touchTokenCache(context.subAccount.id);
           }
 
-          return buildSubSessionResult(
+          return await buildSubSessionResult(
             context,
             validatedToken,
             "sub_cache",
@@ -408,7 +419,7 @@ function install() {
           );
         }
 
-        subTokenCacheModel.removeTokenCache(context.subAccount.id);
+        await subTokenCacheModel.removeTokenCache(context.subAccount.id);
       }
 
       return loginAndCacheSubToken(context);
@@ -416,7 +427,7 @@ function install() {
   }
 
   async function getValidTokenForUser(clBaseUserId) {
-    const roleContext = resolveRole(clBaseUserId);
+    const roleContext = await resolveRole(clBaseUserId);
 
     if (roleContext.accountType === "master_owner") {
       const result = await legacySession.getValidTokenForUser(
@@ -437,7 +448,7 @@ function install() {
   }
 
   async function getCachedTokenBalanceForUser(clBaseUserId) {
-    const roleContext = resolveRole(clBaseUserId);
+    const roleContext = await resolveRole(clBaseUserId);
 
     if (roleContext.accountType === "master_owner") {
       return legacySession.getCachedTokenBalanceForUser(
@@ -445,7 +456,7 @@ function install() {
       );
     }
 
-    const context = resolveSubContext(roleContext);
+    const context = await resolveSubContext(roleContext);
 
     return withSubLock(context.subAccount.id, async () => {
       function toBalanceResult(session) {
@@ -474,7 +485,7 @@ function install() {
       let cachedToken = null;
 
       try {
-        cachedToken = subTokenCacheModel.getTokenCache(
+        cachedToken = await subTokenCacheModel.getTokenCache(
           context.subAccount.id
         );
       } catch (error) {
@@ -483,7 +494,7 @@ function install() {
           error.message
         );
 
-        subTokenCacheModel.removeTokenCache(
+        await subTokenCacheModel.removeTokenCache(
           context.subAccount.id
         );
 
@@ -507,7 +518,7 @@ function install() {
         cachedToken.providerAccount !==
         context.providerConfig.providerAccount
       ) {
-        subTokenCacheModel.removeTokenCache(
+        await subTokenCacheModel.removeTokenCache(
           context.subAccount.id
         );
 
@@ -519,7 +530,7 @@ function install() {
       );
 
       if (!isSuccessfulResponse(validationResult)) {
-        subTokenCacheModel.removeTokenCache(
+        await subTokenCacheModel.removeTokenCache(
           context.subAccount.id
         );
 
@@ -532,14 +543,14 @@ function install() {
       ).trim();
 
       if (validatedToken !== cachedToken.token) {
-        subTokenCacheModel.upsertTokenCache({
+        await subTokenCacheModel.upsertTokenCache({
           subAccountId: context.subAccount.id,
           providerAccount:
             context.providerConfig.providerAccount,
           token: validatedToken
         });
       } else {
-        subTokenCacheModel.touchTokenCache(
+        await subTokenCacheModel.touchTokenCache(
           context.subAccount.id
         );
       }
@@ -549,7 +560,7 @@ function install() {
         context.providerConfig
       );
 
-      activeSessionModel.touchSession(
+      await activeSessionModel.touchSession(
         context.clBaseUserId
       );
 
@@ -564,7 +575,7 @@ function install() {
     let roleContext;
 
     try {
-      roleContext = resolveRole(clBaseUserId, {
+      roleContext = await resolveRole(clBaseUserId, {
         allowSessionFallback: true
       });
     } catch (error) {
@@ -581,14 +592,12 @@ function install() {
       );
     }
 
-    const context = resolveSubContext(roleContext);
+    const context = await resolveSubContext(roleContext);
 
     return withSubLock(context.subAccount.id, async () => {
-      activeSessionModel.markSessionLoggedOut(context.clBaseUserId);
+      await activeSessionModel.markSessionLoggedOut(context.clBaseUserId);
 
-      const remainingActiveUsers = activeSessionModel
-        .listSessions()
-        .filter(
+      const remainingActiveUsers = (await activeSessionModel.listSessions()).filter(
           session =>
             session.status === "active" &&
             String(session.aigcSubAccountId) ===
@@ -608,11 +617,11 @@ function install() {
       let cachedToken = null;
 
       try {
-        cachedToken = subTokenCacheModel.getTokenCache(
+        cachedToken = await subTokenCacheModel.getTokenCache(
           context.subAccount.id
         );
       } catch {
-        subTokenCacheModel.removeTokenCache(context.subAccount.id);
+        await subTokenCacheModel.removeTokenCache(context.subAccount.id);
         return {
           success: true,
           action: "local_cache_removed",
@@ -643,7 +652,7 @@ function install() {
         };
       }
 
-      subTokenCacheModel.removeTokenCache(context.subAccount.id);
+      await subTokenCacheModel.removeTokenCache(context.subAccount.id);
 
       return {
         success: true,
@@ -719,8 +728,8 @@ function install() {
     );
   }
 
-  function resolveBoundSubAccount(masterAccountId, identities) {
-    const data = accountModel.listAdminData();
+  async function resolveBoundSubAccount(masterAccountId, identities) {
+    const data = await accountModel.listAdminData();
     const activeMappings = (data.mappings || []).filter(
       mapping => mapping.mappingStatus === "active"
     );
@@ -753,7 +762,7 @@ function install() {
 
     const subAccount = matchingSubs[0];
     const binding =
-      subProviderConfigModel.getProviderConfigBySubAccountId(
+      await subProviderConfigModel.getProviderConfigBySubAccountId(
         subAccount.id
       );
 
@@ -767,7 +776,7 @@ function install() {
     };
   }
 
-  taskSnapshotModel.listTaskSnapshotByIdentity = function patchedList(
+  taskSnapshotModel.listTaskSnapshotByIdentity = async function patchedList(
     args
   ) {
     const masterAccountId = String(args?.masterAccountId || "").trim();
@@ -776,15 +785,15 @@ function install() {
       : [];
 
     if (masterAccountId) {
-      const resolved = resolveBoundSubAccount(
+      const resolved = await resolveBoundSubAccount(
         masterAccountId,
         identities
       );
 
       if (resolved) {
         const companyTasks =
-          taskSnapshotModel.listTasksByMasterAccountId(masterAccountId);
-        const tasks = taskSnapshotModel.listTasksByMemberId({
+          await taskSnapshotModel.listTasksByMasterAccountId(masterAccountId);
+        const tasks = await taskSnapshotModel.listTasksByMemberId({
           masterAccountId,
           memberId: resolved.binding.providerMemberId
         });
@@ -803,10 +812,63 @@ function install() {
     return originalListTaskSnapshotByIdentity(args);
   };
 
-  sessionService.getValidTokenForUser = getValidTokenForUser;
-  sessionService.refreshTokenForUser = refreshTokenForUser;
-  sessionService.getCachedTokenBalanceForUser =
-    getCachedTokenBalanceForUser;
+  function getSessionMasterAccountId(roleContext) {
+    const masterAccountId =
+      roleContext.accountType === "master_owner"
+        ? roleContext.ownerMapping?.masterAccountId
+        : (
+            roleContext.subMapping?.mapping?.masterAccountId ||
+            roleContext.subMapping?.masterAccount?.id
+          );
+
+    return requireText(masterAccountId, "AIGC企业主账号ID");
+  }
+
+  async function withEnterpriseSessionGuard(
+    clBaseUserId,
+    task
+  ) {
+    const roleContext = await resolveRole(clBaseUserId);
+    const masterAccountId =
+      getSessionMasterAccountId(roleContext);
+
+    return accountMongoModel.withMasterSessionOperation(
+      masterAccountId,
+      async () => {
+        // 进入保护后再次核实用户映射没有变化
+        const currentRole = await resolveRole(clBaseUserId);
+
+        if (
+          getSessionMasterAccountId(currentRole) !==
+          masterAccountId
+        ) {
+          throw new Error(
+            "用户企业映射已变化，请重新进入 Workspace"
+          );
+        }
+
+        return task();
+      }
+    );
+  }
+
+  sessionService.getValidTokenForUser = clBaseUserId =>
+    withEnterpriseSessionGuard(
+      clBaseUserId,
+      () => getValidTokenForUser(clBaseUserId)
+    );
+
+  sessionService.refreshTokenForUser = clBaseUserId =>
+    withEnterpriseSessionGuard(
+      clBaseUserId,
+      () => refreshTokenForUser(clBaseUserId)
+    );
+
+  sessionService.getCachedTokenBalanceForUser = clBaseUserId =>
+    withEnterpriseSessionGuard(
+      clBaseUserId,
+      () => getCachedTokenBalanceForUser(clBaseUserId)
+    );
   sessionService.logoutUserAigcSession = logoutUserAigcSession;
 
   installed = true;

@@ -1,19 +1,19 @@
 "use strict";
 
 const aigcAccountModel = require(
-  "../models/aigcAccountCsvModel"
+  "../models/aigcAccountMongoModel"
 );
 
 const taskSnapshotModel = require(
-  "../models/aigcTaskSnapshotCsvModel"
+  "../models/aigcTaskSnapshotMongoModel"
 );
 
 const masterOwnerModel = require(
-  "../models/aigcMasterOwnerCsvModel"
+  "../models/aigcMasterOwnerMongoModel"
 );
 
 const masterProviderConfigModel = require(
-  "../models/aigcMasterProviderConfigCsvModel"
+  "../models/aigcMasterProviderConfigMongoModel"
 );
 
 function toNonNegativeNumber(value) {
@@ -251,12 +251,12 @@ function toDashboardTask(task) {
   };
 }
 
-function createMasterAnalytics({
+async function createMasterAnalytics({
   master,
   ownerMapping
 }) {
   const providerConfig =
-    masterProviderConfigModel
+    await masterProviderConfigModel
       .getProviderConfigByMasterAccountId(
         master.id
       );
@@ -270,9 +270,9 @@ function createMasterAnalytics({
 
   const snapshot =
     providerMemberId
-      ? (() => {
+      ? await (async () => {
           const tasks =
-            taskSnapshotModel
+            await taskSnapshotModel
               .listTasksByMemberId({
                 masterAccountId:
                   master.id,
@@ -300,7 +300,7 @@ function createMasterAnalytics({
               )
           };
         })()
-      : taskSnapshotModel
+      : await taskSnapshotModel
           .listTaskSnapshotByIdentity({
             masterAccountId:
               master.id,
@@ -384,13 +384,13 @@ function createMasterAnalytics({
   };
 }
 
-function createAccountAnalytics({
+async function createAccountAnalytics({
   master,
   subAccount,
   mapping
 }) {
   const snapshot =
-    taskSnapshotModel
+    await taskSnapshotModel
       .listTaskSnapshotByIdentity({
         masterAccountId:
           master.id,
@@ -574,7 +574,7 @@ function toSafeAccount(account) {
   return safeAccount;
 }
 
-function buildDashboardAnalytics({
+async function buildDashboardAnalytics({
   masterAccountIds = [],
   scope = "master_owner",
   now = new Date()
@@ -588,7 +588,7 @@ function buildDashboardAnalytics({
   );
 
   const data =
-    aigcAccountModel
+    await aigcAccountModel
       .listAdminData();
 
   const availableMasters =
@@ -633,7 +633,7 @@ function buildDashboardAnalytics({
     );
 
   const ownerMappings =
-    masterOwnerModel
+    await masterOwnerModel
       .listActiveMappings();
 
   const rawMasterAccounts =
@@ -684,8 +684,8 @@ function buildDashboardAnalytics({
   const resolvedAccounts =
     removeDuplicateMemberMatches(
       [
-        ...rawMasterAccounts,
-        ...rawAccounts
+        ...(await Promise.all(rawMasterAccounts)),
+        ...(await Promise.all(rawAccounts))
       ]
     );
 
@@ -703,14 +703,18 @@ function buildDashboardAnalytics({
         "sub"
     );
 
-  const uniqueTasks = new Map();
-
-  masters.forEach(master => {
-    taskSnapshotModel
-      .listTasksByMasterAccountId(
+  const taskLists = await Promise.all(
+    masters.map(master =>
+      taskSnapshotModel.listTasksByMasterAccountId(
         master.id
       )
-      .forEach(task => {
+    )
+  );
+
+  const uniqueTasks = new Map();
+
+  masters.forEach((master, index) => {
+    taskLists[index].forEach(task => {
       uniqueTasks.set(
         [
           master.id,
@@ -813,14 +817,8 @@ function buildDashboardAnalytics({
 
   const latestSyncedAt =
     latestValue(
-      masters.flatMap(master =>
-        taskSnapshotModel
-          .listTasksByMasterAccountId(
-            master.id
-          )
-          .map(task =>
-            task.syncedAt
-          )
+      taskLists.flatMap(tasks =>
+        tasks.map(task => task.syncedAt)
       )
     );
 

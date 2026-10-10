@@ -12,7 +12,7 @@ const aigcAccountRoutes = require("./src/routes/aigcAccountRoutes");
 const aiRoutes =
   require("./src/routes/aiRoutes");
 const masterOwnerModel = require(
-  "./src/models/aigcMasterOwnerCsvModel"
+  "./src/models/aigcMasterOwnerMongoModel"
 );
 
 const connectDB = require("./src/db");
@@ -171,7 +171,7 @@ function sendAdminOnlyPage(req, res, filename) {
   }
 }
 
-function sendDashboardPage(
+async function sendDashboardPage(
   req,
   res,
   filename
@@ -192,8 +192,7 @@ function sendDashboardPage(
     const ownerMapping =
       user?.role !== "admin" &&
       user?.id
-        ? masterOwnerModel
-            .getActiveMappingByUserId(
+        ? await masterOwnerModel.getActiveMappingByUserId(
               user.id
             )
         : null;
@@ -317,8 +316,15 @@ app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-connectDB();
+async function startServer() {
+  await connectDB();
 
-app.listen(PORT, () => {
-  console.log(`HARSON app running at http://localhost:${PORT}`);
+  app.listen(PORT, () => {
+    console.log(`HARSON app running at http://localhost:${PORT}`);
+  });
+}
+
+startServer().catch(error => {
+  console.error("Harson-Base 启动失败：", error.message);
+  process.exitCode = 1;
 });

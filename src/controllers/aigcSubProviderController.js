@@ -4,11 +4,11 @@ const subProviderService = require(
   "../services/aigcSubProviderService"
 );
 
-function listBindings(req, res) {
+async function listBindings(req, res) {
   try {
     return res.json({
       success: true,
-      data: subProviderService.listSubProviderBindings()
+      data: await subProviderService.listSubProviderBindings()
     });
   } catch (error) {
     return res.status(500).json({

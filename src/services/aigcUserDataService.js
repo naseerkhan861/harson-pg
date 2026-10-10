@@ -1,15 +1,15 @@
 "use strict";
 
 const providerConfigModel = require(
-  "../models/aigcMasterProviderConfigCsvModel"
+  "../models/aigcMasterProviderConfigMongoModel"
 );
 
 const userTokenCacheModel = require(
-  "../models/aigcUserTokenCacheCsvModel"
+  "../models/aigcUserTokenCacheMongoModel"
 );
 
 const taskSnapshotModel = require(
-  "../models/aigcTaskSnapshotCsvModel"
+  "../models/aigcTaskSnapshotMongoModel"
 );
 
 const credentialCrypto = require(
@@ -80,7 +80,7 @@ function removeTokenFromMember(
 /**
  * 读取企业主账号的 YiBai 绑定。
  */
-function getProviderContext(
+async function getProviderContext(
   masterAccountId
 ) {
   const normalizedMasterAccountId =
@@ -90,7 +90,7 @@ function getProviderContext(
     );
 
   const providerConfig =
-    providerConfigModel
+    await providerConfigModel
       .getProviderConfigByMasterAccountId(
         normalizedMasterAccountId
       );
@@ -179,7 +179,7 @@ async function loginAndCacheUserDataToken(
   masterAccountId
 ) {
   const context =
-    getProviderContext(
+    await getProviderContext(
       masterAccountId
     );
 
@@ -219,7 +219,7 @@ async function loginAndCacheUserDataToken(
     );
   }
 
-  userTokenCacheModel
+  await userTokenCacheModel
     .upsertTokenCache({
       masterAccountId:
         context.masterAccountId,
@@ -289,7 +289,7 @@ async function getValidUserDataToken(
   } = {}
 ) {
   const context =
-    getProviderContext(
+    await getProviderContext(
       masterAccountId
     );
 
@@ -315,7 +315,7 @@ async function getValidUserDataToken(
 
   try {
     cachedToken =
-      userTokenCacheModel
+      await userTokenCacheModel
         .getTokenCache(
           context.masterAccountId
         );
@@ -325,7 +325,7 @@ async function getValidUserDataToken(
       error.message
     );
 
-    userTokenCacheModel
+    await userTokenCacheModel
       .removeTokenCache(
         context.masterAccountId
       );
@@ -342,7 +342,7 @@ async function getValidUserDataToken(
     cachedToken.providerAccount !==
     context.providerAccount
   ) {
-    userTokenCacheModel
+    await userTokenCacheModel
       .removeTokenCache(
         context.masterAccountId
       );
@@ -364,7 +364,7 @@ async function getValidUserDataToken(
       validationResult
     )
   ) {
-    userTokenCacheModel
+    await userTokenCacheModel
       .removeTokenCache(
         context.masterAccountId
       );
@@ -393,7 +393,7 @@ async function getValidUserDataToken(
     ).trim();
 
   if (!validatedToken) {
-    userTokenCacheModel
+    await userTokenCacheModel
       .removeTokenCache(
         context.masterAccountId
       );
@@ -408,7 +408,7 @@ async function getValidUserDataToken(
     validatedToken !==
     cachedToken.token
   ) {
-    userTokenCacheModel
+    await userTokenCacheModel
       .upsertTokenCache({
         masterAccountId:
           context.masterAccountId,
@@ -420,7 +420,7 @@ async function getValidUserDataToken(
           validatedToken
       });
   } else {
-    userTokenCacheModel
+    await userTokenCacheModel
       .touchTokenCache(
         context.masterAccountId
       );
@@ -639,7 +639,7 @@ async function getRechargeRecords(
         rechargeResponse?.code
       ) === 601
     ) {
-      userTokenCacheModel
+      await userTokenCacheModel
         .removeTokenCache(
           tokenContext
             .masterAccountId
@@ -945,7 +945,7 @@ async function getCompanyTaskSnapshot(
         taskResponse?.code
       ) === 601
     ) {
-      userTokenCacheModel
+      await userTokenCacheModel
         .removeTokenCache(
           tokenContext
             .masterAccountId
@@ -1270,7 +1270,7 @@ async function getMemberTaskSnapshot(
         memberResponse?.code
       ) === 601
     ) {
-      userTokenCacheModel
+      await userTokenCacheModel
         .removeTokenCache(
           tokenContext
             .masterAccountId
@@ -1475,7 +1475,7 @@ async function syncCompanyTaskSnapshot(
       );
 
     const storageResult =
-      taskSnapshotModel
+      await taskSnapshotModel
         .upsertTasks({
           masterAccountId:
             normalizedMasterAccountId,
@@ -1512,7 +1512,7 @@ async function syncCompanyTaskSnapshot(
    * 先查看本地已经同步到哪一天。
    */
   let existingTasks =
-    taskSnapshotModel
+    await taskSnapshotModel
       .listTasksByMasterAccountId(
         normalizedMasterAccountId
       );
@@ -1653,7 +1653,7 @@ async function syncCompanyTaskSnapshot(
    * upsert 不会删除以前的旧任务。
    */
   const storageResult =
-    taskSnapshotModel
+    await taskSnapshotModel
       .upsertTasks({
         masterAccountId:
           normalizedMasterAccountId,
@@ -1668,7 +1668,7 @@ async function syncCompanyTaskSnapshot(
    * 返回当前完整统计。
    */
   existingTasks =
-    taskSnapshotModel
+    await taskSnapshotModel
       .listTasksByMasterAccountId(
         normalizedMasterAccountId
       );

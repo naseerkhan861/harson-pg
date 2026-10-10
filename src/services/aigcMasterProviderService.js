@@ -1,27 +1,31 @@
 "use strict";
 
+const enterpriseRevocationService = require(
+  "./aigcEnterpriseSessionRevocationService"
+);
+
 const aigcAccountModel = require(
-  "../models/aigcAccountCsvModel"
+  "../models/aigcAccountMongoModel"
 );
 
 const masterProviderConfigModel =
   require(
-    "../models/aigcMasterProviderConfigCsvModel"
+    "../models/aigcMasterProviderConfigMongoModel"
   );
 
 const masterTokenCacheModel =
   require(
-    "../models/aigcMasterTokenCacheCsvModel"
+    "../models/aigcMasterTokenCacheMongoModel"
   );
 
 const userTokenCacheModel =
   require(
-    "../models/aigcUserTokenCacheCsvModel"
+    "../models/aigcUserTokenCacheMongoModel"
   );
 
 const taskSnapshotModel =
   require(
-    "../models/aigcTaskSnapshotCsvModel"
+    "../models/aigcTaskSnapshotMongoModel"
   );
 
 const credentialCrypto = require(
@@ -316,12 +320,12 @@ function buildSafeResult({
  * 缓存损坏时不阻止管理员重新绑定；
  * 后续成功登录会覆盖它。
  */
-function readPreviousTokenCache(
+async function readPreviousTokenCache(
   masterAccountId
 ) {
   try {
     return (
-      masterTokenCacheModel
+      await masterTokenCacheModel
         .getTokenCache(
           masterAccountId
         )
@@ -341,12 +345,12 @@ function readPreviousTokenCache(
  *
  * 仅在绑定事务后续步骤失败时调用。
  */
-function restorePreviousBinding({
+async function restorePreviousBinding({
   masterAccountId,
   previousConfig
 }) {
   if (!previousConfig) {
-    masterProviderConfigModel
+    await masterProviderConfigModel
       .disableMasterProviderConfig(
         masterAccountId
       );
@@ -354,7 +358,7 @@ function restorePreviousBinding({
     return;
   }
 
-  masterProviderConfigModel
+  await masterProviderConfigModel
     .upsertMasterProviderConfig({
       masterAccountId:
         previousConfig
@@ -383,7 +387,7 @@ function restorePreviousBinding({
         previousConfig.pointsField
     });
 
-  masterProviderConfigModel
+  await masterProviderConfigModel
     .updateProviderSyncSnapshot({
       masterAccountId:
         previousConfig
@@ -423,7 +427,7 @@ function restorePreviousBinding({
  * 若此次尝试登录的是另一个 YiBai 账号，
  * 则旧账号 token 通常仍可保留。
  */
-function restorePreviousToken({
+async function restorePreviousToken({
   masterAccountId,
   previousConfig,
   previousTokenCache,
@@ -442,7 +446,7 @@ function restorePreviousToken({
     previousTokenCache?.token &&
     !attemptedSameProvider
   ) {
-    masterTokenCacheModel
+    await masterTokenCacheModel
       .upsertTokenCache({
         masterAccountId,
 
@@ -457,7 +461,7 @@ function restorePreviousToken({
     return;
   }
 
-  masterTokenCacheModel
+  await masterTokenCacheModel
     .removeTokenCache(
       masterAccountId
     );
@@ -511,13 +515,13 @@ async function bindMasterProviderAndSync({
     normalizedMasterAccountId,
     async () => {
       const previousConfig =
-        masterProviderConfigModel
+        await masterProviderConfigModel
           .getProviderConfigByMasterAccountId(
             normalizedMasterAccountId
           );
 
       const previousTokenCache =
-        readPreviousTokenCache(
+        await readPreviousTokenCache(
           normalizedMasterAccountId
         );
 
@@ -576,7 +580,7 @@ async function bindMasterProviderAndSync({
                 normalizedProviderPassword
             });
 
-        masterProviderConfigModel
+        await masterProviderConfigModel
           .upsertMasterProviderConfig({
             masterAccountId:
               normalizedMasterAccountId,
@@ -609,7 +613,7 @@ async function bindMasterProviderAndSync({
          * 账号密码登录可能令旧 token 失效，
          * 因此必须保存本次返回的新 token。
          */
-        masterTokenCacheModel
+        await masterTokenCacheModel
           .upsertTokenCache({
             masterAccountId:
               normalizedMasterAccountId,
@@ -622,7 +626,7 @@ async function bindMasterProviderAndSync({
           });
 
         const binding =
-          masterProviderConfigModel
+          await masterProviderConfigModel
             .updateProviderSyncSnapshot({
               masterAccountId:
                 normalizedMasterAccountId,
@@ -670,7 +674,7 @@ async function bindMasterProviderAndSync({
           providerAuthenticated
         ) {
           try {
-            restorePreviousToken({
+            await restorePreviousToken({
               masterAccountId:
                 normalizedMasterAccountId,
 
@@ -716,7 +720,7 @@ async function bindMasterProviderAndSync({
 
         if (bindingWritten) {
           try {
-            restorePreviousBinding({
+            await restorePreviousBinding({
               masterAccountId:
                 normalizedMasterAccountId,
 
@@ -755,7 +759,7 @@ async function syncBoundMasterProvider(
     normalizedMasterAccountId,
     async () => {
       const providerConfig =
-        masterProviderConfigModel
+        await masterProviderConfigModel
           .getProviderConfigByMasterAccountId(
             normalizedMasterAccountId
           );
@@ -850,7 +854,7 @@ async function syncBoundMasterProvider(
               })
           );
 
-        masterTokenCacheModel
+        await masterTokenCacheModel
           .upsertTokenCache({
             masterAccountId:
               normalizedMasterAccountId,
@@ -862,7 +866,7 @@ async function syncBoundMasterProvider(
           });
 
         const binding =
-          masterProviderConfigModel
+          await masterProviderConfigModel
             .updateProviderSyncSnapshot({
               masterAccountId:
                 normalizedMasterAccountId,
@@ -907,7 +911,7 @@ async function syncBoundMasterProvider(
           providerAuthenticated
         ) {
           try {
-            masterTokenCacheModel
+            await masterTokenCacheModel
               .removeTokenCache(
                 normalizedMasterAccountId
               );
@@ -979,16 +983,61 @@ async function unbindMasterProvider(
   return withMasterAccountLock(
     normalizedMasterAccountId,
     async () => {
+
+      const verifyBindingRemoved = async id => {
+        const remaining = await masterProviderConfigModel
+          .getProviderConfigByMasterAccountId(id);
+
+        return !remaining;
+      };
+
       const providerConfig =
-        masterProviderConfigModel
+        await masterProviderConfigModel
           .getProviderConfigByMasterAccountId(
             normalizedMasterAccountId
           );
 
-      if (!providerConfig) {
-        throw new Error(
-          "当前企业主账号没有有效的 YiBai 绑定"
-        );
+            if (!providerConfig) {
+        try {
+          const sessionRevocation =
+            await enterpriseRevocationService
+              .revokeEnterpriseSessionsForUnbind(
+                normalizedMasterAccountId
+              );
+
+          if (sessionRevocation?.completed !== true) {
+            throw new Error("企业共享 Session 注销未完成");
+          }
+
+          const finalization = await aigcAccountModel
+            .finalizeMasterProviderUnbind(
+              normalizedMasterAccountId,
+              verifyBindingRemoved
+            );
+
+          return {
+            masterAccountId: normalizedMasterAccountId,
+            recovered: true,
+            finalization,
+            sessionRevocation,
+            bindingRemoved: true
+          };
+        } catch (error) {
+          if (
+            (
+            error.message ===
+              "企业主账号尚未完成解绑清零" ||
+            error.message ===
+              "企业尚未进入解绑清零状态，拒绝注销 Session"
+          )
+          ) {
+            throw new Error(
+              "当前企业主账号没有有效的外部绑定"
+            );
+          }
+
+          throw error;
+        }
       }
 
       /*
@@ -1003,29 +1052,46 @@ async function unbindMasterProvider(
             )
         );
 
+      // 保留原接口中的缓存清理结果字段
+      const managementTokenPresent = Boolean(
+        await masterTokenCacheModel.getTokenCache(
+          normalizedMasterAccountId
+        )
+      );
+
+      const userTokenPresent = Boolean(
+        await userTokenCacheModel.getTokenCache(
+          normalizedMasterAccountId
+        )
+      );
+
+      const sessionRevocation =
+        await enterpriseRevocationService
+          .revokeEnterpriseSessionsForUnbind(
+            normalizedMasterAccountId
+          );
+
+      if (sessionRevocation?.completed !== true) {
+        throw new Error("企业共享 Session 注销未完成");
+      }
+
       const deletedTaskCount =
-        taskSnapshotModel
+        await taskSnapshotModel
           .deleteTasksByMasterAccountId(
             normalizedMasterAccountId
           );
 
       const managementTokenRemoved =
-        masterTokenCacheModel
-          .removeTokenCache(
-            normalizedMasterAccountId
-          );
+        managementTokenPresent;
 
       const userTokenRemoved =
-        userTokenCacheModel
-          .removeTokenCache(
-            normalizedMasterAccountId
-          );
+        userTokenPresent;
 
       /*
        * 最后删除绑定和加密凭据。
        */
       const bindingRemoved =
-        masterProviderConfigModel
+        await masterProviderConfigModel
           .removeMasterProviderConfig(
             normalizedMasterAccountId
           );
@@ -1036,6 +1102,13 @@ async function unbindMasterProvider(
         );
       }
 
+      const finalization = await aigcAccountModel
+        .finalizeMasterProviderUnbind(
+          normalizedMasterAccountId,
+          verifyBindingRemoved
+        );
+
+
       return {
         masterAccountId:
           normalizedMasterAccountId,
@@ -1045,6 +1118,8 @@ async function unbindMasterProvider(
             .providerAccount,
 
         creditReset,
+        finalization,
+        sessionRevocation,
         deletedTaskCount,
         managementTokenRemoved,
         userTokenRemoved,
@@ -1057,8 +1132,8 @@ async function unbindMasterProvider(
 }
 
 
-function listMasterProviderBindings() {
-  return masterProviderConfigModel
+async function listMasterProviderBindings() {
+  return await masterProviderConfigModel
     .listMasterProviderConfigs();
 }
 

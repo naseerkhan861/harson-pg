@@ -1,32 +1,66 @@
 require("dotenv").config();
 
-const userCsvModel = require("../src/models/userCsvModel");
+const mongoose = require("mongoose");
+
+const userMongoModel = require(
+  "../src/models/userMongoModel"
+);
 
 async function main() {
-  const email = process.env.ADMIN_EMAIL || "admin@harson.local";
-  const password = process.env.ADMIN_PASSWORD || "HarsonAdmin123!";
+  await mongoose.connect(
+    process.env.MONGODB_URI
+  );
 
-  const existing = await userCsvModel.findByEmail(email);
+  const email =
+    process.env.ADMIN_EMAIL ||
+    "admin@harson.local";
+
+  const password =
+    process.env.ADMIN_PASSWORD ||
+    "HarsonAdmin123!";
+
+  const existing =
+    await userMongoModel.findByEmail(
+      email
+    );
 
   if (existing) {
-    console.log(`Admin already exists: ${email}`);
+    console.log(
+      `Admin already exists: ${email}`
+    );
+
     return;
   }
 
-  await userCsvModel.createUser({
+  await userMongoModel.createUser({
     name: "HARSON Admin",
     email,
     password,
     role: "admin"
   });
 
-  console.log("Admin account created successfully.");
-  console.log(`Email: ${email}`);
-  console.log(`Password: ${password}`);
-  console.log("Change this password policy before production deployment.");
+  console.log(
+    "Admin account created successfully."
+  );
+
+  console.log(
+    `Email: ${email}`
+  );
+
+  console.log(
+    `Password: ${password}`
+  );
+
+  console.log(
+    "Change this password policy before production deployment."
+  );
 }
 
-main().catch(error => {
-  console.error(error);
-  process.exit(1);
-});
+main()
+  .catch(error => {
+    console.error(error);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await mongoose.disconnect();
+  });

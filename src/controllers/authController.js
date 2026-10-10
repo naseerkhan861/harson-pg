@@ -1,10 +1,10 @@
 const jwt = require("jsonwebtoken");
-const userCsvModel = require("../models/userCsvModel");
+const userCsvModel = require("../models/userMongoModel");
 const aigcSessionService = require(
   "../services/aigcSessionService"
 );
 const masterOwnerModel = require(
-  "../models/aigcMasterOwnerCsvModel"
+  "../models/aigcMasterOwnerMongoModel"
 );
 
 const VALID_GENDERS = ["Male", "Female", "Other"];
@@ -209,44 +209,50 @@ async function logout(req, res) {
   });
 }
 
-function me(req, res) {
-  const isAdmin =
-    req.user?.role === "admin";
+async function me(req, res) {
+  try {
+    const isAdmin =
+      req.user?.role === "admin";
 
-  const ownerMapping =
-    !isAdmin && req.user?.id
-      ? masterOwnerModel
-          .getActiveMappingByUserId(
-            req.user.id
-          )
-      : null;
+    const ownerMapping =
+      !isAdmin && req.user?.id
+        ? await masterOwnerModel
+            .getActiveMappingByUserId(
+              req.user.id
+            )
+        : null;
 
-  return res.json({
-    success: true,
-    user: req.user
-      ? {
-          ...req.user,
-
-          dashboardAccess: {
-            allowed:
-              isAdmin ||
-              Boolean(ownerMapping),
-
-            scope:
-              isAdmin
-                ? "admin"
-                : ownerMapping
-                  ? "master_owner"
-                  : null,
-
-            masterAccountId:
-              ownerMapping
-                ?.masterAccountId ||
-              null
+    return res.json({
+      success: true,
+      user: req.user
+        ? {
+            ...req.user,
+            dashboardAccess: {
+              allowed:
+                isAdmin || Boolean(ownerMapping),
+              scope:
+                isAdmin
+                  ? "admin"
+                  : ownerMapping
+                    ? "master_owner"
+                    : null,
+              masterAccountId:
+                ownerMapping?.masterAccountId || null
+            }
           }
-        }
-      : null
-  });
+        : null
+    });
+  } catch (error) {
+    console.error(
+      "Harson-Base 用户权限查询失败：",
+      error.message
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "用户权限读取失败"
+    });
+  }
 }
 
 module.exports = { register, login, logout, me };

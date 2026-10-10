@@ -1,23 +1,23 @@
 "use strict";
 
 const aigcAccountModel = require(
-  "../models/aigcAccountCsvModel"
+  "../models/aigcAccountMongoModel"
 );
 
 const masterOwnerModel = require(
-  "../models/aigcMasterOwnerCsvModel"
+  "../models/aigcMasterOwnerMongoModel"
 );
 
 const masterProviderConfigModel = require(
-  "../models/aigcMasterProviderConfigCsvModel"
+  "../models/aigcMasterProviderConfigMongoModel"
 );
 
 const masterTokenCacheModel = require(
-  "../models/aigcMasterTokenCacheCsvModel"
+  "../models/aigcMasterTokenCacheMongoModel"
 );
 
 const activeSessionModel = require(
-  "../models/aigcActiveSessionCsvModel"
+  "../models/aigcActiveSessionMongoModel"
 );
 
 const credentialCrypto = require(
@@ -297,7 +297,7 @@ function withMasterAccountLock(
  * 这里只解析关系，不解密 YiBai 密码。
  * 只有必须重新登录时才解密密码。
  */
-function resolveUserAccount(
+async function resolveUserAccount(
   clBaseUserId
 ) {
   const normalizedUserId =
@@ -307,7 +307,7 @@ function resolveUserAccount(
     );
 
   let mappingData =
-    aigcAccountModel.getMyMapping(
+    await aigcAccountModel.getMyMapping(
       normalizedUserId
     );
 
@@ -318,7 +318,7 @@ function resolveUserAccount(
 
   if (!mappingData?.mapping) {
     ownerMapping =
-      masterOwnerModel
+      await masterOwnerModel
         .getActiveMappingByUserId(
           normalizedUserId
         );
@@ -330,7 +330,7 @@ function resolveUserAccount(
     }
 
     const ownerMasterAccount =
-      aigcAccountModel
+      await aigcAccountModel
         .getMasterAccountById(
           ownerMapping
             .masterAccountId
@@ -411,7 +411,7 @@ function resolveUserAccount(
   }
 
   const providerConfig =
-    masterProviderConfigModel
+    await masterProviderConfigModel
       .getProviderConfigByMasterAccountId(
         masterAccount.id
       );
@@ -493,10 +493,10 @@ function decryptProviderPassword(
  * 用户成功获得可用 YiBai token 后，
  * 将其记录为当前共享登录态的活跃用户。
  */
-function markUserSessionActive(
+async function markUserSessionActive(
   accountContext
 ) {
-  activeSessionModel
+  await activeSessionModel
     .markSessionActive({
       clBaseUserId:
         accountContext.clBaseUserId,
@@ -566,7 +566,7 @@ async function loginAndCacheToken(
       providerConfig
     );
 
-  masterTokenCacheModel
+  await masterTokenCacheModel
     .upsertTokenCache({
       masterAccountId:
         masterAccount.id,
@@ -578,7 +578,7 @@ async function loginAndCacheToken(
       token
     });
 
-  markUserSessionActive(
+  await markUserSessionActive(
     accountContext
   );
 
@@ -626,7 +626,7 @@ async function getValidTokenForUser(
     options.forceRefresh === true;
 
   const accountContext =
-    resolveUserAccount(
+    await resolveUserAccount(
       clBaseUserId
     );
 
@@ -643,7 +643,7 @@ async function getValidTokenForUser(
     masterAccountId,
     async () => {
       if (forceRefresh) {
-        masterTokenCacheModel
+        await masterTokenCacheModel
           .removeTokenCache(
             masterAccountId
           );
@@ -657,7 +657,7 @@ async function getValidTokenForUser(
 
       try {
         cachedToken =
-          masterTokenCacheModel
+          await masterTokenCacheModel
             .getTokenCache(
               masterAccountId
             );
@@ -673,7 +673,7 @@ async function getValidTokenForUser(
           error.message
         );
 
-        masterTokenCacheModel
+        await masterTokenCacheModel
           .removeTokenCache(
             masterAccountId
           );
@@ -688,7 +688,7 @@ async function getValidTokenForUser(
         cachedToken.providerAccount !==
           providerAccount
       ) {
-        masterTokenCacheModel
+        await masterTokenCacheModel
           .removeTokenCache(
             masterAccountId
           );
@@ -729,7 +729,7 @@ async function getValidTokenForUser(
             validatedToken !==
             cachedToken.token
           ) {
-            masterTokenCacheModel
+            await masterTokenCacheModel
               .upsertTokenCache({
                 masterAccountId,
 
@@ -739,13 +739,13 @@ async function getValidTokenForUser(
                   validatedToken
               });
           } else {
-            masterTokenCacheModel
+            await masterTokenCacheModel
               .touchTokenCache(
                 masterAccountId
               );
           }
 
-          markUserSessionActive(
+          await markUserSessionActive(
             accountContext
           );
 
@@ -782,7 +782,7 @@ async function getValidTokenForUser(
          * loginByToken 验证失败，
          * 删除旧缓存后重新账号密码登录。
          */
-        masterTokenCacheModel
+        await masterTokenCacheModel
           .removeTokenCache(
             masterAccountId
           );
@@ -837,7 +837,7 @@ async function getCachedTokenBalanceForUser(
   clBaseUserId
 ) {
   const accountContext =
-    resolveUserAccount(
+    await resolveUserAccount(
       clBaseUserId
     );
 
@@ -858,7 +858,7 @@ async function getCachedTokenBalanceForUser(
 
       try {
         cachedToken =
-          masterTokenCacheModel
+          await masterTokenCacheModel
             .getTokenCache(
               masterAccountId
             );
@@ -971,7 +971,7 @@ async function logoutUserAigcSession(
     );
 
   const existingSession =
-    activeSessionModel
+    await activeSessionModel
       .getSessionByUserId(
         normalizedUserId
       );
@@ -995,13 +995,13 @@ async function logoutUserAigcSession(
   return withMasterAccountLock(
     masterAccountId,
     async () => {
-      activeSessionModel
+      await activeSessionModel
         .markSessionLoggedOut(
           normalizedUserId
         );
 
       const remainingActiveSessions =
-        activeSessionModel
+        await activeSessionModel
           .listActiveSessionsByMasterAccountId(
             masterAccountId
           );
@@ -1024,7 +1024,7 @@ async function logoutUserAigcSession(
 
       try {
         cachedToken =
-          masterTokenCacheModel
+          await masterTokenCacheModel
             .getTokenCache(
               masterAccountId
             );
@@ -1034,12 +1034,12 @@ async function logoutUserAigcSession(
           error.message
         );
 
-        masterTokenCacheModel
+        await masterTokenCacheModel
           .removeTokenCache(
             masterAccountId
           );
 
-        activeSessionModel
+        await activeSessionModel
           .removeSessionsByMasterAccountId(
             masterAccountId
           );
@@ -1055,7 +1055,7 @@ async function logoutUserAigcSession(
       }
 
       if (!cachedToken?.token) {
-        activeSessionModel
+        await activeSessionModel
           .removeSessionsByMasterAccountId(
             masterAccountId
           );
@@ -1092,12 +1092,12 @@ async function logoutUserAigcSession(
         };
       }
 
-      masterTokenCacheModel
+      await masterTokenCacheModel
         .removeTokenCache(
           masterAccountId
         );
 
-      activeSessionModel
+      await activeSessionModel
         .removeSessionsByMasterAccountId(
           masterAccountId
         );

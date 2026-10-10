@@ -1,12 +1,13 @@
-const aigcAccountModel = require("../models/aigcAccountCsvModel");
+const aigcAccountMongoModel = require("../models/aigcAccountMongoModel");
+const aigcUserMappingMongoModel = require("../models/aigcUserMappingMongoModel");
 const masterOwnerModel = require(
-  "../models/aigcMasterOwnerCsvModel"
+  "../models/aigcMasterOwnerMongoModel"
 );
 
 const taskSnapshotModel = require(
-  "../models/aigcTaskSnapshotCsvModel"
+  "../models/aigcTaskSnapshotMongoModel"
 );
-const userCsvModel = require("../models/userCsvModel");
+const userCsvModel = require("../models/userMongoModel");
 const aigcMasterProviderService = require(
   "../services/aigcMasterProviderService"
 );
@@ -24,14 +25,14 @@ const aigcDashboardService = require(
 async function dashboard(req, res) {
   try {
     const data =
-      aigcAccountModel.listAdminData();
+      await aigcAccountMongoModel.listAdminData();
 
     return res.json({
       success: true,
       data: {
         ...data,
         masterOwnerMappings:
-          masterOwnerModel
+          await masterOwnerModel
             .listActiveMappings()
       }
     });
@@ -40,14 +41,14 @@ async function dashboard(req, res) {
   }
 }
 
-function getMyEnterpriseSubAccounts(
+async function getMyEnterpriseSubAccounts(
   req,
   res
 ) {
   try {
     const ownerMapping =
       req.user?.id
-        ? masterOwnerModel
+        ? await masterOwnerModel
             .getActiveMappingByUserId(
               req.user.id
             )
@@ -62,7 +63,7 @@ function getMyEnterpriseSubAccounts(
     }
 
     const data =
-      aigcAccountModel.listAdminData();
+      await aigcAccountMongoModel.listAdminData();
 
     const masterAccount =
       data.masters.find(
@@ -183,7 +184,7 @@ function getMyEnterpriseSubAccounts(
   }
 }
 
-function getDashboardAnalytics(
+async function getDashboardAnalytics(
   req,
   res
 ) {
@@ -193,7 +194,7 @@ function getDashboardAnalytics(
 
     const ownerMapping =
       !isAdmin && req.user?.id
-        ? masterOwnerModel
+        ? await masterOwnerModel
             .getActiveMappingByUserId(
               req.user.id
             )
@@ -244,7 +245,7 @@ function getDashboardAnalytics(
           : [];
 
     const analytics =
-      aigcDashboardService
+      await aigcDashboardService
         .buildDashboardAnalytics({
           masterAccountIds,
           scope:
@@ -286,7 +287,7 @@ async function syncDashboardUserData(
   if (!isAdmin) {
     const ownerMapping =
       req.user?.id
-        ? masterOwnerModel
+        ? await masterOwnerModel
             .getActiveMappingByUserId(
               req.user.id
             )
@@ -342,7 +343,7 @@ async function syncMyWorkspaceUserData(
   res
 ) {
   const mapping =
-    aigcAccountModel.getMyMapping(
+    await aigcAccountMongoModel.getMyMapping(
       req.user.id
     );
 
@@ -444,7 +445,7 @@ async function createMasterOwnerMapping(
     }
 
     const adminData =
-      aigcAccountModel.listAdminData();
+      await aigcAccountMongoModel.listAdminData();
 
     const master =
       adminData.masters.find(
@@ -489,7 +490,7 @@ async function createMasterOwnerMapping(
     }
 
     if (
-      aigcAccountModel.getMyMapping(
+      await aigcAccountMongoModel.getMyMapping(
         user.id
       )
     ) {
@@ -501,7 +502,7 @@ async function createMasterOwnerMapping(
     }
 
     const mapping =
-      masterOwnerModel.createMapping({
+      await masterOwnerModel.createMapping({
         masterAccountId:
           master.id,
         clBaseUserId:
@@ -524,13 +525,13 @@ async function createMasterOwnerMapping(
   }
 }
 
-function unbindMasterOwnerMapping(
+async function unbindMasterOwnerMapping(
   req,
   res
 ) {
   try {
     const mapping =
-      masterOwnerModel.unbindMapping(
+      await masterOwnerModel.unbindMapping(
         req.params.mappingId
       );
 
@@ -548,18 +549,18 @@ function unbindMasterOwnerMapping(
   }
 }
 
-function aigcCenter(req, res) {
+async function aigcCenter(req, res) {
   try {
     return res.json({
       success: true,
-      data: aigcAccountModel.listAigcCenterData()
+      data: await aigcAccountMongoModel.listAigcCenterData()
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 }
 
-function purchaseTokens(req, res) {
+async function purchaseTokens(req, res) {
   try {
     const { masterAccountId, packageName, tokens, amount } = req.body;
 
@@ -577,7 +578,7 @@ function purchaseTokens(req, res) {
       });
     }
 
-    const result = aigcAccountModel.purchaseTokens({
+    const result = await aigcAccountMongoModel.purchaseTokens({
       masterAccountId,
       packageName,
       tokens,
@@ -586,7 +587,7 @@ function purchaseTokens(req, res) {
 
     return res.status(201).json({
       success: true,
-      message: "token 套餐购买成功，AIGC 主账号总点数已更新",
+      message: "充值记录保存成功",
       data: result
     });
   } catch (error) {
@@ -605,7 +606,7 @@ async function createMaster(req, res) {
       });
     }
 
-    const master = await aigcAccountModel.createMaster({
+    const master = await aigcAccountMongoModel.createMaster({
       enterpriseName,
       platformName,
       platformLogin,
@@ -641,7 +642,7 @@ async function createSubAccount(req, res) {
       });
     }
 
-    const subAccount = await aigcAccountModel.createSubAccount({
+    const subAccount = await aigcAccountMongoModel.createSubAccount({
       masterAccountId,
       subAccountName,
       platformLogin,
@@ -660,7 +661,7 @@ async function createSubAccount(req, res) {
   }
 }
 
-function updateSubAccountTokenSettings(req, res) {
+async function updateSubAccountTokenSettings(req, res) {
   try {
     const { subAccountId, tokenLimit, warningThreshold } = req.body;
 
@@ -678,7 +679,7 @@ function updateSubAccountTokenSettings(req, res) {
       });
     }
 
-    const subAccount = aigcAccountModel.updateSubAccountTokenSettings({
+    const subAccount = await aigcAccountMongoModel.updateSubAccountTokenSettings({
       subAccountId,
       tokenLimit,
       warningThreshold
@@ -715,7 +716,7 @@ async function createMapping(req, res) {
       });
     }
 
-    const mapping = aigcAccountModel.createMapping({
+    const mapping = await aigcUserMappingMongoModel.createMapping({
       clBaseUserId,
       clBaseEmail: user.email,
       aigcSubAccountId
@@ -734,7 +735,7 @@ async function createMapping(req, res) {
 async function unbindMapping(req, res) {
   try {
     const mapping =
-      aigcAccountModel.unbindMapping(
+      await aigcUserMappingMongoModel.unbindMapping(
         req.params.mappingId
       );
 
@@ -783,13 +784,13 @@ async function unbindMapping(req, res) {
  *
  * 的全部绑定记录。
  */
-function listMasterProviderBindings(
+async function listMasterProviderBindings(
   req,
   res
 ) {
   try {
     const bindings =
-      aigcMasterProviderService
+      await aigcMasterProviderService
         .listMasterProviderBindings();
 
     return res.json({
@@ -1096,7 +1097,7 @@ async function syncMasterUserData(
        * 用户端 Token 很可能已经失效，
        * 不保留无效缓存。
        */
-      aigcUserDataService
+      await aigcUserDataService
         .clearUserDataToken(
           masterAccountId
         );
@@ -1211,13 +1212,12 @@ async function getMyRechargeRecords(
   res
 ) {
   const subMapping =
-  aigcAccountModel
-    .getMyMapping(
+  await aigcAccountMongoModel.getMyMapping(
       req.user.id
     );
 
 const ownerMapping =
-  masterOwnerModel
+  await masterOwnerModel
     .getActiveMappingByUserId(
       req.user.id
     );
@@ -1336,7 +1336,7 @@ if (!masterAccountId) {
        * 不保留可能已经失效的
        * Access-Token-User。
        */
-      aigcUserDataService
+      await aigcUserDataService
         .clearUserDataToken(
           masterAccountId
         );
@@ -1577,14 +1577,13 @@ function toWorkspaceWork(
   };
 }
 
-function myAigcWorkspace(
+async function myAigcWorkspace(
   req,
   res
 ) {
   try {
     const originalMapping =
-      aigcAccountModel
-        .getMyMapping(
+      await aigcAccountMongoModel.getMyMapping(
           req.user.id
         );
 
@@ -1649,7 +1648,7 @@ function myAigcWorkspace(
       ).trim();
 
     const snapshot =
-      taskSnapshotModel
+      await taskSnapshotModel
         .listTaskSnapshotByIdentity({
           masterAccountId,
 
@@ -1739,7 +1738,7 @@ function myAigcWorkspace(
 }
 
 
-function addMyWork(req, res) {
+async function addMyWork(req, res) {
   try {
     const { title, workType, promptSummary, creditCost } = req.body;
 
@@ -1750,7 +1749,7 @@ function addMyWork(req, res) {
       });
     }
 
-    const result = aigcAccountModel.addMyWork({
+    const result = await aigcAccountMongoModel.addMyWork({
       clBaseUserId: req.user.id,
       title,
       workType,
