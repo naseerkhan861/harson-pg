@@ -11,6 +11,8 @@ const authRoutes = require("./src/routes/authRoutes");
 const aigcAccountRoutes = require("./src/routes/aigcAccountRoutes");
 const aiRoutes =
   require("./src/routes/aiRoutes");
+const ssoRoutes =
+  require("./src/routes/ssoRoutes");
 const masterOwnerModel = require(
   "./src/models/aigcMasterOwnerCsvModel"
 );
@@ -114,6 +116,33 @@ app.use(
   }),
 
   aiRoutes
+);
+
+/*
+  SSO 免登录跳转：HARSON -> HarsonFOOT（3D 足型测量平台）
+
+  GET /api/sso/foot-entry
+    已登录：返回带 HMAC 签名的免登录跳转 URL
+    未登录：401
+*/
+app.use(
+  "/api/sso",
+
+  rateLimit({
+    windowMs:
+      60 * 1000,
+
+    max: 20,
+
+    message: {
+      success: false,
+
+      message:
+        "跳转请求过于频繁，请稍后重试。"
+    }
+  }),
+
+  ssoRoutes
 );
 
 app.get(
