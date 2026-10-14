@@ -1189,6 +1189,36 @@ body.home-v2
 
 
 /* =========================================================
+   3D 足型测量（Foot Measure）
+   ========================================================= */
+
+/* 主视觉 */
+body.home-v2
+.v2-platform-foot-measure
+.v2-platform-visual {
+  background-image:
+    url("/images/istore/足测.webp");
+}
+
+/*
+  能力卡暂时复用同一张足测主视觉。
+
+  后续设计中心提供 4 张专属素材后，
+  按上面的 nth-of-type(1..4) 写法替换即可。
+*/
+body.home-v2
+.v2-platform-foot-measure
+.v2-capability-card
+.v2-capability-visual {
+  background-image:
+    url("/images/istore/足测.webp");
+
+  background-size: cover;
+  background-position: center center;
+}
+
+
+/* =========================================================
    SCM / iRobot image crop correction
    设计中心原图存在边缘留白，放大裁切到铺满
    ========================================================= */

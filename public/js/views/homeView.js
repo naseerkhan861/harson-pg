@@ -60,6 +60,13 @@ export class HomeView {
         title: "CL-iStore",
         tagline: "零售体验",
         link: "#cl-istore"
+      },
+
+      "foot-measure": {
+        title: "CL足测",
+        tagline: "足测数智",
+        link: "https://harson-base-health.com",
+        ssoUrl: "/api/sso/foot-entry"
       }
     };
 
@@ -89,7 +96,11 @@ export class HomeView {
 
         <a
           class="featured-app-link"
-          href="${app.link}"
+          href="${app.link}"${
+            app.ssoUrl
+              ? ` data-sso-url="${app.ssoUrl}" data-sso-external="${app.link}"`
+              : ""
+          }
         >
           探索 ${app.title}
           <i class="fas fa-arrow-right"></i>
@@ -166,6 +177,76 @@ export class HomeView {
             behavior: "smooth",
             block: "start"
           });
+        }
+      });
+    });
+
+    this.bindSsoEntries();
+  }
+
+  /**
+   * 绑定 SSO 免登录跳转入口（如「CL足测」卡片）。
+   *
+   * 点击后请求同源接口 /api/sso/foot-entry：
+   *  - 已登录：接口返回带签名的免登录跳转 URL，整页跳转到目标平台。
+   *  - 未登录：接口返回 401，跳转到本系统登录页。
+   *  - 接口异常 / 未配置：降级为直接打开目标平台官网。
+   */
+  bindSsoEntries() {
+    const ssoLinks = document.querySelectorAll("[data-sso-url]");
+
+    if (!ssoLinks.length) {
+      return;
+    }
+
+    ssoLinks.forEach(link => {
+      link.addEventListener("click", async event => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const ssoUrl = link.dataset.ssoUrl;
+        const fallbackUrl = link.dataset.ssoExternal || link.getAttribute("href");
+        const isValidAbsolute =
+          typeof fallbackUrl === "string" && /^https?:\/\//i.test(fallbackUrl);
+
+        try {
+          const response = await fetch(ssoUrl, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+              "Accept": "application/json"
+            }
+          });
+
+          if (response.status === 401) {
+            window.location.href = "/login";
+            return;
+          }
+
+          const result = await response.json().catch(() => null);
+
+          if (response.ok && result && result.url) {
+            window.location.href = result.url;
+            return;
+          }
+
+          console.warn("SSO 跳转接口返回异常，降级为直接跳转", result);
+
+          if (isValidAbsolute) {
+            window.location.href = fallbackUrl;
+            return;
+          }
+
+          alert((result && result.message) || "跳转失败，请稍后重试或直接登录目标系统。");
+        } catch (error) {
+          console.error("SSO 跳转失败", error);
+
+          if (isValidAbsolute) {
+            window.location.href = fallbackUrl;
+            return;
+          }
+
+          alert("跳转失败，请稍后重试或直接登录目标系统。");
         }
       });
     });
