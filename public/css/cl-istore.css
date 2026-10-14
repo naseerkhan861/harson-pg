@@ -252,6 +252,17 @@ body.cl-istore-page * {
     url("/images/istore/门店.webp");
 }
 
+/* RFID 库存盘点 */
+
+.istore-menu-item:nth-child(3) {
+  background-image:
+    linear-gradient(
+      rgba(8, 9, 10, 0.38),
+      rgba(8, 9, 10, 0.72)
+    ),
+    url("/images/istore/rfid.webp");
+}
+
 
 .istore-menu-item:hover {
   transform:

@@ -1,0 +1,2039 @@
+HARSON MODEL DISPLAY NAME FIXES
+Agent implementation, verification, deployment, and rollback runbook
+Document version: 1.0
+Prepared: 29 September 2026, Asia/Shanghai
+Format: UTF-8 plain text
+
+Repository: https://github.com/naseerkhan861/harson-pg
+Requested baseline: origin/temp-main
+Reviewed commit: 9117ecd801d4077828ac72e429f17186a42fac24
+Reviewed commit subject:
+  fix(display): mirror names.txt lowercase gpt-image-2.5 row exactly
+
+Main website: https://harson-base.com
+Iframe gateway: https://ai.harson-base.com
+Provider: YiBai AIGC
+
+PURPOSE
+
+Implement consistent model display names across Harson's own pages and the
+proxied YiBai interface. Preserve provider model identities and the working
+login, ticket, gateway, upload, generation, and account flows.
+
+This is an implementation specification. The reviewed branch was not modified
+or deployed when this document was created. Code samples below are proposed
+changes unless explicitly identified as existing code. New filenames, tests,
+scripts, and commands must be implemented before they can be used.
+
+The observations apply to the reviewed commit and public assets inspected on
+29 September 2026. Agents must compare the current branch and deployed release
+before applying the plan. Do not overwrite newer fixes.
+
+CONTENTS
+
+01. Desired behavior and scope
+02. Confirmed findings and evidence
+03. Mapping decisions and compatibility policy
+04. Source-of-truth mapping and build design
+05. File-by-file change inventory
+06. Step 0: prepare an isolated branch and record the baseline
+07. Step 1: create regression fixtures for the reported failures
+08. Step 2: fix selector coverage and sidebar activation
+09. Step 3: implement shared matching and contextual versions
+10. Step 4: extend the display renderer safely
+11. Step 5: make dynamic navigation and rendering reliable
+12. Step 6: apply the resolver to Harson's own pages
+13. Step 7: version assets and improve diagnostics
+14. Step 8: run the acceptance tests and build the release
+15. Step 9: staging verification
+16. Step 10: production deployment
+17. Step 11: rollback and incident diagnosis
+18. Suggested agent handoffs and completion report
+19. Definition of done
+Appendix A. Original mapping supplied by the owner
+Appendix B. Proposed canonical names.txt
+Appendix C. Context and spelling correspondence
+Appendix D. Diagnostic examples
+Appendix E. Source references
+
+
+01. DESIRED BEHAVIOR AND SCOPE
+
+1.1 Display behavior
+
+When an approved original model label is displayed, show its configured alias.
+Apply the same mapping to:
+
+- Model entries in the left navigation.
+- Tool and model headings.
+- Floating model-selection tabs.
+- Model labels within buttons and dropdown choices.
+- Selected model/version labels.
+- Image and video card badges.
+- History-card model labels.
+- Model labels in relevant dialogs, popovers, and tooltips.
+- Accessible names associated with those model labels, where appropriate.
+- Harson's own model/tool catalog titles and image alternative text.
+
+Provider modules currently listed in the customization config are:
+  image-generator
+  upscaler
+  video-generator
+  pattern-design
+  prompt-generator
+  clothing
+  e-commerce
+
+Harson's own All Tools catalog is outside the provider iframe and needs a
+separate integration with the same shared resolver.
+
+1.2 Functional behavior to preserve
+
+The selected provider model must remain the same model before and after the
+display change. Preserve:
+
+- Model IDs, object IDs, option values, and workflow IDs.
+- Request bodies and identifiers submitted to the provider.
+- Route names, backend-facing keys, and navigation query values.
+- Provider application state and event handlers.
+- Login/session handling and launch-ticket behavior.
+- Upload controls, generation controls, and credit accounting.
+- User prompts, copied prompts, editable text, and generated content.
+- Existing account and database contents.
+
+A display label is presentation data. It must not become a substitute for the
+original identifier in a provider request.
+
+1.3 Scope boundaries
+
+The picture badges in the screenshots are interface labels. This work concerns
+those labels, not rewriting text embedded inside the actual image pixels.
+Canvas-rendered labels or text baked into an image need a separate adapter or
+asset change; a DOM text adapter cannot automatically alter them.
+
+"Everywhere" means all relevant model-label surfaces, not every occurrence of
+a matching string in user content or application internals.
+
+Do not implement global search-and-replace over HTML, JavaScript bundles, JSON
+responses, localStorage, request bodies, or the entire document's innerHTML.
+Do not alter the provider database to achieve branding.
+
+The proxy origin and the main origin are different browser origins.
+The injected renderer should run inside the gateway-served document.
+The parent page must not try to read the iframe DOM across origins.
+Do not use document.domain, disable browser security, or loosen CORS to make
+the parent reach the iframe.
+
+1.4 Reliability target
+
+Changing tabs or receiving new history results should update visible aliases
+without reloading the iframe. One normal page/frame load after a new software
+release is expected. Repeated automatic reloads are not an aliasing strategy.
+
+Future provider markup changes may require adapter updates. On an unknown or
+unsupported structure, retain the original usable interface and report the
+unhandled label. Do not blank controls or break generation to hide a name.
+
+
+02. CONFIRMED FINDINGS AND EVIDENCE
+
+2.1 Runtime files match the reviewed branch
+
+During review, these public files served by ai.harson-base.com were compared
+byte-for-byte with the reviewed commit:
+
+  /__harson_custom/image-tab-1/image-tab-config.js
+  /__harson_custom/image-tab-1/image-tab-labels.js
+
+Both matched. The served config reported version "all-pages-4".
+The observed asset Cache-Control value was "public, max-age=0".
+
+This confirms that the server's public files contained the analyzed code.
+It does not prove that every already-open browser tab had reloaded that code.
+
+2.2 The runtime does not read names.txt
+
+The fetched commit did not contain a tracked names.txt. Comments mention
+tab_customization/names.txt, but the runtime aliases are a manually maintained
+JavaScript object in:
+
+  public/harson-customization/image-tab-config.js
+
+No automatic names.txt parser/generator was found in the reviewed pipeline.
+An untracked file on a developer machine or server may exist, but simply
+editing it does not update this hardcoded object.
+
+2.3 The renderer is still globally gated by the sidebar
+
+Existing logic in image-tab-labels.js:
+
+  const nextActive = enabled && sidebarMatches();
+
+sidebarMatches() only succeeds when it finds a known original model label in:
+
+  .MainLayout-nav .NavList-list-item > span.label
+
+The pattern-design screenshot has a sidebar of tool names such as 图案创作,
+提取花纹, and 风格转换. It can therefore contain a mapped model heading in the
+main panel while failing the sidebar test. The renderer then becomes inactive.
+
+A browser fixture using the current runtime reproduced active:false and an
+unchanged 悠船MJ V7 heading when only tool names existed in the sidebar.
+
+2.4 Floating headers are outside the required ancestor
+
+Current selectors include:
+
+  .SubLayout-draw .header_fix > span
+  .SubLayout-draw .header_fix .IcTab
+  .SubLayout-draw .q-tab__label
+  .SubLayout-draw .IcTabs
+
+Public provider components inspected during review render floating header_fix
+blocks before the transition/form content that contains SubLayout-draw.
+The floating header is not necessarily a descendant of SubLayout-draw.
+
+This explains why a mapped sidebar label and history badge can coexist with
+an unchanged model selector at the top of the same page.
+
+2.5 IcTabs is a wrapper, not the individual label
+
+The current public IcTabs component creates an IcTabs wrapper containing
+individual IcTab elements. Text is in the individual tab.
+
+The renderer only examines direct TEXT_NODE children of selected elements.
+Selecting .IcTabs by itself does not alias text inside its .IcTab children.
+
+2.6 A workflow header type is missing
+
+The public FLUX Krea workflow page uses DefaultLayout. Its header class is:
+
+  .DefaultLayout-header
+
+That selector is absent from the reviewed customization config.
+This is a specific coverage gap, not a missing FLUX Krea mapping.
+
+2.7 The lowercase GPT mapping already exists
+
+The runtime includes gpt-image-2.5 and other GPT casing variants.
+The lookup also already normalizes case.
+
+The unchanged gpt-image-2.5 heading therefore cannot be fixed just by adding
+the same lowercase key again. The actual heading must be selected and
+processed by the display renderer.
+
+2.8 Short versions and versioned badges are not the same input
+
+The exact normalized lookup sees these as different strings:
+
+  Seedream
+  seedream 5.0 pro
+  5.0 pro
+  即梦 5.0 Pro
+
+The supplied table maps the first and the last, not the two middle strings.
+A full-name rule and a component-context rule are both necessary.
+
+2.9 Other direct-text limitations
+
+The current renderer may miss:
+
+- A label split across two or more nested spans.
+- Text under an unselected nested element.
+- A direct label on a native button, which is not a supported shadow host.
+- An element whose only model label is title or aria-label, because attribute
+  processing currently happens after a text match created a renderer record.
+
+Do not address these by selecting every element in the document.
+
+2.10 Harson's own catalog is outside this renderer
+
+public/js/aigc-workspace.js has an ALL_TOOLS array with original model names.
+renderAllTools() writes tool.name directly into the card heading and img.alt.
+The iframe-origin renderer does not run on those parent-page elements.
+
+2.11 Existing tests leave the gap uncovered
+
+The root tests/image-tab-injection.test.cjs suite passed all 15 tests during
+review. Those tests validate mappings and HTML injection, not all rendered
+provider components.
+
+The browser tests under tab_customization/tests/ import the older files under
+tab_customization/public/, using earlier HarsonMD/HarsonFK-style labels.
+They do not exercise the current production renderer under public/.
+
+New browser tests must import the actual production files.
+
+2.12 Comments are not authoritative
+
+Some comments still describe image-generator-only behavior although the
+runtime supports multiple module names.
+
+The config comment that header_fix and ToolLayout-header no longer exist is
+also inaccurate for the public provider builds inspected during review.
+Both classes were found. Correct these comments alongside the relevant code.
+
+2.13 Evidence limits
+
+The review used repository code, public deployed assets, public provider
+component bundles, supplied screenshots, and local browser fixtures.
+It did not perform authenticated production generation or spend credits.
+
+Local fixture reproduction confirms the code gaps. Staging verification is
+still necessary for the actual authenticated DOM, styles, interactions,
+uploads, and provider requests.
+
+
+03. MAPPING DECISIONS AND COMPATIBILITY POLICY
+
+3.1 Preserve the currently deployed FLUX Krea result
+
+The owner's input contains:
+
+  FLUX Krea,CLImage-1.0
+  FLUX Krea,CLImage
+
+The reviewed branch deliberately uses the last row's value: CLImage.
+
+Compatibility default for this release:
+  FLUX Krea -> CLImage
+
+Create a canonical file with only that resolved FLUX Krea row. Record the
+resolution in the change description. Do not silently switch to CLImage-1.0.
+
+If the owner later chooses CLImage-1.0, make that a clear mapping-only change.
+The new generator should reject future conflicting duplicates rather than
+silently introducing a new choice.
+
+3.2 Preserve the literal Seedream mapping
+
+The supplied input says:
+
+  Seedream,CLVideo
+
+Compatibility default:
+  Bare Seedream heading -> CLVideo
+
+This is unusual on an image-generation page, but the owner's explicit mapping
+takes precedence over an agent's assumption about the product name.
+
+The contextual version rules in Section 09 use the owner's separate 即梦
+version values, CLImage-3.0 through CLImage-3.3. This means the family heading
+and version buttons can intentionally have different prefixes under the
+current table. Document that result rather than hiding it.
+
+If the owner wants a uniform CLImage family heading, that is a separate policy
+change to Seedream, not an automatic code correction.
+
+3.3 Literal strings are not patterns
+
+  FLUX.1 Kontex (pro/max)
+
+is a literal source name. "(pro/max)" does not mean "match pro or max".
+Retain the literal row and define explicit correspondences for actual UI
+spellings such as FLUX.1 Kontext, kontext-pro, and kontext-max.
+
+3.4 Identical duplicate normalized keys
+
+GPT-image-2.5 and gpt-image-2.5 normalize to the same lookup key and have the
+same destination. Coalescing these is safe; report it as a harmless duplicate.
+A duplicate with different destinations is a validation error.
+
+3.5 Unknown values and generic status words
+
+Leave unknown labels unchanged. Do not infer an unknown variant's identity
+from a generic prefix.
+
+The supplied 暂未上架 -> CLVideo-2.1 rule should apply where that text is being
+used as a model entry. Do not convert unrelated product-availability messages
+elsewhere in the application into a model name.
+
+3.6 Explicit contextual correspondence
+
+This guide proposes an explicit correspondence between the provider's Seedream
+version selector and the owner's 即梦 version keys. The public provider menu
+links the Seedream route to the 即梦 family.
+
+Agents should implement the listed correspondence as a reviewed policy table,
+not as a broad assumption that all Seedream-containing text is replaceable.
+Do not change backend values such as seedream50pro.
+
+
+04. SOURCE-OF-TRUTH MAPPING AND BUILD DESIGN
+
+4.1 Proposed canonical source
+
+Use one tracked file:
+
+  config/display-names/names.txt
+
+If a newer branch already has a canonical names.txt and generator, extend that
+implementation instead of creating a competing source.
+
+Appendix B supplies the proposed canonical contents, preserving current
+behavior and resolving the conflicting FLUX Krea row.
+
+4.2 Proposed generated/shared files
+
+  scripts/build-model-aliases.cjs
+  config/display-names/display-correspondence.cjs
+  public/harson-customization/model-aliases.generated.js
+  public/harson-customization/model-alias-resolver.js
+
+Suggested responsibilities:
+
+names.txt:
+  Owner-controlled exact source-to-display mappings.
+
+display-correspondence.cjs:
+  Explicit display spellings, context rules, and canonical-key references.
+  It should refer back to names.txt keys rather than repeat destination values.
+
+build-model-aliases.cjs:
+  Parse, validate, expand approved correspondences, generate deterministic data.
+  Support --check to detect stale generated output without modifying files.
+
+model-aliases.generated.js:
+  Browser/CommonJS-compatible data containing exact aliases, contextual rules,
+  a schema version, and a deterministic mapping hash.
+  It contains no credentials, provider tokens, user records, or account state.
+
+model-alias-resolver.js:
+  Pure lookup and context-resolution logic shared by the parent page and iframe.
+  No DOM observation, network calls, routing changes, or origin bypasses.
+
+4.3 Parsing rules
+
+- Read UTF-8; tolerate a leading BOM.
+- Accept LF and CRLF line endings.
+- Ignore empty lines.
+- If comments are supported, document the syntax, such as a line beginning #.
+- Parse a two-column CSV using the repository's existing CSV parser dependency
+  or an equally explicit parser. Handle quoted commas if the format supports
+  them. Do not split silently into an arbitrary number of columns.
+- Require exactly one nonempty source and one nonempty destination.
+- Trim the leading/trailing whitespace from both fields.
+- Preserve the original source spelling separately for diagnostics.
+- Preserve destination spelling and capitalization.
+- Reject malformed rows with the filename and line number.
+- Reject conflicting normalized duplicates.
+- Coalesce identical normalized duplicates with a warning.
+- Verify that every correspondence references an existing canonical source.
+- Reject destination-to-source alias cycles or define one-pass-only behavior.
+  Prefer one-pass resolution with aliases never treated as new source input.
+
+4.4 Normalization
+
+Normalize source lookup keys consistently in both generator and resolver.
+
+Recommended:
+  Unicode normalization, such as NFKC, with collision detection.
+  Trim outer whitespace.
+  Collapse runs of whitespace to one space.
+  Case-insensitive comparison.
+
+Do not change the visible original text or backend values while normalizing.
+Normalize a lookup copy only.
+
+Keep existing no-space variants through explicit correspondence entries.
+If retaining a loose "remove all spaces" index, validate its collisions too.
+Do not let a first-entry/last-entry accident decide conflicting loose matches.
+
+Zero-width characters, unusual punctuation, and alternative dashes should be
+handled only through a documented normalization policy or explicit variants.
+Do not remove arbitrary punctuation from model identifiers.
+
+4.5 Build behavior
+
+The generated output must be deterministic. Do not include the current wall
+clock in bytes that otherwise have not changed.
+
+Suggested new npm scripts after they are implemented:
+
+  "aliases:build": "node scripts/build-model-aliases.cjs"
+  "aliases:check": "node scripts/build-model-aliases.cjs --check"
+
+The current Dockerfile runs node server.js directly. A prestart npm hook alone
+will not guarantee generation inside that image.
+
+Choose and document one consistent approach:
+  Commit generated output and verify it during CI/image build; or
+  Generate it during image build after copying the canonical source.
+
+Prefer committed generated output plus a stale-output check for a reviewable
+diff. The browser should not fetch names.txt repeatedly.
+
+Build the data once per release and ship it with the renderer.
+
+
+05. FILE-BY-FILE CHANGE INVENTORY
+
+Existing file:
+  public/harson-customization/image-tab-config.js
+Changes:
+  Add verified floating/header selectors.
+  Keep origin/module restrictions.
+  Consume generated mapping data instead of maintaining a second alias object.
+  Correct outdated comments and include release/schema metadata.
+
+Existing file:
+  public/harson-customization/image-tab-labels.js
+Changes:
+  Remove sidebar-dependent activation.
+  Use the shared resolver.
+  Add component adapters for nested/split labels and contextual versions.
+  Handle applicable attributes independently of visible-text adaptation.
+  Preserve original nodes and values.
+  Improve lifecycle cleanup, diagnostics, and reversible disable behavior.
+
+Existing file:
+  src/services/yibaiDisplayInjection.js
+Changes:
+  Inject shared data and resolver before config and renderer.
+  Use coordinated, versioned asset URLs.
+  Retain bounded HTML-only injection and duplicate-injection protection.
+  Do not transform provider JSON, JavaScript, or request bodies.
+
+Existing file:
+  src/gateway/server.js
+Changes:
+  Only the static asset/version integration and associated accurate comments
+  should need adjustments for this feature.
+  Preserve authentication, session isolation, allowlists, streaming, and proxy
+  behavior. Avoid bundling unrelated gateway rewrites with the alias fix.
+
+Existing file:
+  public/aigc-workspace.html
+Changes:
+  Load the shared alias data and resolver before aigc-workspace.js.
+
+Existing file:
+  public/js/aigc-workspace.js
+Changes:
+  Resolve display names at render time for catalog headings and img.alt.
+  Add explicit model-label context to catalog records when necessary.
+  Keep original routing/filter identity unless a separate UI-search behavior
+  is intentionally added and tested.
+
+Existing file:
+  tests/image-tab-injection.test.cjs
+Changes:
+  Assert new asset order/version and production mapping behavior.
+  Stop treating hardcoded object equality as proof of all-page coverage.
+
+New test files, suggested:
+  tests/model-alias-resolver.test.cjs
+  tests/model-alias-generator.test.cjs
+  tests/model-labels.browser.cjs
+  tests/fixtures/model-labels/
+
+Existing file:
+  scripts/test-gateway-fixture.js
+Changes:
+  Update expected asset paths and injection markers.
+  Retain existing gateway/authentication tests.
+  Add pass-through and fixture integration assertions as needed.
+
+Existing files:
+  package.json, package-lock.json, Dockerfile
+Changes:
+  Add build/check/test scripts and optional pinned test tooling as needed.
+  Keep browser tooling out of production runtime dependencies.
+
+Old copied tree:
+  tab_customization/
+Changes:
+  Mark obsolete browser fixtures/docs clearly or update their role.
+  Do not patch only this tree while leaving public/ unchanged.
+  Do not delete unrelated material just to simplify this task.
+
+New documentation:
+  docs/model-display-aliases.md
+Contents:
+  Canonical source, matching policy, version table, deployment, rollback,
+  diagnostic commands, and known limitations.
+
+Existing auth files:
+  src/controllers/aigcSessionController.js
+  src/services/aigcFrameTicketService.js
+Expectation:
+  No alias-driven authentication redesign or token changes are required.
+
+
+06. STEP 0: PREPARE AN ISOLATED BRANCH AND RECORD THE BASELINE
+
+Goal:
+  Start from the requested branch without losing existing work.
+
+Actions:
+
+1. Read applicable AGENTS.md and repository contribution instructions.
+2. Inspect git status. Preserve unrelated modifications and untracked files.
+3. Fetch the current temp-main branch.
+4. Record the actual starting commit.
+5. Compare it with the reviewed commit. Review newer changes before proceeding.
+6. Work on an isolated feature branch or worktree.
+
+Example commands from an existing clone:
+
+  git status --short
+  git fetch --no-tags origin temp-main
+  git rev-parse origin/temp-main
+  git log -5 --oneline origin/temp-main
+  git worktree add -b fix/model-display-alias-coverage \
+    ../harson-display-alias-fix origin/temp-main
+
+If that branch/worktree already exists, inspect and reuse it when appropriate.
+Do not force-delete it or use git reset --hard to make these commands succeed.
+
+Record:
+  Starting commit.
+  Existing customization version.
+  Current deployment image ID/tag.
+  Current provider upstream host, without exposing secrets.
+  Whether deployed config/renderer hashes match the branch.
+
+The historical reviewed version is all-pages-4. Do not assume that remains
+the latest version when the agents execute this document.
+
+Exit criteria:
+  A clean, isolated implementation area exists.
+  The agent can identify the actual runtime files and deployed release.
+  No production behavior has changed.
+
+
+07. STEP 1: CREATE REGRESSION FIXTURES FOR THE REPORTED FAILURES
+
+Goal:
+  Demonstrate the bug with the production scripts before changing them.
+
+Use local browser fixtures. Route mock HTTPS requests to fixture responses so
+the existing https://ai.harson-base.com origin guard can remain enabled.
+Do not disable browser security.
+
+Required fixture layouts:
+
+A. Standard image module:
+   Known mapped sidebar label.
+   History badge with gpt-image-2.5.
+   Heading with gpt-image-2.5 under its actual heading container.
+
+B. Floating model selector:
+   A header_fix element outside SubLayout-draw.
+   IcTabs containing individual IcTab elements.
+   Include image-2, 全能图片, 全能图片 pro, and 全能图片2.
+
+C. Seedream:
+   Floating Seedream heading.
+   Version buttons 4.0, 4.5, 5.0 lite, and 5.0 pro.
+   A history badge with Seedream 5.0 Pro.
+   Unrelated numerical labels outside the model selector.
+
+D. Workflow page:
+   SubLayout-draw containing DefaultLayout-header with FLUX Krea.
+
+E. Pattern module:
+   Sidebar with only tool names, no known model names.
+   ToolLayout-header with 悠船MJ V7.
+
+F. Nested/attribute cases:
+   A split model label.
+   An icon plus label.
+   A title-only model label.
+   A model-label span within a native button.
+   A late-inserted dropdown/dialog and a reused history card.
+
+Keep the original DOM shape, icons, source text, and representative event
+handlers. Do not build a fixture that already has only the selectors the
+implementation happens to recognize.
+
+Observe actual composed/rendered output, not just light-DOM textContent.
+The existing shadow approach intentionally retains original source text in
+the light DOM, so searching raw DOM text for old names is not a valid visual
+coverage test.
+
+Exit criteria:
+  Current code fails the relevant new assertions.
+  Existing sidebar/history success cases remain represented.
+  Fixtures import files from public/harson-customization, not the old copy.
+
+
+08. STEP 2: FIX SELECTOR COVERAGE AND SIDEBAR ACTIVATION
+
+Goal:
+  Correct the verified structural misses with a small, reviewable change.
+
+8.1 Add verified selectors
+
+Extend the existing selectors array with:
+
+  ".header_fix > span",
+  ".header_fix .IcTabs > .IcTab",
+  ".DefaultLayout-header",
+  ".ToolLayout-header"
+
+Keep existing sidebar, history, badge, menu, dialog, and relevant tooltip
+selectors. Deduplicate identical entries.
+
+The absence of the SubLayout-draw prefix is deliberate: floating headers can
+be siblings of the content containing SubLayout-draw.
+
+Matching remains exact against approved model labels, and execution remains
+restricted to the gateway origin and supported provider modules.
+
+8.2 Remove global sidebar gating
+
+Existing:
+
+  const nextActive = enabled && sidebarMatches();
+
+Proposed:
+
+  const nextActive = enabled;
+
+The script's initialization must still verify:
+  Required config and script metadata exist.
+  The current origin is the configured trusted gateway origin.
+  The injected module is in the supported module list.
+  The renderer has not already been installed.
+  Required rendering capabilities are supported.
+
+Remove or repurpose sidebarMatches() so it no longer controls unrelated label
+surfaces. Sidebar data may still be used as optional local context or a
+diagnostic, not as a mandatory global prerequisite.
+
+8.3 Preserve existing fallback behavior
+
+Unknown labels should continue to display unchanged. Module support does not
+mean every number or text fragment in that module is a model label.
+
+If required shadow capabilities are absent, keep provider controls usable and
+expose a diagnostic reason instead of silently presenting an inactive status
+as successful coverage.
+
+8.4 Required checks
+
+- Floating image-2 becomes CLImage-4.0.
+- 全能图片 pro becomes CLImage-5.1.
+- 全能图片2 becomes CLImage-5.2.
+- FLUX Krea workflow title becomes CLImage.
+- A mapped ToolLayout-header works without any mapped sidebar entries.
+- Functional tool labels remain unchanged.
+- A bare Seedream heading becomes CLVideo under the current literal policy.
+- Case-only GPT variants still resolve.
+
+This step does not by itself solve every bare version, nested label, or
+parent-page catalog. Continue through the remaining steps before claiming
+complete platform coverage.
+
+
+09. STEP 3: IMPLEMENT SHARED MATCHING AND CONTEXTUAL VERSIONS
+
+Goal:
+  Give the parent and iframe one predictable resolver.
+
+Suggested resolver contract:
+
+  resolveDisplayName(sourceText, context) -> alias string or null
+
+Example context fields:
+  module
+  surface
+  modelFamily
+  originalModelIdentity
+
+Context must come from verified component/route information or known catalog
+metadata. Do not use the currently rendered alias as the identity source.
+The original light-DOM text can still be read when the renderer preserves it.
+
+9.1 Lookup order
+
+1. Normalize a copy of the complete source label.
+2. Try an exact approved mapping.
+3. Try an explicit display-spelling correspondence.
+4. Try an explicit, narrowly scoped contextual rule.
+5. Otherwise return null.
+
+Do not cascade aliases. Resolving CLImage-4.1 again should not produce another
+replacement.
+
+9.2 Seedream version selector
+
+The public component inspected during review used:
+
+  Visible label   Original value/object
+  4.0             seedream
+  4.5             seedream45
+  5.0 lite        seedream50
+  5.0 pro         seedream50pro
+
+Use these values or equally verified route/component metadata only to
+recognize the model context. Never change them.
+
+Within that version-selector context, resolve:
+
+  4.0       -> canonical key 即梦 4.0      -> CLImage-3.0
+  4.5       -> canonical key 即梦 4.5      -> CLImage-3.1
+  5.0 lite  -> canonical key 即梦 5.0 Lite -> CLImage-3.2
+  5.0 pro   -> canonical key 即梦 5.0 Pro  -> CLImage-3.3
+
+An implementation sketch, not a complete replacement module:
+
+  const seedreamVersionKeys = {
+    "4.0": "即梦 4.0",
+    "4.5": "即梦 4.5",
+    "5.0 lite": "即梦 5.0 Lite",
+    "5.0 pro": "即梦 5.0 Pro"
+  };
+
+  function resolveDisplayName(source, context) {
+    const key = normalize(source);
+    const exact = exactLookup(key);
+    if (exact !== null) return exact;
+
+    if (context.surface === "model-version-tab" &&
+        context.modelFamily === "seedream") {
+      const canonical = seedreamVersionKeys[key];
+      if (canonical) return exactLookup(normalize(canonical));
+    }
+
+    return null;
+  }
+
+The production version must also support the correspondence table, null-safe
+input handling, diagnostics, and the tested normalization policy.
+
+9.3 Full versioned display labels
+
+Add explicit display correspondences:
+
+  Seedream 4.0      -> 即梦 4.0
+  Seedream 4.5      -> 即梦 4.5
+  Seedream 5.0 Lite -> 即梦 5.0 Lite
+  Seedream 5.0 Pro  -> 即梦 5.0 Pro
+
+The generated targets come from the canonical mapping, not copied CLImage
+strings inside multiple modules.
+
+Bare Seedream still follows its exact mapping to CLVideo.
+
+Do not guess whether an unsuffixed "Seedream 5.0" means Lite or Pro.
+Record it as unresolved unless reliable model identity supplies the variant.
+
+9.4 Version specificity
+
+Do not implement:
+
+  replace every "image-2" substring with "CLImage-4.0"
+
+That can corrupt a version such as image-2.5.
+
+Likewise do not replace generic Midjourney or Seedance prefixes before a
+specific full model label. Prefer exact full-label matching.
+
+For approved composite catalog titles such as "Seedance 2.5 视频", use structured
+metadata or an explicit correspondence. Preserve a verified descriptive suffix
+if the UI needs it. Do not apply unrestricted regex replacement to arbitrary
+sentences.
+
+9.5 Tests for the resolver
+
+Include:
+  Exact full names.
+  Case and whitespace variants.
+  Same-destination normalized duplicates.
+  Conflicting duplicates rejected by the generator.
+  Bare versions resolved only with correct context.
+  Unknown contexts and variants return null.
+  Specific versions never reduced to generic family aliases.
+  Alias outputs are not reprocessed as source names.
+
+
+10. STEP 4: EXTEND THE DISPLAY RENDERER SAFELY
+
+Goal:
+  Cover small and nested label elements while preserving provider behavior.
+
+10.1 Keep the renderer separate from the resolver
+
+The resolver decides the text to show.
+The renderer decides how to show it on a verified label surface.
+The gateway injects assets and does not rename model IDs.
+
+10.2 Component adapters
+
+Create explicit adapters, or an equivalent maintainable structure, for:
+  Sidebar model label.
+  ToolLayout heading.
+  DefaultLayout heading.
+  Floating family heading.
+  Floating IcTab/model version.
+  Quasar model label.
+  Model dropdown choice.
+  History badge.
+  Example-image badge.
+  Model dialog/tooltip.
+  Parent-page catalog title.
+
+Each adapter should identify:
+  Eligible container/label element.
+  How original source text is read.
+  Whether it represents one complete label or several labels.
+  Optional model-family context.
+  Which presentation attributes may be adapted.
+  How it restores the original rendering.
+
+Prefer stable component classes or semantic roles verified in the actual DOM.
+Do not depend on generated data-v-* attribute hashes or child positions alone.
+
+10.3 Single text node
+
+The existing shadow/manual-slot approach can show an alias while leaving the
+provider's original text node intact. Retain that advantage.
+
+10.4 Nested label
+
+If the selected component contains a dedicated nested label span, adapt that
+span rather than the entire button or form container.
+
+Walk within approved label containers, not indiscriminately across the page.
+A relevant nested text mutation must also cause the owning label adapter to
+be reconsidered.
+
+10.5 Split label
+
+Example:
+
+  <span class="verified-model-label">
+    <span>全能图片</span><span>2</span>
+  </span>
+
+Resolve the complete label "全能图片2" at the label-container level.
+Do not independently rename the first span to CLImage-5.0 and leave "2"
+appended, producing the wrong model name.
+
+Only aggregate text that belongs to one verified label. Do not concatenate a
+whole card's heading, prompt, time, cost, and actions into a candidate label.
+
+Keep original child nodes and listeners intact. For a noninteractive
+label-only host, a controlled shadow representation can display the resolved
+alias while retaining source nodes. Preserve separate icon nodes through
+slots when needed.
+
+10.6 Buttons and links
+
+Not every native element accepts attachShadow(). The existing implementation
+also has its own limited host-tag set.
+
+Prefer adapting a supported inner span/div containing the model label while
+retaining the original button/link element and event handler.
+
+Do not blindly add BUTTON, A, STRONG, or other unsupported elements to the
+shadow-host set and assume it fixes coverage.
+
+If the actual provider uses a direct-text native button with no suitable label
+child, implement and test a specific adapter for that component. Do not replace
+its innerHTML, recreate the button, or wrap/move provider nodes generically.
+If a direct text change is considered for a component, prove that its source
+text is not used as model identity and that submitted payloads are unchanged.
+The default strategy remains preserving original provider-owned source text.
+
+An unresolved component must appear in the coverage report. A release cannot
+claim complete coverage for that component before its adapter is verified.
+
+10.7 Attributes
+
+Handle title and aria-label on approved model-label surfaces even when the
+element has no visible mapped text.
+
+Store:
+  Latest provider-supplied attribute value.
+  Last adapter-written value.
+  Current resolved value.
+
+When the provider reuses a node, recognize a genuinely new source value and
+resolve it. On disable, restore the latest provider value, not a stale value
+from a previous model.
+
+For Harson-owned images, resolve img.alt through the parent renderer.
+Do not blanket-rewrite placeholder text or unrelated accessibility content.
+
+10.8 Exclusions
+
+Preserve exclusions for:
+  input, textarea, select, option
+  script, style, pre, code
+  contenteditable regions
+  .Prompt
+  .TextToImageCard-prompt
+  .prompt-content
+
+Do not remove all exclusions to satisfy a visual test.
+
+Native select/option labels need a dedicated, verified display/value adapter
+if they are part of the observed product. Keep option.value unchanged and
+verify the provider does not derive request identity from option.text.
+Treat that as a deliberate additional adapter, not a generic text walk.
+
+10.9 Styles, interaction, and accessibility
+
+Check:
+  Font, color, line height, and layout inheritance.
+  Selected/hover states.
+  Click targets and keyboard focus.
+  Icons and buttons retained as the same nodes.
+  Text wrapping and clipping with longer CLImage/CLVideo values.
+  Dialog/tooltip accessibility names.
+  Unsupported rendering capability fallback.
+
+Do not force all aliases into fixed-width controls by truncating meaningful
+version numbers. Adjust only the relevant label styling if necessary.
+
+10.10 Disable and cleanup
+
+setEnabled(false) should restore the provider's current visible labels.
+Repeated enable/disable must not create duplicate observers or nested aliases.
+
+A shadow root cannot simply be removed with a detachShadow operation.
+For hosts already adapted, restore rendering by slotting the current original
+children through the existing root. A later page load with the feature off
+starts with untouched markup.
+
+Keep original nodes and event handlers available throughout.
+
+
+11. STEP 5: MAKE DYNAMIC NAVIGATION AND RENDERING RELIABLE
+
+Goal:
+  Handle Vue updates, lazy rendering, and reused nodes without reload loops.
+
+11.1 Keep one observer
+
+Use one coordinated MutationObserver per provider document for relevant
+childList, characterData, and selected attribute changes.
+
+The current code already has an observer; improve its candidate selection.
+Adding more timers or observers is not the solution to a missing selector.
+
+11.2 Incremental candidate collection
+
+For each mutation:
+  Consider the changed element or text node's parent.
+  Consider the nearest approved owning label container where necessary.
+  Scan added subtrees for known component targets.
+  Reconsider adapted descendants when a relevant ancestor class/context changes.
+  Remove detached hosts from strong tracking sets.
+
+Collect candidates in a Set and schedule one bounded flush.
+Avoid rescanning the entire document for every small mutation.
+
+11.3 Idempotence
+
+If source, context, alias, and child-node identity have not changed, do no work.
+Avoid updating title or aria-label when the desired value already matches.
+
+Guard against observer loops caused by the adapter's own attribute writes.
+Shadow-root rendering should not cause a body-subtree loop, but light-DOM
+attribute writes still need equality checks.
+
+11.4 Context refresh
+
+A reused node may keep the same short version text while its model context
+changes. Include context identity in its rendering signature.
+
+Read route state without changing route state.
+Use existing route events/hooks if the application exposes suitable ones.
+For back/forward navigation, handle the relevant event and reconsider context.
+If a pushState/replaceState hook is actually needed, make it reversible,
+idempotent, and tested; do not repeatedly monkey-patch router behavior.
+
+11.5 Long galleries
+
+Use incremental work and bounded diagnostics.
+Do not scan every history card at a short interval.
+Do not retain references to removed cards indefinitely.
+If a large batch needs yielding, use measured batching while keeping above-fold
+labels responsive. Do not introduce a polling loop by default.
+
+11.6 Startup
+
+Load the alias data, resolver, config, and renderer in dependency order.
+Install before or during the initial provider render where possible.
+The observer should catch later component creation.
+
+Do not hide the entire page while waiting for replacements. A failed or
+unsupported adapter should not produce a blank interface.
+
+11.7 Required dynamic cases
+
+- Change between all seven module entries.
+- Change model version within one page.
+- Open and close a model dropdown.
+- Open a tooltip/dialog.
+- Load more history items.
+- Reuse an existing card for another model.
+- Replace a whole component subtree.
+- Navigate with browser back/forward.
+- Disable and re-enable the adapter.
+- Confirm no alias-triggered iframe reload occurs.
+
+
+12. STEP 6: APPLY THE RESOLVER TO HARSON'S OWN PAGES
+
+Goal:
+  Rename parent-page model labels using the same mapping.
+
+12.1 Existing catalog integration point
+
+In public/js/aigc-workspace.js, renderAllTools() currently uses tool.name for:
+  The catalog-card heading.
+  The image alternative text.
+
+Add a display helper at rendering time. Conceptual example:
+
+  const displayName =
+    resolveCatalogDisplayName(tool) || tool.name;
+
+  title.textContent = displayName;
+  image.alt = displayName;
+
+Keep tool.name and original routing/identity data intact.
+
+12.2 Structured context
+
+For ambiguous or composite catalog labels, add explicit presentation metadata.
+Example design:
+
+  {
+    name: "Seedance 2.5 视频",
+    modelLabelKey: "Seedance 2.5",
+    displaySuffix: " 视频",
+    cover: existingCoverPath
+  }
+
+Resolve the canonical key and append the approved descriptive suffix.
+Do not rename image filenames or routing keys solely for display branding.
+
+For Seedream 5.0 Pro cards, use the explicit version correspondence from
+Section 09, while retaining the original catalog record.
+
+12.3 Script loading
+
+Load shared data and the pure resolver before aigc-workspace.js.
+Use ordered defer scripts, not async dependencies that can race.
+
+The iframe DOM renderer should remain guarded for the gateway origin.
+Do not load that DOM observer indiscriminately on the parent page.
+
+12.4 Other native pages
+
+Search owned HTML/JavaScript/templates for model labels outside the iframe.
+Exclude minified vendor bundles and binary/generated media from routine source
+searches. Inspect each real rendering path before changing it.
+
+Examples to inspect:
+  Home/catalog cards.
+  Navigation labels.
+  Model headings in owned pages.
+  Model-related notifications or dialogs.
+  Search/filter display labels.
+
+If user-facing search exists, it may optionally accept both original and alias
+names. Keep that logic separate from provider identity and test it explicitly.
+
+Exit criteria:
+  Mapped catalog titles and alternative text use the shared resolver.
+  Existing card routing, filters, image loading, and click behavior still work.
+
+
+13. STEP 7: VERSION ASSETS AND IMPROVE DIAGNOSTICS
+
+13.1 Dependency order
+
+After adding the shared files, the injected order should be:
+
+  1. Generated mapping data.
+  2. Shared resolver.
+  3. Provider adapter config.
+  4. Provider DOM renderer.
+
+Retain ordered defer execution.
+Update injection tests to assert this order.
+
+If config is required from Node tests, make its generated-data import work in
+CommonJS as well as the browser.
+
+13.2 Coordinated asset version
+
+The current URLs contain image-tab-1 while the config says all-pages-4.
+Use one release identifier or content-hashed asset set across data, resolver,
+config, and renderer.
+
+Possible design:
+  Keep the gateway's reserved static mount.
+  Store complete release directories beneath public/harson-customization.
+  Inject URLs for one complete immutable release.
+  Retain prior release assets while old pages might still request them.
+
+Do not add a changing timestamp to every page request. That defeats caching
+and does not solve compatibility between mixed script versions.
+
+If changing the reserved mount instead, update:
+  Injection helper.
+  Gateway static route.
+  Tests and deployment checks.
+  Any explicit Nginx location rules that actually exist.
+
+Do not assume Nginx needs a change without inspecting its deployed config.
+
+13.3 Cache policy
+
+Versioned public alias assets may be cached.
+Authenticated HTML and sensitive account/API responses must keep their
+existing privacy/cache behavior.
+
+Do not configure broad CDN/proxy caching for the whole authenticated iframe.
+Do not confuse the public mapping files with personalized provider responses.
+
+13.4 Existing diagnostics
+
+Current methods:
+  window.HarsonImageLabels.status()
+  window.HarsonImageLabels.dumpUnmatched()
+  window.HarsonImageLabels.setEnabled(false)
+
+Keep compatibility with these if practical.
+
+Current dumpUnmatched() only recognizes exact known text nodes and skips
+parents with renderer records. It cannot provide complete coverage for unknown
+versions, split labels, or all inactive adapted records.
+
+13.5 Proposed diagnostics
+
+Enhance status to include:
+  Asset/release version.
+  Mapping hash.
+  Module name.
+  Enabled/active state.
+  Capability support.
+  Number of currently renamed label elements.
+  Number of recognized unresolved model-label surfaces.
+
+Add a bounded diagnostic report with categories such as:
+  not-targeted
+  unknown-label
+  missing-context
+  unsupported-host
+  unsupported-browser
+  excluded-editable
+  already-owned-shadow-root
+  mapping-conflict
+
+These are proposed fields/categories, not claims about the current API.
+
+Do not log:
+  Credentials or cookies.
+  Provider tokens or launch tickets.
+  Full URLs containing query secrets.
+  User prompts or account contents.
+  Entire DOM/HTML dumps.
+
+Diagnostic strings should come from recognized label surfaces and safe context.
+Distinguish visible unresolved labels from original source text intentionally
+retained behind an alias in the light DOM.
+
+13.6 Feature switch
+
+Retain the existing YIBAI_IMAGE_ALIASES_ENABLED gateway switch.
+
+The parent-page catalog integration needs a compatible application-controlled
+switch or release rollback path of its own. Turning off gateway injection
+alone does not disable a resolver already used by the parent page.
+
+A switch change affects newly served pages; it does not magically unload an
+already-running renderer. Document the distinction between:
+  Local session disable.
+  Disabling new injection.
+  Rolling back the deployed assets/application.
+
+
+14. STEP 8: RUN THE ACCEPTANCE TESTS AND BUILD THE RELEASE
+
+14.1 Generator and resolver
+
+Verify:
+  The canonical file generates stable output.
+  --check fails on stale output.
+  Blank/BOM/CRLF handling works.
+  Malformed lines report a useful location.
+  Conflicting duplicates fail validation.
+  Same-target normalized duplicates coalesce.
+  All owner-supplied canonical rows are represented.
+  Explicit spelling variants resolve.
+  Context versions resolve only in the proper model selector.
+  Unknown names and unapproved variants remain unchanged.
+  Matching does not cascade or corrupt longer versions.
+
+14.2 Browser presentation
+
+Verify:
+  Sidebar aliases.
+  ToolLayout and DefaultLayout headings.
+  Floating headers outside SubLayout-draw.
+  IcTab and actual model-label button children.
+  Contextual Seedream versions.
+  Full versioned history labels.
+  Image/video badges.
+  Dropdowns and dialog/tooltip labels.
+  Nested/split labels.
+  Attribute-only labels.
+  Parent-page catalog headings and img.alt.
+
+Verify the expected strings from this document, not screenshots captured after
+the implementation and treated as automatic truth.
+
+14.3 Original identity and event behavior
+
+Set up mock request capture or intercept requests before they reach a real
+paid endpoint. Compare representative operations with the adapter disabled
+and enabled.
+
+Compare meaningful payload fields, excluding nondeterministic timestamps or
+request IDs where necessary.
+
+Verify:
+  Original model/object/workflow IDs are equal.
+  Selected option values are equal.
+  Original prompt text is equal.
+  File upload content and relevant metadata are equal.
+  Clicking a model triggers the same routing/selection behavior.
+  Existing button and icon listeners still fire.
+  Generation controls retain their enabled/disabled state.
+  No extra provider request is sent because of alias rendering.
+
+Do not describe a fixture test as a completed paid production generation test.
+
+14.4 Lifecycle
+
+Verify:
+  Initial render.
+  Delayed render.
+  Provider text update in an existing node.
+  Entire node/subtree replacement.
+  Context change with unchanged short text.
+  Back/forward navigation.
+  Portal-mounted UI.
+  Long scrolling history.
+  Observer cleanup and detached node release.
+  Repeated enable/disable.
+  Unsupported-capability fallback.
+  Duplicate script injection protection.
+
+14.5 Gateway regression
+
+Use the existing local gateway fixture and retain authentication behavior.
+Check:
+  Asset delivery at the expected URLs.
+  Ordered script injection only into intended HTML.
+  Module metadata remains correct.
+  JSON and other non-HTML responses are not renamed.
+  Upload/request payloads are not changed.
+  Existing session/ticket and allowlist behavior still passes.
+
+The injection helper has a size limit; oversized/nonmatching HTML should not
+be blindly modified. Do not remove those protections to force injection.
+
+14.6 Test commands
+
+Existing reviewed suite:
+
+  node --test tests/image-tab-injection.test.cjs
+
+After the proposed scripts/tests have been implemented:
+
+  npm ci
+  npm run aliases:build
+  npm run aliases:check
+  node --test tests/model-alias-generator.test.cjs
+  node --test tests/model-alias-resolver.test.cjs
+  node --test tests/image-tab-injection.test.cjs
+  node --test tests/model-labels.browser.cjs
+  node scripts/test-gateway-fixture.js
+
+Document browser-tool installation and executable requirements in the repo.
+Use a pinned test dependency compatible with the project. Do not install
+browser engines into production containers simply to run development tests.
+
+Test commands should produce clear pass/fail results. A missing browser or a
+fixture setup failure is not a successful coverage check.
+
+14.7 Build gate
+
+Before release:
+  git diff --check must pass.
+  Generated data must be current.
+  Required tests must pass against production paths.
+  A Docker image must contain the new shared assets and scripts.
+  The release must have a unique identity usable for rollback.
+  The mapping policy decisions must be included in the change description.
+
+Do not expand unrelated dependency upgrades into this release.
+
+
+15. STEP 9: STAGING VERIFICATION
+
+Goal:
+  Verify actual authenticated behavior without disrupting working production.
+
+15.1 Use the real architecture
+
+Staging should retain:
+  Main application.
+  Dedicated gateway.
+  Same-origin alias assets inside the gateway document.
+  Existing app-to-gateway ticket flow.
+  Separate main-page rendering integration.
+
+For a staging domain, configure an explicit trusted renderer origin.
+Do not use a wildcard origin check as a temporary shortcut that can reach
+production.
+
+15.2 Required manual walkthrough
+
+With an authorized staging/test account:
+  Open the image module.
+  Visit each model shown in the screenshots.
+  Open every relevant version selector.
+  Check history and example badges.
+  Open the pattern module with its tool-only sidebar.
+  Visit video, upscaler, clothing, e-commerce, and prompt modules where mapped
+  model labels actually appear.
+  Visit Harson's All Tools catalog.
+  Exercise dropdowns, dialogs, tooltips, and back/forward navigation.
+
+Where a module has no mapped model labels, unchanged functional tool labels
+are expected. Do not manufacture replacements for unrelated controls.
+
+15.3 Layout review
+
+Check desktop sizes used by the owner and smaller supported windows.
+Ensure aliases do not hide the selected state, overflow buttons, or obscure
+controls. Check keyboard navigation and accessible model names.
+
+15.4 Performance comparison
+
+Compare adapter disabled/enabled under the same workflow:
+  Module opening.
+  Version switching.
+  Loading a long history gallery.
+  Scrolling.
+  Opening dropdowns.
+  Repeated navigation.
+
+Watch for persistent observer loops, growing retained-node counts, excessive
+full-document scans, or added network polling.
+
+Do not promise a numerical performance target without measuring a baseline.
+The key requirement is responsive UI with no alias-driven reload cycle.
+
+15.5 Capture evidence safely
+
+Record:
+  App/renderer release.
+  Mapping hash.
+  Module/surface checked.
+  Expected and observed display label.
+  Pass/fail.
+  Redacted screenshots where needed.
+  Payload identity checks from authorized test operations.
+
+Do not publish raw HAR files or screenshots containing session tokens, prompts,
+account data, or credentials.
+
+Exit criteria:
+  All mapped surfaces in the acceptance list are verified or explicitly
+  documented with a remaining adapter task.
+  Do not mark full coverage complete while a reported model label still leaks.
+
+
+16. STEP 10: PRODUCTION DEPLOYMENT
+
+Goal:
+  Ship the verified release on the existing Alibaba Cloud setup.
+
+16.1 Deployment facts from the reviewed repository
+
+The Compose setup has:
+  app: Node application, host loopback port 3000.
+  gateway: separate Node process, host loopback port 3001.
+  gateway profile: "gateway".
+  shared application image name: harson-pg:latest.
+  app data bind mount: ./data:/app/data.
+  mongo service with a persistent volume.
+
+The Dockerfile copies application files into the image. There is no existing
+source-code bind mount for hot-updating customization scripts.
+
+Therefore, changing a file in the host Git checkout alone does not update a
+running container's copied assets.
+
+16.2 Important restart behavior
+
+The reviewed gateway stores its sessions in an in-memory Map.
+The app's frame-ticket service also uses in-memory Maps.
+
+Recreating the gateway loses its in-memory gateway sessions. Recreating the
+app loses outstanding one-time tickets. Do not promise a completely
+interruption-free deployment under this architecture.
+
+Plan the release when active generations/uploads are minimal.
+After a restart, users may need to reopen the module from Harson so the normal
+ticket flow establishes a fresh gateway session.
+
+Do not force refresh all user iframes while jobs or uploads are active.
+
+Persistent/distributed session storage is a separate architecture project;
+do not quietly introduce it as part of the display-name fix.
+
+16.3 Pre-deployment checklist
+
+- Confirm the tested commit and release identifier.
+- Retain the prior working image ID/tag and source commit.
+- Preserve existing environment settings and mounted data.
+- Ensure the mapping hash matches the release notes.
+- Confirm both app and gateway will serve compatible shared assets.
+- Verify whether any Nginx/CDN rule affects the customized asset path.
+- Check the actual deployment location and project name.
+- Keep credentials out of the runbook, shell history, and logs.
+
+Existing settings to verify, without printing secrets:
+
+  YIBAI_FRAME_PUBLIC_ORIGIN=https://ai.harson-base.com
+  YIBAI_IMAGE_ALIASES_ENABLED=true
+
+Preserve the working upstream and internal API configuration.
+The reviewed .env.example contains stale explanatory comments; do not copy
+its placeholder values over the working production .env.
+
+16.4 Deploy as one coordinated release
+
+Preferred sequence:
+
+1. Build the tested image without stopping the current containers.
+2. Retain a usable prior image tag before replacing a mutable latest tag.
+3. Verify generated mapping files and all dependent scripts in the new image.
+4. Deploy the app/gateway release using the existing operational workflow.
+5. Validate health and public alias asset availability.
+6. Open one pilot session and inspect the expected aliases.
+7. Complete the module acceptance walkthrough.
+8. Monitor for display errors and normal request behavior.
+
+Compose command shapes, only from the verified deployment checkout:
+
+  docker compose --profile gateway build app gateway
+  docker compose --profile gateway up -d --no-deps app gateway
+
+These are examples for the reviewed service names, not a substitute for the
+operator's tagged-image release process. --no-deps assumes existing dependency
+services are already running. Preserve any production overrides.
+
+Do not run docker compose down -v. No database reset or migration is required
+for model display aliases.
+
+The existing mutable harson-pg:latest tag is not sufficient rollback evidence.
+Retain the actual prior image under a separate tag or use the team's existing
+immutable release tags.
+
+16.5 Health and asset checks
+
+Examples that do not require provider credentials:
+
+  curl -fsS https://ai.harson-base.com/__harson/healthz
+
+Download the new public alias assets to temporary files and verify their
+release identifiers/hashes. Use the actual versioned URLs introduced by the
+implementation, not a guessed future path.
+
+A successful health response or HTTP 200 for a script does not prove that the
+browser executed the correct renderer. Also inspect status() in a pilot
+iframe session and verify visible aliases.
+
+16.6 Pilot checks
+
+Expected under this guide's compatibility policy:
+  FLUX Krea -> CLImage
+  gpt-image-2.5 -> CLImage-4.1
+  image-2 -> CLImage-4.0
+  悠船MJ V7 -> CLImage-2.0
+  全能图片 -> CLImage-5.0
+  全能图片 pro -> CLImage-5.1
+  全能图片2 -> CLImage-5.2
+  Seedream -> CLVideo
+  Seedream version 5.0 pro -> CLImage-3.3
+
+Verify the pattern-design page even when its sidebar has no mapped models.
+Verify at least one parent-page All Tools card.
+
+16.7 Avoid repeated reloads after release
+
+A new document load receives the new scripts.
+Already-open documents keep their current in-memory code unless a deliberate,
+tested hot-update mechanism exists.
+
+Do not add setInterval reloads, cache-busting timestamps on every navigation,
+or forced relogin loops. Subsequent model/tab updates should be handled by the
+observer and render-time resolver.
+
+16.8 Production completion record
+
+Record:
+  Release commit and image tags.
+  Deployment time.
+  Mapping hash.
+  Pilot module/surface results.
+  Whether sessions needed reopening.
+  Any unresolved provider component.
+  Rollback release reference.
+
+
+17. STEP 11: ROLLBACK AND INCIDENT DIAGNOSIS
+
+17.1 Local visual disable
+
+Inside the correct gateway iframe's DevTools execution context:
+
+  window.HarsonImageLabels?.setEnabled(false)
+
+This is for that loaded document. It should restore provider labels while
+retaining usable controls. It is not a server-wide rollback.
+
+The parent-page resolver needs its own implemented display switch or release
+rollback, as described in Section 13.
+
+17.2 Disable future gateway injection
+
+Set the existing feature switch to false through the normal deployment
+configuration process:
+
+  YIBAI_IMAGE_ALIASES_ENABLED=false
+
+A process restart may be required to read a changed environment variable.
+Existing loaded documents will not automatically unload their scripts.
+Account for the in-memory session behavior when restarting the gateway.
+
+Keep the working proxy and login integration. A display rollback should not
+require switching all traffic back to a different provider origin.
+
+17.3 Roll back the application release
+
+Restore the retained previous app/gateway image and matching asset set through
+the existing deployment mechanism.
+
+Restore compatible parent-page and iframe assets together.
+Do not restore an old mapping with a new incompatible renderer by accident.
+Do not modify user data, provider data, model IDs, or account CSVs.
+
+Recheck:
+  Main-page access.
+  Gateway health.
+  Normal module launch.
+  Provider controls and request identity.
+  Expected original or previous aliases.
+
+17.4 Failure triage
+
+Symptom: status() is undefined.
+Check:
+  Correct iframe execution context.
+  Script injection and load order.
+  JavaScript errors.
+  Origin/module guard.
+  Required browser capability.
+  Duplicate-install behavior.
+Do not immediately weaken the origin guard.
+
+Symptom: active is false on a tool-only sidebar page.
+Check:
+  Whether the old sidebar gate remains.
+  Whether the browser is still running an old renderer release.
+
+Symptom: sidebar changes but floating tabs do not.
+Check:
+  .header_fix location.
+  Whether individual .IcTab labels are targeted.
+  Whether tabs are native elements with nested label spans.
+
+Symptom: FLUX Krea heading remains original.
+Check:
+  .DefaultLayout-header adapter.
+  Exact/normalized source text and exclusions.
+
+Symptom: gpt-image-2.5 remains original.
+Check:
+  Header container and nested text coverage first.
+  The reviewed mapping already contains this source and case-insensitive lookup.
+
+Symptom: only 4.5 or 5.0 pro remains unchanged.
+Check:
+  Context adapter execution.
+  Canonical version correspondence.
+  Whether the node is in the verified model version selector.
+Do not add a global numeric replacement.
+
+Symptom: Seedream 5.0 remains unresolved.
+Check:
+  Whether Lite/Pro identity can be established reliably.
+  Whether a new provider display spelling needs an explicit mapping.
+Do not infer a variant just to hide the old name.
+
+Symptom: All Tools still shows originals.
+Check:
+  Shared resolver loading on harson-base.com.
+  renderAllTools() integration.
+  Composite catalog metadata.
+
+Symptom: aliases look duplicated or a version is appended incorrectly.
+Check:
+  Split-label handling.
+  Cascading/substr replacement.
+  Alias-on-alias processing.
+  Whole-label versus independent-child resolution.
+
+Symptom: repeated CPU activity after the page becomes idle.
+Check:
+  Observer self-triggering through attributes.
+  Missing equality/signature checks.
+  Multiple observers from repeated initialization.
+  Repeated full-document scans.
+
+Symptom: old names are found in Elements but not on screen.
+Check:
+  Whether they are intentionally preserved light-DOM source text behind an
+  alias shadow root. Do not treat this alone as a visible leak.
+
+Symptom: users must reopen frames after deployment.
+Check:
+  Whether the gateway was recreated and lost in-memory sessions.
+  Use the existing Harson launch flow to establish a new session.
+  Do not create an automatic rapid reload/relogin loop.
+
+
+18. SUGGESTED AGENT HANDOFFS AND COMPLETION REPORT
+
+Use sequential handoffs or disjoint file ownership. The labels below describe
+work packages, not a requirement to launch agents concurrently.
+
+Agent A: baseline and regression reproduction
+  Owns baseline notes and fixtures.
+  Reports actual start commit, fixture failures, and runtime paths.
+  Does not deploy.
+
+Agent B: canonical data and resolver
+  Owns names.txt, correspondence policy, generator, generated data, resolver.
+  Provides tests and documented duplicate/context decisions.
+  Does not change gateway authentication.
+
+Agent C: provider renderer coverage
+  Owns config selectors, activation, DOM adapters, lifecycle, diagnostics.
+  Uses Agent B's resolver contract.
+  Provides original-value and interaction-preservation tests.
+
+Agent D: parent application and asset integration
+  Owns renderAllTools integration, ordered script loading, injection assets,
+  version paths, and relevant build changes.
+  Coordinates with Agent C to avoid incompatible asset assumptions.
+
+Agent E: verification and release
+  Runs tests against actual runtime files.
+  Performs staging checks.
+  Builds/deploys through the established project workflow when authorized.
+  Records release/rollback references and remaining issues.
+
+No agent should mark its task complete merely because its isolated tests pass.
+The integration owner verifies one coherent mapping/schema/asset release.
+
+Suggested small commits:
+  1. Add regression fixtures for missed model labels.
+  2. Fix floating/default headers and remove sidebar activation dependency.
+  3. Generate canonical aliases and add shared context resolver.
+  4. Extend nested label/attribute handling and diagnostics.
+  5. Integrate parent catalog and versioned asset loading.
+  6. Add integration verification and deployment documentation.
+
+Agent completion report template:
+
+  Baseline commit:
+  Implemented commit(s):
+  Mapping source path:
+  Mapping hash:
+  Duplicate policy applied:
+  Seedream heading policy:
+  Context rules added:
+  Runtime files changed:
+  Tests run and results:
+  Authenticated staging checks:
+  Original payload identity verification:
+  Deployed image/release:
+  Deployment time:
+  Pilot screenshots or safe evidence:
+  Known unresolved labels:
+  Rollback release:
+  Next action, if any:
+
+Report tests not run as "not run" with the reason. Do not present a proposed
+test, a mock request, or a public-bundle inspection as live generation evidence.
+
+
+19. DEFINITION OF DONE
+
+The release is complete when all applicable statements are true:
+
+[ ] Work is based on the requested current temp-main lineage.
+[ ] Canonical names.txt is tracked and used by a deterministic build.
+[ ] Conflicting mappings cannot silently enter generated output.
+[ ] FLUX Krea compatibility behavior is explicit.
+[ ] Seedream heading and version policies are explicit.
+[ ] Parent and iframe use the same shared resolver/data.
+[ ] Floating model headers and individual tabs are covered.
+[ ] DefaultLayout and ToolLayout headings are covered.
+[ ] A tool-only sidebar does not disable the whole renderer.
+[ ] Contextual version labels resolve only in the correct component.
+[ ] Known versioned Seedream badges resolve explicitly.
+[ ] Nested/split labels do not produce incorrect combined aliases.
+[ ] Buttons, dropdowns, dialogs, badges, and tooltips are verified where used.
+[ ] Prompts and editable/user content remain unchanged.
+[ ] Original provider IDs, option values, routes, and request payloads remain.
+[ ] Existing handlers and control states remain functional.
+[ ] Dynamic updates work without alias-triggered iframe reloads.
+[ ] Reused nodes and detached nodes are handled correctly.
+[ ] No persistent observer loop or unnecessary polling is introduced.
+[ ] Tests exercise production files, not only the old copied tree.
+[ ] The built image contains all assets in the correct dependency order.
+[ ] Release/version metadata is consistent across parent and iframe.
+[ ] Staging and pilot checks cover the reported screenshots.
+[ ] Prior release artifacts and rollback instructions are available.
+[ ] In-memory session restart behavior is accounted for.
+[ ] Remaining unknown provider components are honestly documented.
+[ ] Deployment evidence identifies the actual release and mapping hash.
+
+
+APPENDIX A. ORIGINAL MAPPING SUPPLIED BY THE OWNER
+
+The following preserves the supplied row order, including the conflicting
+FLUX Krea rows. Do not use it as validated canonical data without applying
+the explicit resolution in Section 03.
+
+FLUX Krea,CLImage-1.0
+FLUX Krea,CLImage
+FLUX.1 Kontex (pro/max),CLImage-1.1
+FLUX.1 Kontext pro,CLImage-1.1
+FLUX.1 Kontext max,CLImage-1.1
+Midjourney V7,CLImage-2.0
+Midjourney,CLImage
+悠船MJ V7,CLImage-2.0
+即梦 ,CLImage
+即梦 4.0,CLImage-3.0
+即梦 4.5,CLImage-3.1
+即梦 5.0 Lite,CLImage-3.2
+即梦 5.0 Pro,CLImage-3.3
+image-2,CLImage-4.0
+image-2.5,CLImage-4.1
+GPT-image-2,CLImage-4.0
+GPT-image-2.5,CLImage-4.1
+gpt-image-2.5,CLImage-4.1
+全能图片,CLImage-5.0
+全能图片 Pro,CLImage-5.1
+全能图片 2,CLImage-5.2
+Seedance 2.0,CLVideo-2.0
+Seedance,CLVideo
+Seedance 2.5,CLVideo-3.0
+Seedream,CLVideo
+Happy Horse,CLVideo-1.0
+暂未上架,CLVideo-2.1
+
+
+APPENDIX B. PROPOSED CANONICAL names.txt
+
+Proposed location: config/display-names/names.txt
+
+This resolves the conflicting FLUX Krea row using the deployed behavior,
+trims 即梦's trailing space, and retains the same-destination GPT casing row
+for traceability. The generator may coalesce that harmless duplicate.
+
+FLUX Krea,CLImage
+FLUX.1 Kontex (pro/max),CLImage-1.1
+FLUX.1 Kontext pro,CLImage-1.1
+FLUX.1 Kontext max,CLImage-1.1
+Midjourney V7,CLImage-2.0
+Midjourney,CLImage
+悠船MJ V7,CLImage-2.0
+即梦,CLImage
+即梦 4.0,CLImage-3.0
+即梦 4.5,CLImage-3.1
+即梦 5.0 Lite,CLImage-3.2
+即梦 5.0 Pro,CLImage-3.3
+image-2,CLImage-4.0
+image-2.5,CLImage-4.1
+GPT-image-2,CLImage-4.0
+GPT-image-2.5,CLImage-4.1
+gpt-image-2.5,CLImage-4.1
+全能图片,CLImage-5.0
+全能图片 Pro,CLImage-5.1
+全能图片 2,CLImage-5.2
+Seedance 2.0,CLVideo-2.0
+Seedance,CLVideo
+Seedance 2.5,CLVideo-3.0
+Seedream,CLVideo
+Happy Horse,CLVideo-1.0
+暂未上架,CLVideo-2.1
+
+
+APPENDIX C. CONTEXT AND SPELLING CORRESPONDENCE
+
+Store these as source-spelling-to-canonical-key relationships so destination
+changes in names.txt propagate consistently.
+
+Display spelling                  Canonical source key
+
+FLUX.1 Kontext                    FLUX.1 Kontex (pro/max)
+FLUX.1Kontext                     FLUX.1 Kontex (pro/max)
+FLUXKrea                          FLUX Krea
+Kontext Pro                       FLUX.1 Kontext pro
+kontext-pro                       FLUX.1 Kontext pro
+Kontext Max                       FLUX.1 Kontext max
+kontext-max                       FLUX.1 Kontext max
+悠船Midjourney V7                  悠船MJ V7
+悠船 Midjourney V7                 悠船MJ V7
+悠船 MJ V7                        悠船MJ V7
+悠船M| V7                         悠船MJ V7
+悠船M｜ V7                        悠船MJ V7
+MidjourneyV7                      Midjourney V7
+即梦4.0                           即梦 4.0
+即梦4.5                           即梦 4.5
+即梦5.0 Lite                      即梦 5.0 Lite
+即梦5.0 Pro                       即梦 5.0 Pro
+全能图片Pro                       全能图片 Pro
+全能图片2                         全能图片 2
+HappyHorse                        Happy Horse
+SeeDance                          Seedance
+SeeDance 2.0                      Seedance 2.0
+SeeDance 2.5                      Seedance 2.5
+GPT image 2                       GPT-image-2
+GPT image 2.5                     GPT-image-2.5
+
+Case normalization covers equivalent Pro/pro and GPT/gpt variants.
+These correspondences retain display variants present in the reviewed config.
+
+Additional explicit version correspondences proposed for this fix:
+
+Seedream 4.0                      即梦 4.0
+Seedream 4.5                      即梦 4.5
+Seedream 5.0 Lite                 即梦 5.0 Lite
+Seedream 5.0 Pro                  即梦 5.0 Pro
+
+Short strings only within the verified Seedream version selector:
+
+4.0                               即梦 4.0
+4.5                               即梦 4.5
+5.0 lite                          即梦 5.0 Lite
+5.0 pro                           即梦 5.0 Pro
+
+Do not turn the four short strings into global aliases.
+
+Keep unknown examples unresolved until their identity is established:
+  Seedream 5.0
+  SeeDance 2.0 VIP
+  A newly introduced provider model
+  A matching number in a resolution, price, duration, or unrelated field
+
+Some provider labels may use further prefixes or punctuation. Add those only
+after observing the exact display string and verifying its intended canonical
+identity. Do not invent coverage for unseen variants.
+
+
+APPENDIX D. DIAGNOSTIC EXAMPLES
+
+Select the ai.harson-base.com iframe execution context in DevTools.
+The top-level harson-base.com window has a different JavaScript context.
+
+Existing status:
+
+  window.HarsonImageLabels?.status()
+
+Existing bounded-use diagnostic:
+
+  window.HarsonImageLabels?.dumpUnmatched().slice(0, 50)
+
+Local disable:
+
+  window.HarsonImageLabels?.setEnabled(false)
+
+Local re-enable:
+
+  window.HarsonImageLabels?.setEnabled(true)
+
+Do not infer success solely from renamedElements being greater than zero.
+A sidebar alone can make that count nonzero while headings remain unchanged.
+
+In the reviewed version:
+  Known aliases can remain unreported if the diagnostic skips their parent.
+  Unknown version labels are not recognized by an exact-only diagnostic.
+  Original light-DOM text may intentionally remain behind a correct alias.
+
+The improved diagnostic should record the relevant display surface and reason
+without copying user prompts or sensitive page content.
+
+Suggested safe per-surface result:
+
+  module: image-generator
+  surface: floating-model-tab
+  sourceLabel: image-2
+  resolvedLabel: CLImage-4.0
+  result: renamed
+  release: actual release identifier
+
+A record for a bare numerical label should include its verified family
+context. Never use that context as a reason to modify a backend request.
+
+
+APPENDIX E. SOURCE REFERENCES
+
+Reviewed repository commit:
+https://github.com/naseerkhan861/harson-pg/commit/9117ecd801d4077828ac72e429f17186a42fac24
+
+Runtime config at the reviewed commit:
+https://github.com/naseerkhan861/harson-pg/blob/9117ecd801d4077828ac72e429f17186a42fac24/public/harson-customization/image-tab-config.js
+
+Runtime renderer at the reviewed commit:
+https://github.com/naseerkhan861/harson-pg/blob/9117ecd801d4077828ac72e429f17186a42fac24/public/harson-customization/image-tab-labels.js
+
+Injection helper:
+https://github.com/naseerkhan861/harson-pg/blob/9117ecd801d4077828ac72e429f17186a42fac24/src/services/yibaiDisplayInjection.js
+
+Gateway:
+https://github.com/naseerkhan861/harson-pg/blob/9117ecd801d4077828ac72e429f17186a42fac24/src/gateway/server.js
+
+Parent workspace renderer:
+https://github.com/naseerkhan861/harson-pg/blob/9117ecd801d4077828ac72e429f17186a42fac24/public/js/aigc-workspace.js
+
+Public asset URLs compared during review:
+https://ai.harson-base.com/__harson_custom/image-tab-1/image-tab-config.js
+https://ai.harson-base.com/__harson_custom/image-tab-1/image-tab-labels.js
+
+Examples of provider component assets inspected on 29 September 2026:
+https://cl-base.yibaiaigc.com/assets/ToolLayout-DtKksiFV.js
+https://cl-base.yibaiaigc.com/assets/DefaultLayout-Diq6oLhU.js
+https://cl-base.yibaiaigc.com/assets/IcTabs-Di_94mjz.js
+https://cl-base.yibaiaigc.com/assets/IndexPage-BF_74u7H.js
+https://cl-base.yibaiaigc.com/assets/IndexPage-BKC00ZTB.js
+
+Public provider asset filenames can change with provider releases. Treat these
+as evidence for the dated review, not permanent integration contracts.
+
+Browser API references:
+https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver
+https://developer.mozilla.org/en-US/docs/Web/API/Element/attachShadow
+https://developer.mozilla.org/en-US/docs/Web/API/HTMLSlotElement/assign
+
+END OF RUNBOOK
+

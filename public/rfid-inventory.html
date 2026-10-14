@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>RFID 库存盘点 | CL-iStore</title>
+
+  <link
+    rel="stylesheet"
+    href="/css/main.css"
+  />
+
+  <link
+    rel="stylesheet"
+    href="/css/rfid-inventory.css"
+  />
+</head>
+
+<body class="rfid-page">
+
+  <main class="rfid-main">
+
+    <div class="rfid-container">
+
+
+      <!-- ==================================================
+           Header
+           ================================================== -->
+
+      <header class="rfid-header">
+
+        <div class="rfid-title-row">
+
+          <a
+            href="/cl-istore.html"
+            class="rfid-back"
+            aria-label="返回 CL-iStore"
+            title="返回 CL-iStore"
+          >
+            ←
+          </a>
+
+          <div class="rfid-title-copy">
+
+            <span class="rfid-eyebrow">
+              CL-iStore / Inventory
+            </span>
+
+            <h1>
+              RFID 库存盘点
+            </h1>
+
+            <p>
+              RFID 标签采集、库存核对与异常识别
+            </p>
+
+          </div>
+
+        </div>
+
+      </header>
+
+
+      <!-- ==================================================
+           Status
+           ================================================== -->
+
+      <section class="rfid-status-bar">
+
+        <div class="rfid-status-item">
+
+          <span class="rfid-status-label">
+            库存基准
+          </span>
+
+          <strong
+            id="inventoryStatus"
+            class="rfid-status-value"
+          >
+            尚未导入
+          </strong>
+
+        </div>
+
+
+        <div class="rfid-status-divider"></div>
+
+
+        <div class="rfid-status-item">
+
+          <span class="rfid-status-label">
+            扫描设备
+          </span>
+
+          <strong
+            id="deviceStatus"
+            class="rfid-status-value"
+          >
+            C72 · 未连接
+          </strong>
+
+        </div>
+
+
+        <div class="rfid-status-divider"></div>
+
+
+        <div class="rfid-status-item">
+
+          <span class="rfid-status-label">
+            当前状态
+          </span>
+
+          <strong
+            id="sessionStatus"
+            class="rfid-status-value"
+          >
+            等待设备接入
+          </strong>
+
+        </div>
+
+      </section>
+
+
+      <!-- ==================================================
+           Actions
+           ================================================== -->
+
+      <section class="rfid-actions">
+
+        <div class="rfid-actions-left">
+
+          <button
+            id="importInventoryBtn"
+            class="rfid-btn"
+            type="button"
+          >
+            导入库存
+          </button>
+
+          <button
+            id="connectDeviceBtn"
+            class="rfid-btn rfid-btn-primary"
+            type="button"
+          >
+            连接设备
+          </button>
+
+          <button
+            id="finishInventoryBtn"
+            class="rfid-btn"
+            type="button"
+            disabled
+          >
+            结束盘点
+          </button>
+
+          <button
+            id="resetInventoryBtn"
+            class="rfid-btn"
+            type="button"
+            disabled
+          >
+            重新盘点
+          </button>
+
+        </div>
+
+
+        <div class="rfid-live-state">
+
+          <span class="rfid-live-dot"></span>
+
+          <span id="liveStateText">
+            设备离线
+          </span>
+
+        </div>
+
+      </section>
+
+
+      <!-- ==================================================
+           Summary
+           ================================================== -->
+
+      <section class="rfid-summary">
+
+        <article class="rfid-summary-item">
+
+          <span>
+            应盘
+          </span>
+
+          <strong id="summaryExpected">
+            0
+          </strong>
+
+        </article>
+
+
+        <article class="rfid-summary-item">
+
+          <span>
+            已扫描
+          </span>
+
+          <strong id="summaryScanned">
+            0
+          </strong>
+
+        </article>
+
+
+        <article class="rfid-summary-item">
+
+          <span>
+            已匹配
+          </span>
+
+          <strong
+            id="summaryMatched"
+          >
+            0
+          </strong>
+
+        </article>
+
+
+        <article class="rfid-summary-item">
+
+          <span>
+            待扫描
+          </span>
+
+          <strong
+            id="summaryPending"
+          >
+            0
+          </strong>
+
+        </article>
+
+
+        <article class="rfid-summary-item">
+
+          <span>
+            多出
+          </span>
+
+          <strong
+            id="summaryExtra"
+          >
+            0
+          </strong>
+
+        </article>
+
+
+        <article class="rfid-summary-item">
+
+          <span>
+            匹配率
+          </span>
+
+          <strong id="summaryRate">
+            0.0%
+          </strong>
+
+        </article>
+
+      </section>
+
+
+      <!-- ==================================================
+           Inventory table
+           ================================================== -->
+
+      <section class="rfid-panel rfid-inventory-panel">
+
+        <header class="rfid-panel-header">
+
+          <div>
+
+            <span class="rfid-panel-kicker">
+              System Activity
+            </span>
+
+            <h2>
+              库存核对明细
+            </h2>
+
+          </div>
+
+          <span
+            id="recordCount"
+            class="rfid-record-count"
+          >
+            0 条记录
+          </span>
+
+        </header>
+
+
+        <div class="rfid-table-wrap">
+
+          <table class="rfid-table">
+
+            <thead>
+
+              <tr>
+                <th>序号</th>
+                <th>EPC 编码</th>
+                <th>SKU</th>
+                <th>商品名称</th>
+                <th>库存</th>
+                <th>实扫</th>
+                <th>RSSI</th>
+                <th>次数</th>
+                <th>状态</th>
+              </tr>
+
+            </thead>
+
+
+            <tbody id="inventoryTableBody">
+
+              <tr class="rfid-empty-row">
+
+                <td colspan="9">
+
+                  <div class="rfid-empty-state">
+
+                    <div class="rfid-empty-symbol">
+                      RFID
+                    </div>
+
+                    <strong>
+                      暂无盘点数据
+                    </strong>
+
+                    <span>
+                      导入库存并连接扫描设备后开始盘点
+                    </span>
+
+                  </div>
+
+                </td>
+
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </section>
+
+
+      <!-- ==================================================
+           Log
+           ================================================== -->
+
+      <section class="rfid-panel rfid-log-panel">
+
+        <header class="rfid-panel-header rfid-log-header">
+
+          <div>
+
+            <span class="rfid-panel-kicker">
+              System Activity
+            </span>
+
+            <h2>
+              系统日志
+            </h2>
+
+          </div>
+
+          <span
+            id="logStatus"
+            class="rfid-record-count"
+          >
+            等待操作
+          </span>
+
+        </header>
+
+
+        <div
+          id="systemLog"
+          class="rfid-log-content"
+        >
+          <div class="rfid-log-line">
+
+            <span class="rfid-log-time">
+              --:--:--
+            </span>
+
+            <span class="rfid-log-type">
+              系统
+            </span>
+
+            <span>
+              RFID 库存盘点页面已就绪
+            </span>
+
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+
+  </main>
+
+
+  <input
+    id="inventoryFileInput"
+    type="file"
+    accept=".xlsx,.xls"
+    hidden
+  />
+
+
+    <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
+    ></script>
+
+    <script
+    src="/js/rfid-inventory.js"
+    defer
+    ></script>
+
+</body>
+</html>

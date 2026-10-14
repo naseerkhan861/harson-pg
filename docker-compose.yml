@@ -22,5 +22,21 @@ services:
       - mongo_data:/data/db
     # NOT exposing mongo to the host — only the app container can reach it
 
+  # YiBai iframe gateway for the image-tab display aliases (ai.harson-base.com).
+  # Inactive by default — start explicitly with:
+  #   docker compose --profile gateway up -d
+  gateway:
+    build: .
+    image: harson-pg:latest
+    container_name: harson-pg-gateway
+    restart: unless-stopped
+    command: node src/gateway/server.js
+    profiles: ["gateway"]
+    ports:
+      - "127.0.0.1:3001:3001"   # only exposed to host (Nginx will proxy ai.harson-base.com)
+    env_file: .env
+    depends_on:
+      - app
+
 volumes:
   mongo_data:

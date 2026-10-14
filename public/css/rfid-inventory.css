@@ -1,0 +1,792 @@
+/* =========================================================
+   RFID Inventory
+   Rebuild based on the WHITE version layout,
+   only replacing the color system with dark theme.
+   ========================================================= */
+
+:root {
+  --rfid-bg: #0a0c0f;
+  --rfid-bg-top: #0d1116;
+
+  --rfid-panel: rgba(255, 255, 255, 0.025);
+  --rfid-panel-soft: rgba(255, 255, 255, 0.018);
+  --rfid-panel-hover: rgba(255, 255, 255, 0.035);
+
+  --rfid-border: rgba(255, 255, 255, 0.08);
+  --rfid-border-strong: rgba(255, 255, 255, 0.12);
+
+  --rfid-text: #f6f7f8;
+  --rfid-text-2: #d7dadc;
+  --rfid-text-3: #a0a6ab;
+  --rfid-text-4: #72787e;
+
+  --rfid-accent: #c9f400;
+  --rfid-accent-2: rgba(201, 244, 0, 0.12);
+
+  --rfid-success: #b6de4a;
+  --rfid-warning: #e2b74f;
+  --rfid-extra: #dc8740;
+  --rfid-danger: #df6f6f;
+
+  --rfid-shadow: 0 18px 44px rgba(0, 0, 0, 0.22);
+
+  --rfid-max-width: 1460px;
+}
+
+
+/* =========================================================
+   Base
+   ========================================================= */
+
+body.rfid-page {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 50% -12%, rgba(135, 180, 30, 0.10), transparent 26%),
+    linear-gradient(180deg, var(--rfid-bg-top) 0%, var(--rfid-bg) 100%);
+  color: var(--rfid-text);
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Display",
+    "SF Pro Text",
+    "Helvetica Neue",
+    "PingFang SC",
+    "Microsoft YaHei",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body.rfid-page * {
+  box-sizing: border-box;
+}
+
+.rfid-main {
+  min-height: 100vh;
+  padding: 34px 42px 40px;
+}
+
+.rfid-container {
+  width: min(var(--rfid-max-width), 100%);
+  margin: 0 auto;
+}
+
+
+/* =========================================================
+   Header
+   Match the first white screenshot: compact and flat
+   ========================================================= */
+
+.rfid-header {
+  margin-bottom: 18px;
+}
+
+.rfid-title-row {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 16px;
+}
+
+
+.rfid-back {
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  /*
+    让按钮避开上面的绿色英文，
+    大致和 RFID 大标题顶部对齐
+  */
+  margin-top: 23px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.10);
+
+  border-radius: 50%;
+
+  background:
+    rgba(255, 255, 255, 0.025);
+
+  color:
+    rgba(255, 255, 255, 0.68);
+
+  font-size: 18px;
+  line-height: 1;
+
+  text-decoration: none;
+
+  transition:
+    background 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease;
+}
+
+
+.rfid-back:hover {
+  background:
+    rgba(201, 244, 0, 0.10);
+
+  border-color:
+    rgba(201, 244, 0, 0.30);
+
+  color:
+    var(--rfid-accent);
+
+  transform:
+    translateX(-2px);
+}
+
+
+.rfid-title-copy {
+  display: block;
+}
+
+.rfid-eyebrow {
+  display: inline-block;
+  margin-bottom: 10px;
+  color: var(--rfid-accent);
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.rfid-title-copy h1 {
+  margin: 0;
+  color: var(--rfid-text);
+  font-size: 42px;
+  line-height: 1.08;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+
+.rfid-title-copy p {
+  margin: 12px 0 0;
+  color: var(--rfid-text-3);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+
+/* =========================================================
+   Top info strip
+   Similar to white layout
+   ========================================================= */
+
+.rfid-status-bar {
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr 1px 1fr;
+  align-items: center;
+  min-height: 62px;
+  margin-bottom: 14px;
+  padding: 0 0;
+  border-top: 1px solid var(--rfid-border);
+  border-bottom: 1px solid var(--rfid-border);
+  border-left: 0;
+  border-right: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.rfid-status-item {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  gap: 4px;
+
+  /* 原来左右空间不够 */
+  padding: 0 28px;
+}
+
+/* 第一列左边保持和页面对齐 */
+.rfid-status-item:first-child {
+  padding-left: 0;
+}
+
+/* 最后一列右边不用留太多 */
+.rfid-status-item:last-child {
+  padding-right: 0;
+}
+
+.rfid-status-divider {
+  display: block;
+
+  width: 1px;
+  height: 28px;
+
+  background: var(--rfid-border);
+}
+
+
+.rfid-status-label {
+  color: var(--rfid-text-4);
+  font-size: 11px;
+  line-height: 1;
+}
+
+.rfid-status-value {
+  color: var(--rfid-text-2);
+  font-size: 13px;
+  line-height: 1.3;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* =========================================================
+   Actions bar
+   Flat like the first image
+   ========================================================= */
+
+.rfid-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 60px;
+  margin-bottom: 16px;
+  padding: 0 0 0 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.rfid-actions-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.rfid-btn {
+  min-height: 44px;
+  padding: 0 20px;
+  border: 1px solid var(--rfid-border-strong);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--rfid-text);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.rfid-btn:hover:not(:disabled) {
+  background: var(--rfid-panel-hover);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+.rfid-btn-primary {
+  background: var(--rfid-accent);
+  border-color: var(--rfid-accent);
+  color: #111214;
+}
+
+.rfid-btn-primary:hover:not(:disabled) {
+  background: #d7fb22;
+  border-color: #d7fb22;
+}
+
+.rfid-btn:disabled {
+  opacity: 0.34;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.rfid-live-state {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  border: 1px solid var(--rfid-border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--rfid-text-3);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.rfid-live-dot {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #8a9095;
+}
+
+
+/* =========================================================
+   Summary strip
+   IMPORTANT:
+   replicate the first image as ONE whole strip,
+   not six independent floating cards.
+   ========================================================= */
+
+.rfid-summary {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0;
+  margin-bottom: 16px;
+  overflow: hidden;
+  border: 1px solid var(--rfid-border);
+  border-radius: 12px;
+  background: var(--rfid-panel);
+  box-shadow: none;
+}
+
+.rfid-summary-item {
+  position: relative;
+  min-height: 78px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  transition: background 160ms ease;
+}
+
+.rfid-summary-item:hover {
+  background: rgba(255, 255, 255, 0.018);
+  transform: none;
+}
+
+.rfid-summary-item::before {
+  display: none;
+}
+
+.rfid-summary-item:not(:last-child)::after {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 18px;
+  right: 0;
+  bottom: 18px;
+  width: 1px;
+  background: var(--rfid-border);
+}
+
+.rfid-summary-item span {
+  margin: 0 0 8px;
+  color: var(--rfid-text-4);
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.rfid-summary-item strong {
+  color: var(--rfid-text);
+  font-family: "SF Mono", "Menlo", "Monaco", monospace;
+  font-size: 18px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.rfid-summary-item .rfid-number-success,
+.rfid-summary-item .rfid-number-warning,
+.rfid-summary-item .rfid-number-extra {
+  color: var(--rfid-text);
+}
+
+
+/* =========================================================
+   Panels
+   Replicate first screenshot panel feeling
+   ========================================================= */
+
+.rfid-panel {
+  overflow: hidden;
+  margin-bottom: 16px;
+  border: 1px solid var(--rfid-border);
+  border-radius: 12px;
+  background: var(--rfid-panel);
+  box-shadow: none;
+}
+
+.rfid-panel-header {
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--rfid-border);
+}
+
+.rfid-panel-kicker {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--rfid-text-4);
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rfid-panel-header h2 {
+  margin: 0;
+  color: var(--rfid-text);
+  font-size: 15px;
+  line-height: 1.2;
+  font-weight: 650;
+}
+
+.rfid-record-count {
+  color: var(--rfid-text-4);
+  font-size: 11px;
+  line-height: 1;
+}
+
+
+/* =========================================================
+   Table
+   ========================================================= */
+
+.rfid-inventory-panel {
+  min-height: 428px;
+}
+
+.rfid-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.rfid-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.rfid-table thead {
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.rfid-table th {
+  height: 52px;
+  padding: 0 14px;
+  color: var(--rfid-text-3);
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--rfid-border);
+}
+
+.rfid-table td {
+  height: 56px;
+  padding: 0 14px;
+  overflow: hidden;
+  color: var(--rfid-text-2);
+  font-size: 12px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+}
+
+.rfid-table tbody tr {
+  transition: background 160ms ease;
+}
+
+.rfid-table tbody tr:not(.rfid-empty-row):hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+
+/* column widths */
+
+.rfid-table th:nth-child(1),
+.rfid-table td:nth-child(1) {
+  width: 64px;
+}
+
+.rfid-table th:nth-child(2),
+.rfid-table td:nth-child(2) {
+  width: 250px;
+}
+
+.rfid-table th:nth-child(3),
+.rfid-table td:nth-child(3) {
+  width: 120px;
+}
+
+.rfid-table th:nth-child(4),
+.rfid-table td:nth-child(4) {
+  width: auto;
+}
+
+.rfid-table th:nth-child(5),
+.rfid-table td:nth-child(5),
+.rfid-table th:nth-child(6),
+.rfid-table td:nth-child(6),
+.rfid-table th:nth-child(7),
+.rfid-table td:nth-child(7),
+.rfid-table th:nth-child(8),
+.rfid-table td:nth-child(8) {
+  width: 76px;
+  text-align: center;
+}
+
+.rfid-table th:nth-child(9),
+.rfid-table td:nth-child(9) {
+  width: 88px;
+  text-align: center;
+}
+
+
+/* =========================================================
+   Empty state
+   Make it closer to the first screenshot:
+   flatter / more table-like / not giant hero block
+   ========================================================= */
+
+.rfid-empty-row td {
+  height: 250px;
+  padding: 0;
+  border-bottom: 0;
+}
+
+.rfid-empty-state {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.rfid-empty-symbol {
+  margin-bottom: 2px;
+  color: rgba(201, 244, 0, 0.65);
+  font-family: "SF Mono", "Menlo", monospace;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.16em;
+}
+
+.rfid-empty-state strong {
+  color: var(--rfid-text-2);
+  font-size: 15px;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+.rfid-empty-state span {
+  color: var(--rfid-text-4);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+
+/* =========================================================
+   Log panel
+   ========================================================= */
+
+.rfid-log-panel {
+  margin-bottom: 0;
+}
+
+.rfid-log-header {
+  min-height: 48px;
+}
+
+.rfid-log-content {
+  max-height: 96px;
+  overflow-y: auto;
+  padding: 10px 20px 14px;
+}
+
+.rfid-log-line {
+  min-height: 24px;
+  display: grid;
+  grid-template-columns: 82px 52px 1fr;
+  align-items: center;
+  color: var(--rfid-text-2);
+  font-family: "SF Mono", "Menlo", "PingFang SC", monospace;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.rfid-log-time {
+  color: var(--rfid-text-4);
+}
+
+.rfid-log-type {
+  color: var(--rfid-accent);
+}
+
+
+/* =========================================================
+   Scrollbar
+   ========================================================= */
+
+.rfid-table-wrap::-webkit-scrollbar,
+.rfid-log-content::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.rfid-table-wrap::-webkit-scrollbar-track,
+.rfid-log-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.rfid-table-wrap::-webkit-scrollbar-thumb,
+.rfid-log-content::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.rfid-table-wrap::-webkit-scrollbar-thumb:hover,
+.rfid-log-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.20);
+}
+
+
+/* =========================================================
+   Responsive
+   ========================================================= */
+
+@media (max-width: 1180px) {
+  .rfid-summary {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .rfid-summary-item:nth-child(3)::after {
+    display: none;
+  }
+
+  .rfid-summary-item:nth-child(-n + 3) {
+    border-bottom: 1px solid var(--rfid-border);
+  }
+}
+
+@media (max-width: 900px) {
+  .rfid-main {
+    padding: 24px 18px 36px;
+  }
+
+  .rfid-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .rfid-actions-left {
+    width: 100%;
+  }
+
+  .rfid-live-state {
+    align-self: flex-start;
+  }
+
+  .rfid-status-bar {
+    grid-template-columns: 1fr;
+    gap: 0;
+    border-top: 1px solid var(--rfid-border);
+    border-bottom: 1px solid var(--rfid-border);
+  }
+
+  .rfid-status-divider {
+    display: none;
+  }
+
+  .rfid-status-item {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--rfid-border);
+  }
+
+  .rfid-status-item:last-child {
+    border-bottom: 0;
+  }
+
+  .rfid-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .rfid-summary-item {
+    border-bottom: 1px solid var(--rfid-border);
+  }
+
+  .rfid-summary-item:nth-child(2n)::after {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .rfid-title-copy h1 {
+    font-size: 34px;
+  }
+
+  .rfid-table {
+    min-width: 960px;
+  }
+
+  .rfid-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .rfid-summary-item::after {
+    display: none !important;
+  }
+
+  .rfid-summary-item {
+    border-bottom: 1px solid var(--rfid-border);
+  }
+
+  .rfid-summary-item:last-child {
+    border-bottom: 0;
+  }
+}
+
+/* =========================================================
+   Inventory status
+   ========================================================= */
+
+.rfid-table td.status-normal {
+  color: var(--rfid-success);
+  font-weight: 650;
+}
+
+.rfid-table td.status-pending {
+  color: var(--rfid-warning);
+  font-weight: 650;
+}
+
+.rfid-table td.status-extra {
+  color: var(--rfid-extra);
+  font-weight: 650;
+}
+
+.rfid-table td.status-missing {
+  color: var(--rfid-danger);
+  font-weight: 650;
+}

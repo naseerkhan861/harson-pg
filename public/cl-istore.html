@@ -55,9 +55,11 @@
       <section class="istore-menu">
 
         <a
-          href="#"
+          href="https://harson-base-health.com"
           class="istore-menu-item"
           id="footScannerEntry"
+          data-sso-url="/api/sso/foot-entry"
+          data-sso-external="https://harson-base-health.com"
         >
 
           <div class="istore-menu-content">
@@ -133,11 +135,57 @@
 
         </a>
 
+
+        <a
+          href="/rfid-inventory"
+          class="istore-menu-item"
+          id="rfidInventoryEntry"
+        >
+
+          <div class="istore-menu-content">
+
+            <div class="istore-menu-icon">
+              <i class="fas fa-boxes-stacked"></i>
+            </div>
+
+            <div class="istore-menu-text">
+
+              <h2>
+                RFID 库存盘点
+              </h2>
+
+              <p>
+                RFID 标签采集、库存核对与异常识别
+              </p>
+
+            </div>
+
+          </div>
+
+          <div class="istore-menu-action">
+
+            <span>
+              进入
+            </span>
+
+            <span class="istore-arrow">
+              →
+            </span>
+
+          </div>
+
+        </a>
+
       </section>
 
     </div>
 
   </main>
+
+  <script
+    src="/js/sso-foot-entry.js"
+    defer
+  ></script>
 
 </body>
 </html>

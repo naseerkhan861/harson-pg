@@ -144,7 +144,8 @@ export const platformModel = {
           "fas fa-shopping-cart"
         ]
       ]
-    }
+    },
+    
   ],
 
   insights: [

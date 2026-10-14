@@ -1189,6 +1189,36 @@ body.home-v2
 
 
 /* =========================================================
+   3D 足型测量（Foot Measure）
+   ========================================================= */
+
+/* 主视觉 */
+body.home-v2
+.v2-platform-foot-measure
+.v2-platform-visual {
+  background-image:
+    url("/images/istore/足测.webp");
+}
+
+/*
+  能力卡暂时复用同一张足测主视觉。
+
+  后续设计中心提供 4 张专属素材后，
+  按上面的 nth-of-type(1..4) 写法替换即可。
+*/
+body.home-v2
+.v2-platform-foot-measure
+.v2-capability-card
+.v2-capability-visual {
+  background-image:
+    url("/images/istore/足测.webp");
+
+  background-size: cover;
+  background-position: center center;
+}
+
+
+/* =========================================================
    SCM / iRobot image crop correction
    设计中心原图存在边缘留白，放大裁切到铺满
    ========================================================= */
@@ -2644,4 +2674,65 @@ body.home-v2.reveal-ready
   
 
 
+}
+
+/* =========================================================
+   Hero 文案可读性优化
+   ========================================================= */
+
+/* 保证 Hero 内容在遮罩上方 */
+body.home-v2 .v2-hero {
+  position: relative;
+  isolation: isolate;
+}
+
+
+/* 只加强左侧文字区域，不影响右侧主视觉 */
+body.home-v2 .v2-hero::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  z-index: 0;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.48) 0%,
+      rgba(0, 0, 0, 0.34) 28%,
+      rgba(0, 0, 0, 0.12) 48%,
+      rgba(0, 0, 0, 0) 65%
+    );
+}
+
+
+/* Hero 内容保持最上层 */
+body.home-v2 .v2-hero .hero-grid {
+  position: relative;
+  z-index: 2;
+}
+
+
+/* 红框正文 */
+body.home-v2 .v2-hero .hero-content p {
+  max-width: 680px;
+
+  margin-top: 26px;
+
+  color:
+    rgba(255, 255, 255, 0.82);
+
+  font-size: 18px;
+
+  line-height: 1.75;
+
+  font-weight: 400;
+
+  letter-spacing: 0.01em;
+
+  text-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.75);
 }

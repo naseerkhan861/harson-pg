@@ -29,19 +29,19 @@ const BACKGROUND_TOKEN_WAIT_MS =
 
 const ALL_TOOLS = Object.freeze([
    {
-    name: "Seedance 2.5 视频" ,
+    name: "CLVideo-3.0" ,
     subtitle: "AI AGENT VIDEO",
     cover:
       "/images/all-tools/40-seedance-2.5-video.webp"
   },
   {
-    name: "全能图片 pro",
+    name: "CLImage-5.1",
     subtitle: "IMAGE LAB",
     cover:
       "/images/all-tools/01-quanneng-tupian-pro.webp"
   },
   {
-    name: "Seedream 5.0 Pro",
+    name: "CLImage-3.3",
     subtitle: "DREAM STUDIO",
     cover:
       "/images/all-tools/02-seedream-5-pro.webp"
@@ -59,13 +59,13 @@ const ALL_TOOLS = Object.freeze([
       "/images/all-tools/04-video-remix.webp"
   },
   {
-    name: "image-2",
+    name: "CLImage-4.0",
     subtitle: "IMAGE ENGINE",
     cover:
       "/images/all-tools/05-image-2.webp"
   },
   {
-    name: "Seedance 2.0 视频",
+    name: "CLVideo-2.0",
     subtitle: "MOTION LAB",
     cover:
       "/images/all-tools/06-seedance-video.webp"
@@ -96,7 +96,7 @@ const ALL_TOOLS = Object.freeze([
       "/images/all-tools/10-detail-page.webp"
   },
   {
-    name: "Seedream 4.5",
+    name: "CLImage-3.1",
     subtitle: "DREAM STUDIO",
     cover:
       "/images/all-tools/11-seedream-4.5.webp"
@@ -114,7 +114,7 @@ const ALL_TOOLS = Object.freeze([
       "/images/all-tools/13-upscaler.webp"
   },
   {
-    name: "悠船 MJ V7",
+    name: "CLImage-2.0",
     subtitle: "VISUAL MODEL",
     cover:
       "/images/all-tools/14-visual-model.webp"
@@ -192,7 +192,7 @@ const ALL_TOOLS = Object.freeze([
       "/images/all-tools/26-image-blend.webp"
   },
   {
-    name: "FLUX.1 Kontext",
+    name: "CLImage-1.1",
     subtitle: "CONTEXT MODEL",
     cover:
       "/images/all-tools/27-flux-kontext.webp"
@@ -234,7 +234,7 @@ const ALL_TOOLS = Object.freeze([
       "/images/all-tools/33-half-drop.webp"
   },
   {
-    name: "FLUX Krea",
+    name: "CLImage-1.0",
     subtitle: "CREATIVE MODEL",
     cover:
       "/images/all-tools/34-flux-krea.webp"
@@ -907,6 +907,60 @@ function observeAllToolsImages(
   );
 }
 
+/*
+  Resolves a tool's display alias at the presentation boundary only
+  (runbook §12). tool.name itself stays untouched — it remains the
+  functional key into TOOL_FILTERS.
+
+  Composite catalog titles carry an approved descriptive suffix that is
+  preserved after the model part is resolved (runbook §12.2).
+*/
+const CATALOG_SUFFIXED_LABELS = Object.freeze({
+  "Seedance 2.5 视频": ["Seedance 2.5", " 视频"],
+  "Seedance 2.0 视频": ["Seedance 2.0", " 视频"]
+});
+
+function getToolDisplayName(
+  tool
+) {
+  const resolver =
+    window.HarsonModelAliasResolver;
+
+  if (
+    !resolver ||
+    typeof resolver.resolveDisplayName !==
+      "function"
+  ) {
+    return tool.name;
+  }
+
+  const direct = resolver.resolveDisplayName(
+    tool.name
+  );
+
+  if (direct) {
+    return direct;
+  }
+
+  const suffixed =
+    CATALOG_SUFFIXED_LABELS[
+      tool.name
+    ];
+
+  if (suffixed) {
+    const modelAlias =
+      resolver.resolveDisplayName(
+        suffixed[0]
+      );
+
+    if (modelAlias) {
+      return modelAlias + suffixed[1];
+    }
+  }
+
+  return tool.name;
+}
+
 function renderAllTools() {
   if (
     !elements.allToolsGrid
@@ -994,7 +1048,9 @@ function renderAllTools() {
           tool.cover;
 
         image.alt =
-          tool.name;
+          getToolDisplayName(
+            tool
+          );
 
         image.loading =
           "lazy";
@@ -1036,7 +1092,9 @@ function renderAllTools() {
         );
 
       title.textContent =
-        tool.name;
+        getToolDisplayName(
+          tool
+        );
 
       card.append(
         cover,

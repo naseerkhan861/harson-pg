@@ -11,6 +11,11 @@ const authRoutes = require("./src/routes/authRoutes");
 const aigcAccountRoutes = require("./src/routes/aigcAccountRoutes");
 const aiRoutes =
   require("./src/routes/aiRoutes");
+const aigcInternalRoutes = require(
+  "./src/routes/aigcInternalRoutes"
+);
+const ssoRoutes =
+  require("./src/routes/ssoRoutes");
 const masterOwnerModel = require(
   "./src/models/aigcMasterOwnerCsvModel"
 );
@@ -19,6 +24,10 @@ const connectDB = require("./src/db");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// App runs behind nginx, which sets X-Forwarded-For. Trust one proxy hop so
+// express-rate-limit sees the real client IP instead of erroring out.
+app.set("trust proxy", 1);
 
 app.use(
   helmet({
@@ -56,7 +65,17 @@ app.use(
           "'self'",
           "blob:",
           "https://cl-base.yibaiaigc.com",
-          "https://yibaiaigc.com"
+          "https://yibaiaigc.com",
+          // Gateway frame origin (image tab only) when enabled;
+          // default CSP is unchanged. Direct provider entries stay
+          // for instant rollback.
+          ...(process.env.YIBAI_FRAME_PUBLIC_ORIGIN
+            ? [
+                String(
+                  process.env.YIBAI_FRAME_PUBLIC_ORIGIN
+                ).replace(/\/+$/, "")
+              ]
+            : [])
         ],
         "frame-ancestors": ["'self'"],
         "upgrade-insecure-requests": null
@@ -81,6 +100,20 @@ app.use(
     }
   }),
   authRoutes
+);
+
+/*
+  app <-> gateway internal API (compose network only).
+
+  Registered BEFORE the /api/aigc rate-limited mount so these
+  machine-to-machine calls (ticket redemption, route allowlist)
+  bypass the public 120/15min limiter and response sanitizer.
+  Every call must present x-harson-internal-secret; block this
+  path from the public internet in nginx.
+*/
+app.use(
+  "/api/aigc/internal",
+  aigcInternalRoutes
 );
 
 app.use(
@@ -116,6 +149,33 @@ app.use(
   aiRoutes
 );
 
+/*
+  SSO 免登录跳转：HARSON -> HarsonFOOT（3D 足型测量平台）
+
+  GET /api/sso/foot-entry
+    已登录：返回带 HMAC 签名的免登录跳转 URL
+    未登录：401
+*/
+app.use(
+  "/api/sso",
+
+  rateLimit({
+    windowMs:
+      60 * 1000,
+
+    max: 20,
+
+    message: {
+      success: false,
+
+      message:
+        "跳转请求过于频繁，请稍后重试。"
+    }
+  }),
+
+  ssoRoutes
+);
+
 app.get(
   "/dashboard-meta.html",
   (req, res) => {
@@ -149,7 +209,26 @@ app.get(
   }
 );
 
+app.get(
+  [
+    "/rfid-inventory",
+    "/rfid-inventory.html"
+  ],
+  (req, res) => {
+    return sendAuthenticatedPage(
+      req,
+      res,
+      "rfid-inventory.html"
+    );
+  }
+);
+
 app.use(express.static(path.join(__dirname, "public")));
+
+
+
+
+
 
 function sendAdminOnlyPage(req, res, filename) {
   const token = req.cookies?.harson_token;

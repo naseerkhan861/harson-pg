@@ -8,6 +8,7 @@ export class HomeV2View {
     this.renderPlatforms();
     this.renderEcosystem();
     this.initScrollReveal();
+    this.bindSsoEntries();
   }
 
   renderNav() {
@@ -230,10 +231,134 @@ export class HomeV2View {
     });
   }
 
+  /**
+   * 绑定 SSO 免登录跳转入口（如「CL足测」卡片）。
+   *
+   * 点击后请求同源接口 /api/sso/foot-entry：
+   *  - 已登录：接口返回带签名的免登录跳转 URL，整页跳转到目标平台。
+   *  - 未登录：接口返回 401，跳转到本系统登录页。
+   *  - 接口异常 / 未配置：降级为直接打开目标平台官网。
+   */
+  bindSsoEntries() {
+    const ssoLinks =
+      document.querySelectorAll(
+        "[data-sso-url]"
+      );
+
+    if (!ssoLinks.length) {
+      return;
+    }
+
+    ssoLinks.forEach(link => {
+      link.addEventListener(
+        "click",
+        async event => {
+          event.preventDefault();
+          event.stopPropagation();
+
+          const ssoUrl =
+            link.dataset.ssoUrl;
+
+          const fallbackUrl =
+            link.dataset.ssoExternal ||
+            link.getAttribute("href");
+
+          const isValidAbsolute =
+            typeof fallbackUrl === "string" &&
+            /^https?:\/\//i.test(
+              fallbackUrl
+            );
+
+          try {
+            const response = await fetch(
+              ssoUrl,
+              {
+                method: "GET",
+
+                credentials: "include",
+
+                headers: {
+                  Accept:
+                    "application/json"
+                }
+              }
+            );
+
+            if (response.status === 401) {
+              window.location.href =
+                "/login";
+
+              return;
+            }
+
+            const result = await response
+              .json()
+              .catch(() => null);
+
+            if (
+              response.ok &&
+              result &&
+              result.url
+            ) {
+              window.location.href =
+                result.url;
+
+              return;
+            }
+
+            console.warn(
+              "SSO 跳转接口返回异常，降级为直接跳转",
+              result
+            );
+
+            if (isValidAbsolute) {
+              window.location.href =
+                fallbackUrl;
+
+              return;
+            }
+
+            alert(
+              (result && result.message) ||
+                "跳转失败，请稍后重试或直接登录目标系统。"
+            );
+          } catch (error) {
+            console.error(
+              "SSO 跳转失败",
+              error
+            );
+
+            if (isValidAbsolute) {
+              window.location.href =
+                fallbackUrl;
+
+              return;
+            }
+
+            alert(
+              "跳转失败，请稍后重试或直接登录目标系统。"
+            );
+          }
+        }
+      );
+    });
+  }
+
   platformTemplate(platform) {
+    /*
+      带 ssoUrl 的平台（如「CL足测」）：
+        href 指向目标平台官网 -> JS 未生效 / 接口异常时可降级直接跳转；
+        同时挂 data-sso-url，由 bindSsoEntries 优先走免登录跳转。
+    */
     const actionLink =
+      platform.externalUrl ||
       platform.link ||
       `#${platform.id}`;
+
+    const ssoAttr = platform.ssoUrl
+      ? ` data-sso-url="${platform.ssoUrl}"` +
+        ` data-sso-external="${platform.externalUrl || ""}"`
+      : "";
 
     const actionLabel =
       platform.actionLabel ||
@@ -292,7 +417,19 @@ export class HomeV2View {
         "Membership & Private Domain Operations",
 
       "全渠道零售支持":
-        "Omnichannel Retail Support"
+        "Omnichannel Retail Support",
+
+      "足型三维扫描":
+        "3D Foot Scanning",
+
+      "测量数据分析":
+        "Measurement Data Analysis",
+
+      "数字鞋楦":
+        "Digital Last",
+
+      "足测报告":
+        "Foot Measurement Report"
     };
 
     const capabilityCards =
@@ -435,7 +572,7 @@ export class HomeV2View {
 
               <a
                 class="v2-platform-primary"
-                href="${actionLink}"
+                href="${actionLink}"${ssoAttr}
               >
                 ${actionLabel}
               </a>
