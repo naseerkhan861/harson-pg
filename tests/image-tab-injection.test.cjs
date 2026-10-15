@@ -179,3 +179,93 @@ test("exported constants match the deployment guide", () => {
   assert.equal(ASSET_PREFIX, "/__harson_custom/image-tab-1");
   assert.equal(MAX_HTML_BYTES, 2 * 1024 * 1024);
 });
+
+/* ---------------- navigation filter (虚拟样机 hiding) ---------------- */
+
+test("navigation assets precede aliases for every module", () => {
+  for (const moduleName of [
+    "image-generator",
+    "pattern-design",
+    "clothing",
+    "e-commerce"
+  ]) {
+    const result = inject(HTML, {
+      moduleName,
+      hideVirtualSample: true
+    });
+
+    const navCss = result.indexOf(`${ASSET_PREFIX}/nav-visibility.css`);
+    const navJs = result.indexOf('id="harson-nav-visibility"');
+    const firstAlias = result.indexOf("model-aliases.generated.js");
+
+    // The nav script's own opening tag (up to the first ">") must not
+    // carry defer — the following ALIAS tags legitimately do.
+    const navTag = result.slice(
+      result.lastIndexOf("<script", navJs),
+      result.indexOf(">", navJs) + 1
+    );
+
+    assert.ok(navCss > 0, `${moduleName}: nav css injected`);
+    assert.ok(navJs > navCss, `${moduleName}: nav script after its css`);
+    assert.ok(
+      !navTag.includes("defer"),
+      `${moduleName}: nav script must be non-deferred`
+    );
+    assert.ok(
+      firstAlias > navJs,
+      `${moduleName}: nav assets before alias assets`
+    );
+  }
+});
+
+test("aliases disabled + nav on injects ONLY the two navigation assets", () => {
+  const result = inject(HTML, {
+    enabled: false,
+    hideVirtualSample: true
+  });
+
+  assert.ok(result.includes(`${ASSET_PREFIX}/nav-visibility.css`));
+  assert.ok(result.includes('id="harson-nav-visibility"'));
+  assert.ok(!result.includes("model-aliases.generated.js"));
+  assert.ok(!result.includes("model-alias-resolver.js"));
+  assert.ok(!result.includes("image-tab-config.js"));
+  assert.ok(!result.includes("harson-image-tab-labels"));
+});
+
+test("both features off returns the original HTML", () => {
+  assert.equal(
+    inject(HTML, { enabled: false, hideVirtualSample: false }),
+    HTML
+  );
+  assert.equal(
+    inject(HTML, { enabled: false, hideVirtualSample: undefined }),
+    HTML
+  );
+});
+
+test("re-injection duplicates neither navigation nor alias assets", () => {
+  const once = inject(HTML, { hideVirtualSample: true });
+  const twice = inject(once, { hideVirtualSample: true });
+
+  assert.equal(twice, once);
+  assert.equal(once.split("harson-nav-visibility").length - 1, 1);
+  assert.equal(
+    once.split("model-aliases.generated.js").length - 1,
+    1
+  );
+});
+
+test("navigation-only mode keeps the shared guards", () => {
+  // Non-HTML, oversized and headless documents stay untouched even when
+  // only the navigation filter is requested.
+  assert.equal(
+    inject(HTML, { enabled: false, hideVirtualSample: true, contentType: "application/json" }),
+    HTML
+  );
+
+  const big = "<html><head>" + "x".repeat(MAX_HTML_BYTES) + "</head><body></body></html>";
+  assert.equal(inject(big, { enabled: false, hideVirtualSample: true }), big);
+
+  const noHead = "<html><body>partial</body>";
+  assert.equal(inject(noHead, { enabled: false, hideVirtualSample: true }), noHead);
+});

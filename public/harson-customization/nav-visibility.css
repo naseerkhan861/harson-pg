@@ -1,0 +1,3 @@
+.MainLayout-nav .NavList-list-item[data-harson-hidden-menu="virtual-sample"] {
+  display: none !important;
+}

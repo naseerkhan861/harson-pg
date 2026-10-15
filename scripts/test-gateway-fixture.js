@@ -563,6 +563,38 @@ async function main() {
           )
     );
 
+    const navCssAsset =
+      await request(
+        `${GATEWAY_ORIGIN}/__harson_custom/image-tab-1/nav-visibility.css`
+      );
+
+    check(
+      "nav-visibility.css served at reserved prefix",
+      navCssAsset.status ===
+        200 &&
+        navCssAsset.body
+          .toString()
+          .includes(
+            "data-harson-hidden-menu"
+          )
+    );
+
+    const navJsAsset =
+      await request(
+        `${GATEWAY_ORIGIN}/__harson_custom/image-tab-1/nav-visibility.js`
+      );
+
+    check(
+      "nav-visibility.js served at reserved prefix",
+      navJsAsset.status ===
+        200 &&
+        navJsAsset.body
+          .toString()
+          .includes(
+            "HarsonNavVisibility"
+          )
+    );
+
     /* 3. launch flow (image-generator) */
     const PROVIDER_TOKEN =
       "SECRET-PROVIDER-TOKEN-123";
@@ -664,9 +696,17 @@ async function main() {
     );
 
     check(
-      "all four assets injected in dependency order",
+      "all four alias assets injected in dependency order, after nav assets",
       html.includes(
-        "/__harson_custom/image-tab-1/model-aliases.generated.js"
+        "/__harson_custom/image-tab-1/nav-visibility.css"
+      ) &&
+        html.includes(
+          'id="harson-nav-visibility"'
+        ) &&
+        html.indexOf("nav-visibility.css") <
+          html.indexOf("harson-nav-visibility") &&
+        html.includes(
+          "/__harson_custom/image-tab-1/model-aliases.generated.js"
       ) &&
         html.includes(
           "/__harson_custom/image-tab-1/model-alias-resolver.js"
@@ -876,11 +916,29 @@ async function main() {
       );
 
     check(
-      "pilot mode (aliases off) serves untouched HTML",
+      "pilot mode (aliases off) injects ONLY the navigation filter",
       pilotHtml.status ===
         200 &&
-        pilotHtml.body.toString() ===
-          HTML_BODY
+        pilotHtml.body
+          .toString()
+          .includes(
+            "nav-visibility.css"
+          ) &&
+        pilotHtml.body
+          .toString()
+          .includes(
+            'id="harson-nav-visibility"'
+          ) &&
+        !pilotHtml.body
+          .toString()
+          .includes(
+            "harson-image-tab-labels"
+          ) &&
+        pilotHtml.body
+          .toString()
+          .includes(
+            "悠船Midjourney V7"
+          )
     );
 
     console.log(

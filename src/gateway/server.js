@@ -856,8 +856,13 @@ async function handleProxyResponse(
     req.harsonGatewaySession ||
     {};
 
+  /*
+    Inject HTML whenever a valid module session produced UTF-8 HTML:
+    the navigation filter (虚拟样机 hiding) is always requested, while
+    model-name aliases additionally depend on YIBAI_IMAGE_ALIASES_ENABLED.
+    The helper decides per-asset inclusion and idempotence.
+  */
   const shouldInject =
-    imageAliasesEnabled() &&
     Boolean(session.moduleName) &&
     isHtmlResponse(
       proxyRes.headers
@@ -896,7 +901,10 @@ async function handleProxyResponse(
             injectImageTabAssets(
               decoded,
               {
-                enabled: true,
+                enabled:
+                  imageAliasesEnabled(),
+                hideVirtualSample:
+                  true,
                 moduleName:
                   session.moduleName,
                 contentType
