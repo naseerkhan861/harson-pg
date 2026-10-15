@@ -24,6 +24,11 @@
   const selector = config.selectors.join(",");
   const aggregateSelector = config.aggregateSelectors.join(",");
   const qualifiedSelector = (config.qualifiedSelectors || []).join(",");
+  const videoModule = script.dataset.harsonModule === "video-generator";
+  const videoMetadataContext = Object.freeze({
+    module: "video-generator",
+    surface: "video-metadata"
+  });
   const blocked = "input,textarea,select,option,script,style,pre,code," +
     "[contenteditable]:not([contenteditable='false']),.Prompt," +
     ".TextToImageCard-prompt,.prompt-content";
@@ -108,6 +113,42 @@
     );
   }
 
+  /*
+    A video player overlay and the clicked video's detail title can be
+    mounted outside the usual form selectors. Their entire source text has
+    one of two tightly specified provider metadata formats, including
+    "Seedance 2.5(Seedance 2.5 原生 720p)". Match a small, text-only host,
+    never the prompt, dialog body, video element or a clickable control.
+  */
+  function videoMetadataAlias(node) {
+    if (!videoModule || !hostTags.has(node.tagName) ||
+        node.closest(blocked + ',[class*="prompt" i]') ||
+        node.querySelector("button,a,input,textarea,select,[contenteditable]," +
+          '.Prompt,.TextToImageCard-prompt,.prompt-content,[class*="prompt" i]')) {
+      return null;
+    }
+    return resolver.resolveDisplayName(node.textContent, videoMetadataContext);
+  }
+
+  function videoMetadataOwner(element) {
+    for (let current = element; current && current !== document.body;
+         current = current.parentElement) {
+      if (videoMetadataAlias(current)) return current;
+    }
+    return null;
+  }
+
+  function collectVideoMetadata(tree, output) {
+    if (!videoModule) return;
+    const walker = document.createTreeWalker(tree, NodeFilter.SHOW_TEXT);
+    let textNode;
+    while ((textNode = walker.nextNode())) {
+      if (!/seedance/i.test(textNode.data)) continue;
+      const owner = videoMetadataOwner(textNode.parentElement);
+      if (owner) output.add(owner);
+    }
+  }
+
   function attributeMaps(node, context) {
     if (node.hasAttribute("title") &&
         aliasFor(node.getAttribute("title"), context)) {
@@ -165,8 +206,12 @@
 
   function render(node) {
     if (!node.isConnected) { hosts.delete(node); return; }
-    const eligible = active && node.matches(selector) && !node.closest(blocked);
-    const context = eligible ? contextFor(node) : null;
+    const metadataAlias = active ? videoMetadataAlias(node) : null;
+    const eligible = active && (node.matches(selector) || Boolean(metadataAlias)) &&
+      !node.closest(blocked);
+    const context = eligible
+      ? (metadataAlias ? videoMetadataContext : contextFor(node))
+      : null;
     const children = Array.from(node.childNodes);
     const labels = children.map(child => eligible && child.nodeType === Node.TEXT_NODE
       ? aliasFor(child.data, context) : null);
@@ -181,8 +226,8 @@
       text-free elements still are).
     */
     let aggregate = null;
-    if (eligible && allowsAggregation(node)) {
-      aggregate = aliasFor(node.textContent, context);
+    if (eligible && (metadataAlias || allowsAggregation(node))) {
+      aggregate = metadataAlias || aliasFor(node.textContent, context);
     }
 
     let record = records.get(node);
@@ -211,7 +256,8 @@
         // children were consumed by the aggregate resolution.
         const joined = String(node.textContent || "");
         fragment.appendChild(document.createTextNode(
-          joined.match(/^\s*/)[0] + aggregate + joined.match(/\s*$/)[0]
+          metadataAlias ? aggregate :
+            joined.match(/^\s*/)[0] + aggregate + joined.match(/\s*$/)[0]
         ));
         children.forEach(child => {
           if (child.nodeType === Node.ELEMENT_NODE &&
@@ -250,6 +296,7 @@
     if (tree.nodeType === Node.ELEMENT_NODE &&
         (tree.matches(selector) || records.has(tree))) output.add(tree);
     tree.querySelectorAll(selector).forEach(node => output.add(node));
+    collectVideoMetadata(tree, output);
     hosts.forEach(host => { if (tree.contains(host)) output.add(host); });
   }
 
@@ -277,6 +324,10 @@
           ? mutation.target : mutation.target.parentElement;
         if (element) {
           if (records.has(element) || element.matches(selector)) pending.add(element);
+          if (videoModule) {
+            const metadataOwner = videoMetadataOwner(element);
+            if (metadataOwner) pending.add(metadataOwner);
+          }
           /*
             Deep changes (proposed_changes.md §3 step 5): a text change or
             nested-span insertion several levels down must refresh its

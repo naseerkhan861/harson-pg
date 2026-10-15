@@ -127,6 +127,40 @@ test("qualified video labels resolve only with the approved context", () => {
   assert.equal(resolve("CLVideo3.0 原生 720p", q), null);
 });
 
+test("video player and detail metadata replace each original occurrence", () => {
+  const context = { module: "video-generator", surface: "video-metadata" };
+  assert.equal(
+    resolve("Seedance 2.5 原生 720p", context),
+    "CLVideo3.0 原生 720p"
+  );
+  assert.equal(
+    resolve("Seedance 2.5(Seedance 2.5 原生 720p)", context),
+    "CLVideo3.0(CLVideo3.0 原生 720p)"
+  );
+  assert.equal(
+    resolve("Seedance 2.5(Seedance 2.5 原生 720p\n)", context),
+    "CLVideo3.0(CLVideo3.0 原生 720p\n)"
+  );
+  assert.equal(
+    resolve("Seedance 2.0（Seedance 2.0 原生1080P）", context),
+    "CLVideo2.0（CLVideo2.0 原生1080P）"
+  );
+  assert.equal(
+    resolve("Seedance 2.5(Seedance 2.0 原生 720p)", context),
+    null
+  );
+  assert.equal(resolve("Seedance 2.50 原生 720p", context), null);
+  assert.equal(resolve("Seedance 3.0 原生 720p", context), null);
+  assert.equal(
+    resolve("Seedance 2.5(Seedance 2.5 原生 720p)"),
+    null
+  );
+  assert.equal(
+    resolve("Seedance 2.5(Seedance 2.5 原生 720p)", { module: "image-generator", surface: "video-metadata" }),
+    null
+  );
+});
+
 test("mapping info reports schema and hash", () => {
   const info = resolver.mappingInfo();
 

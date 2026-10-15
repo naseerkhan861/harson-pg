@@ -116,6 +116,40 @@
     }
 
     /*
+      The video player and its detail drawer use two provider-owned display
+      formats. Match the entire format, preserving punctuation, spacing and
+      resolution while changing only the two known Seedance model names.
+      This is invoked only for video-generator metadata hosts.
+    */
+    function videoMetadataAlias(model) {
+      const key = normalize(model);
+      return key === "seedance 2.5" || key === "seedance 2.0"
+        ? (exact[key] || null)
+        : null;
+    }
+
+    function resolveVideoMetadata(sourceText) {
+      const raw = String(sourceText || "");
+      const overlay = /^(\s*)(seedance\s+2\.(?:5|0))(\s+原生\s*\d{3,4}p)(\s*)$/iu.exec(raw);
+      if (overlay) {
+        const alias = videoMetadataAlias(overlay[2]);
+        return alias
+          ? overlay[1] + alias + overlay[3] + overlay[4]
+          : null;
+      }
+
+      const detail = /^(\s*)(seedance\s+2\.(?:5|0))(\s*[（(]\s*)(seedance\s+2\.(?:5|0))(\s+原生\s*\d{3,4}p)(\s*[)）])(\s*)$/iu.exec(raw);
+      if (!detail || normalize(detail[2]) !== normalize(detail[4])) {
+        return null;
+      }
+
+      const alias = videoMetadataAlias(detail[2]);
+      return alias
+        ? detail[1] + alias + detail[3] + alias + detail[5] + detail[6] + detail[7]
+        : null;
+    }
+
+    /*
       context (all fields optional):
         module          provider module key
         surface         e.g. "model-version-tab"
@@ -123,6 +157,8 @@
         allowQualified  true only for renderer-approved model-label,
                         metadata and tooltip surfaces (qualified prefix
                         resolution with a preserved descriptive suffix)
+        module/surface  video-generator/video-metadata for the provider's
+                        player overlay and repeated detail title
     */
     function resolveDisplayName(sourceText, context) {
       const key = normalize(sourceText);
@@ -146,6 +182,11 @@
         Object.prototype.hasOwnProperty.call(versionKeys, key)
       ) {
         return exact[versionKeys[key]] || null;
+      }
+
+      if (context && context.module === "video-generator" &&
+          context.surface === "video-metadata") {
+        return resolveVideoMetadata(sourceText);
       }
 
       if (context && context.allowQualified === true) {
