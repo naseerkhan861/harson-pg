@@ -18,9 +18,9 @@ gpt-image-2.5,CLImage-4.1
 全能图片,CLImage-5.0
 全能图片 Pro,CLImage-5.1
 全能图片 2,CLImage-5.2
-Seedance 2.0,CLVideo-2.0
-Seedance,CLVideo
-Seedance 2.5,CLVideo-3.0
+Seedance 2.0,CLVideo2.0
+Seedance,CLVideo3.0
+Seedance 2.5,CLVideo3.0
 Seedream,CLVideo
-Happy Horse,CLVideo-1.0
+Happy Horse,CL Dragon
 暂未上架,CLVideo-2.1

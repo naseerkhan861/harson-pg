@@ -19,7 +19,7 @@ test("resolves exact canonical full names", () => {
   assert.equal(resolve("Midjourney V7"), "CLImage-2.0");
   assert.equal(resolve("即梦 5.0 Pro"), "CLImage-3.3");
   assert.equal(resolve("image-2.5"), "CLImage-4.1");
-  assert.equal(resolve("Seedance 2.5"), "CLVideo-3.0");
+  assert.equal(resolve("Seedance 2.5"), "CLVideo3.0");
   assert.equal(resolve("暂未上架"), "CLVideo-2.1");
 });
 
@@ -27,8 +27,8 @@ test("case and whitespace variants resolve identically", () => {
   assert.equal(resolve("gpt-image-2.5"), "CLImage-4.1");
   assert.equal(resolve("GPT-IMAGE-2.5"), "CLImage-4.1");
   assert.equal(resolve("  全能图片   Pro  "), "CLImage-5.1");
-  assert.equal(resolve("seedance 2.0"), "CLVideo-2.0");
-  assert.equal(resolve("HAPPY HORSE"), "CLVideo-1.0");
+  assert.equal(resolve("seedance 2.0"), "CLVideo2.0");
+  assert.equal(resolve("HAPPY HORSE"), "CL Dragon");
 });
 
 test("display-spelling correspondences resolve through canonical keys", () => {
@@ -36,7 +36,7 @@ test("display-spelling correspondences resolve through canonical keys", () => {
   assert.equal(resolve("悠船 MJ V7"), "CLImage-2.0");
   assert.equal(resolve("悠船M| V7"), "CLImage-2.0");
   assert.equal(resolve("全能图片2"), "CLImage-5.2");
-  assert.equal(resolve("HappyHorse"), "CLVideo-1.0");
+  assert.equal(resolve("HappyHorse"), "CL Dragon");
   assert.equal(resolve("kontext-max"), "CLImage-1.1");
   assert.equal(resolve("FLUXKrea"), "CLImage");
 });
@@ -91,9 +91,13 @@ test("resolution does not cascade: aliases are not new sources", () => {
   assert.equal(resolve("CLVideo-3.0"), null);
 });
 
-test("specific versions never collapse to family aliases", () => {
+test("Seedance family policy per proposed_changes.md (15 Oct 2026)", () => {
+  // Seedance and Seedance 2.5 intentionally share CLVideo3.0; only 2.0 differs.
+  assert.equal(resolve("Seedance"), "CLVideo3.0");
+  assert.equal(resolve("Seedance 2.5"), "CLVideo3.0");
+  assert.equal(resolve("Seedance 2.0"), "CLVideo2.0");
+  // Image families keep version specificity.
   assert.notEqual(resolve("image-2.5"), resolve("image-2"));
-  assert.notEqual(resolve("Seedance 2.5"), resolve("Seedance"));
 });
 
 test("mapping info reports schema and hash", () => {
