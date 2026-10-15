@@ -84,8 +84,44 @@
     qualified (model-name + descriptive suffix) resolution for the
     approved model-label/metadata/tooltip surfaces only.
   */
+  /*
+    AI 服装 / AI 电商 版本 dropdown classifier (proposed_changes.md §4):
+    returns a version-dropdown context only for the provider's select
+    popup option reading exactly "image-2版", or for the selected-value
+    span inside a 版本-titled IcbsSelect. Everything else stays null.
+  */
+  function versionDropdownContextFor(node) {
+    const moduleName = script.dataset.harsonModule;
+    if (moduleName !== "clothing" && moduleName !== "e-commerce") {
+      return null;
+    }
+
+    // Quasar mounts popup options in a portal; match the popup component
+    // plus the precise provider-owned source text.
+    if (node.matches(
+      ".IcbsSelect-header-popup .IcbsSelect-header-popup-option-label"
+    )) {
+      return resolver.normalize(node.textContent) === "image-2版"
+        ? { module: moduleName, surface: "version-dropdown" }
+        : null;
+    }
+
+    // The selected value remains inside the select's own 版本 row.
+    if (!node.matches(
+      ".IcbsSelect-header-select .q-field__native > span"
+    )) {
+      return null;
+    }
+    const select = node.closest(".IcbsSelect");
+    const title = select?.querySelector(".IcbsSelect-header > span.col");
+    return resolver.normalize(title?.textContent) === "版本"
+      ? { module: moduleName, surface: "version-dropdown" }
+      : null;
+  }
+
   function contextFor(node) {
-    const context = versionContextFor(node) || {};
+    const context = versionContextFor(node) ||
+      versionDropdownContextFor(node) || {};
 
     if (
       qualifiedSelector &&

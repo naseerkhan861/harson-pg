@@ -189,6 +189,22 @@
         return resolveVideoMetadata(sourceText);
       }
 
+      /*
+        AI 服装 / AI 电商 版本 dropdown (proposed_changes.md §3, 15 Oct):
+        the provider renders the option label "image-2版" there. Renamed
+        contextually ONLY — never in the global exact map, so "image-2"
+        keeps its own CLImage-4.0 mapping everywhere else.
+      */
+      if (
+        context &&
+        context.surface === "version-dropdown" &&
+        (context.module === "clothing" ||
+          context.module === "e-commerce") &&
+        key === "image-2版"
+      ) {
+        return "CLImage4.0";
+      }
+
       if (context && context.allowQualified === true) {
         return resolveQualified(sourceText);
       }

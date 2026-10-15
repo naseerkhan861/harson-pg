@@ -161,6 +161,20 @@ test("video player and detail metadata replace each original occurrence", () => 
   );
 });
 
+test("版本 dropdown: image-2版 renames only in clothing/e-commerce context", () => {
+  const version = module => ({ module, surface: "version-dropdown" });
+
+  assert.equal(resolve("image-2版", version("clothing")), "CLImage4.0");
+  assert.equal(resolve("image-2版", version("e-commerce")), "CLImage4.0");
+  assert.equal(resolve("image-2版"), null);
+  assert.equal(resolve("image-2版", version("image-generator")), null);
+  assert.equal(resolve("mage-2版", version("clothing")), null);
+  // The global image-2 mapping is untouched by this contextual rule.
+  assert.equal(resolve("image-2", version("clothing")), "CLImage-4.0");
+  // Whitespace/case tolerance comes from normalize().
+  assert.equal(resolve("  IMAGE-2版 ", version("clothing")), "CLImage4.0");
+});
+
 test("mapping info reports schema and hash", () => {
   const info = resolver.mappingInfo();
 
