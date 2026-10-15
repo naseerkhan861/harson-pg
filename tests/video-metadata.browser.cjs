@@ -30,8 +30,10 @@ function documentHtml(moduleName) {
       : "") + "></script>"
   ).join("");
   return '<!doctype html><html><head><meta charset="utf-8">' + tags +
-    '</head><body><div class="video-player"><video muted></video>' +
-    '<div id="player-label">Seedance 2.5 原生 720p</div></div>' +
+    '</head><body><div class="q-responsive__content absolute-full fit">' +
+    '<div class="smartVideo"><video muted></video></div>' +
+    '<div class="box-img-banner"><span id="player-label">' +
+    'Seedance 2.5 原生 720p\n</span></div></div>' +
     '<div class="prompt-content" id="prompt">Seedance 2.5 原生 720p</div>' +
     '<div class="history-card" id="history-card">' +
     '<p class="prompt-content">Seedance 2.5 原生 720p</p></div>' +
@@ -83,8 +85,8 @@ async function values(page, ids) {
     await frame(page);
     let shown = await values(page, ["player-label", "prompt", "history-card"]);
     assert.deepEqual(shown["player-label"], {
-      source: "Seedance 2.5 原生 720p",
-      shown: "CLVideo3.0 原生 720p"
+      source: "Seedance 2.5 原生 720p\n",
+      shown: "CLVideo3.0 原生 720p\n"
     });
     assert.equal(shown.prompt.shown, "Seedance 2.5 原生 720p");
     assert.equal(shown["history-card"].shown, "Seedance 2.5 原生 720p");
@@ -96,30 +98,42 @@ async function values(page, ids) {
         '<span id="outer-model">Seedance 2.5</span>' +
         "</span>".repeat(10);
       dialog.innerHTML =
-        '<div class="detail-heading" id="detail-title">' +
+        '<div class="header-container"><div class="header">' +
+        '<div class="vertical-center"><i class="q-icon"></i>' +
+        '<span class="title" id="detail-title">' +
+        'Seedance 2.5(Seedance 2.5 原生 720p\n)</span>' +
+        '</div></div></div>' +
+        '<div class="detail-heading" id="nested-title">' +
         deeplyNestedName +
         '<span id="inner-model">(Seedance 2.5 原生 720p)</span>' +
-        '</div><button id="download"><svg></svg></button>';
+        '</div><div class="prompt-content">Seedance 2.5 原生 720p</div>' +
+        '<button id="download"><svg></svg></button>';
       document.body.append(dialog);
     });
     await frame(page);
-    shown = await values(page, ["detail-title"]);
+    shown = await values(page, ["detail-title", "nested-title"]);
     assert.deepEqual(shown["detail-title"], {
-      source: "Seedance 2.5(Seedance 2.5 原生 720p)",
-      shown: "CLVideo3.0(CLVideo3.0 原生 720p)"
+      source: "Seedance 2.5(Seedance 2.5 原生 720p\n)",
+      shown: "CLVideo3.0(CLVideo3.0 原生 720p\n)"
     });
+    assert.equal(shown["nested-title"].shown,
+      "CLVideo3.0(CLVideo3.0 原生 720p)");
 
     await page.evaluate(() => {
+      document.getElementById("detail-title").firstChild.data =
+        "Seedance 2.0(Seedance 2.0 原生 720p\n)";
       document.getElementById("outer-model").firstChild.data = "Seedance 2.0";
       document.getElementById("inner-model").firstChild.data =
         "(Seedance 2.0 原生 720p)";
       document.getElementById("player-label").firstChild.data =
-        "Seedance 2.0 原生 720p";
+        "Seedance 2.0 原生 720p\n";
     });
     await frame(page);
-    shown = await values(page, ["player-label", "detail-title"]);
-    assert.equal(shown["player-label"].shown, "CLVideo2.0 原生 720p");
+    shown = await values(page, ["player-label", "detail-title", "nested-title"]);
+    assert.equal(shown["player-label"].shown, "CLVideo2.0 原生 720p\n");
     assert.equal(shown["detail-title"].shown,
+      "CLVideo2.0(CLVideo2.0 原生 720p\n)");
+    assert.equal(shown["nested-title"].shown,
       "CLVideo2.0(CLVideo2.0 原生 720p)");
 
     await page.evaluate(() => window.HarsonImageLabels.setEnabled(false));
@@ -131,7 +145,7 @@ async function values(page, ids) {
     await page.goto("https://ai.harson-base.com/image-fixture");
     await frame(page);
     shown = await values(page, ["player-label"]);
-    assert.equal(shown["player-label"].shown, "Seedance 2.5 原生 720p");
+    assert.equal(shown["player-label"].shown, "Seedance 2.5 原生 720p\n");
 
     console.log("Video metadata browser fixture passed.");
   } finally {
