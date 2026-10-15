@@ -100,6 +100,33 @@ test("Seedance family policy per proposed_changes.md (15 Oct 2026)", () => {
   assert.notEqual(resolve("image-2.5"), resolve("image-2"));
 });
 
+test("qualified video labels resolve only with the approved context", () => {
+  const q = { allowQualified: true };
+
+  assert.equal(resolve("Seedance 2.5 原生 720p", q), "CLVideo3.0 原生 720p");
+  assert.equal(resolve("Seedance 2.0 高清", q), "CLVideo2.0 高清");
+  assert.equal(resolve("seedance 2.5 原生 720p", q), "CLVideo3.0 原生 720p");
+  assert.equal(resolve("  Seedance 2.5 原生 720p", q), "CLVideo3.0 原生 720p");
+
+  // No context flag -> exact-only, the composite stays original.
+  assert.equal(resolve("Seedance 2.5 原生 720p", null), null);
+  assert.equal(resolve("Seedance 2.5 原生 720p", { surface: "sidebar" }), null);
+
+  // Unknown versions must not convert through the bare-family mapping.
+  assert.equal(resolve("Seedance 2.50", q), null);
+  assert.equal(resolve("Seedance 3.0", q), null);
+  assert.equal(resolve("Seedance2.5 原生", q), null); // missing boundary
+
+  // Prompt-like text never matches (model name must lead the label).
+  assert.equal(
+    resolve("Generate an image inspired by Seedance 2.5", q),
+    null
+  );
+
+  // One pass: an alias output is not a new source.
+  assert.equal(resolve("CLVideo3.0 原生 720p", q), null);
+});
+
 test("mapping info reports schema and hash", () => {
   const info = resolver.mappingInfo();
 

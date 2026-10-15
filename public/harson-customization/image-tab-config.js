@@ -18,7 +18,7 @@
   //     these header containers; the renderer aggregates a container's full
   //     text when it is exactly a known label.
   const config = Object.freeze({
-    version: "all-pages-5",
+    version: "all-pages-6",
     expectedOrigin: "https://ai.harson-base.com",
     // Applied inside every YiBai module frame served by the gateway.
     modules: Object.freeze([
@@ -65,6 +65,18 @@
       ".header_fix > span",
       ".ToolLayout-header",
       ".DefaultLayout-header"
+    ]),
+    // Approved model-label/metadata/tooltip surfaces where a known model
+    // name may be followed by descriptive text ("Seedance 2.5 原生 720p"
+    // -> "CLVideo3.0 原生 720p"). Qualified resolution never applies to
+    // prompts, user content or unlisted elements.
+    qualifiedSelectors: Object.freeze([
+      ".header_fix > span",
+      ".header_fix .IcTabs > .IcTab",
+      ".ToolLayout-header",
+      ".DefaultLayout-header",
+      ".q-tooltip",
+      ".q-tooltip *"
     ]),
     // Contextual short-version tabs (Seedream selector).
     versionTabSelector: ".header_fix .IcTabs > .IcTab",

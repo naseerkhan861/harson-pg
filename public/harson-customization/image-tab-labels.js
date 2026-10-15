@@ -23,6 +23,7 @@
 
   const selector = config.selectors.join(",");
   const aggregateSelector = config.aggregateSelectors.join(",");
+  const qualifiedSelector = (config.qualifiedSelectors || []).join(",");
   const blocked = "input,textarea,select,option,script,style,pre,code," +
     "[contenteditable]:not([contenteditable='false']),.Prompt," +
     ".TextToImageCard-prompt,.prompt-content";
@@ -71,6 +72,24 @@
       surface: "model-version-tab",
       modelFamily: family
     };
+  }
+
+  /*
+    Context for a label element: Seedream short-version scope, plus
+    qualified (model-name + descriptive suffix) resolution for the
+    approved model-label/metadata/tooltip surfaces only.
+  */
+  function contextFor(node) {
+    const context = versionContextFor(node) || {};
+
+    if (
+      qualifiedSelector &&
+      node.matches(qualifiedSelector)
+    ) {
+      context.allowQualified = true;
+    }
+
+    return context;
   }
 
   function allowsAggregation(node) {
@@ -147,16 +166,23 @@
   function render(node) {
     if (!node.isConnected) { hosts.delete(node); return; }
     const eligible = active && node.matches(selector) && !node.closest(blocked);
-    const context = eligible ? versionContextFor(node) : null;
+    const context = eligible ? contextFor(node) : null;
     const children = Array.from(node.childNodes);
     const labels = children.map(child => eligible && child.nodeType === Node.TEXT_NODE
       ? aliasFor(child.data, context) : null);
 
+    /*
+      Nested/split labels (proposed_changes.md §3 step 3): for an approved
+      label-only container, resolve the COMPLETE semantic label — including
+      nested text spans — BEFORE any smaller direct-text fragment, so
+      <span>Seedance</span><span> 2.5</span> renders one alias instead of
+      a partial family rename. The alias is displayed once; consumed
+      text-bearing children are not slotted beside it (icons and other
+      text-free elements still are).
+    */
     let aggregate = null;
-    if (eligible && !labels.some(Boolean)) {
-      if (allowsAggregation(node)) {
-        aggregate = aliasFor(node.textContent, context);
-      }
+    if (eligible && allowsAggregation(node)) {
+      aggregate = aliasFor(node.textContent, context);
     }
 
     let record = records.get(node);
@@ -180,14 +206,16 @@
       const fragment = document.createDocumentFragment();
       const assignments = [];
       if (aggregate) {
-        // Whole-element label: alias the complete text, slot remaining
-        // element children (icons etc.) unchanged.
+        // Whole-element label: alias the complete text. Only text-free
+        // element children (icons, svgs) stay visible; text-bearing
+        // children were consumed by the aggregate resolution.
         const joined = String(node.textContent || "");
         fragment.appendChild(document.createTextNode(
           joined.match(/^\s*/)[0] + aggregate + joined.match(/\s*$/)[0]
         ));
         children.forEach(child => {
-          if (child.nodeType === Node.ELEMENT_NODE) {
+          if (child.nodeType === Node.ELEMENT_NODE &&
+              !String(child.textContent || "").trim()) {
             const slot = document.createElement("slot");
             fragment.appendChild(slot);
             assignments.push([slot, child]);
@@ -249,11 +277,20 @@
           ? mutation.target : mutation.target.parentElement;
         if (element) {
           if (records.has(element) || element.matches(selector)) pending.add(element);
+          /*
+            Deep changes (proposed_changes.md §3 step 5): a text change or
+            nested-span insertion several levels down must refresh its
+            nearest approved OWNING label, not only the immediate parent.
+          */
+          const owner = typeof element.closest === "function"
+            ? element.closest(selector)
+            : null;
+          if (owner) pending.add(owner);
+          // Managed aggregate hosts containing the change refresh too.
+          hosts.forEach(host => { if (host.contains(element)) pending.add(host); });
           if (mutation.type === "attributes" &&
               ["class", "contenteditable"].includes(mutation.attributeName)) {
             subtrees.add(element);
-            // Restore any former targets when an ancestor stops matching.
-            hosts.forEach(host => { if (element.contains(host)) pending.add(host); });
           }
         }
         mutation.addedNodes.forEach(node => {
@@ -293,7 +330,14 @@
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     let node;
     while ((node = walker.nextNode())) {
-      const alias = aliasFor(node.data);
+      let alias = aliasFor(node.data);
+      let qualified = false;
+      if (!alias) {
+        // Qualified labels ("model name + descriptive suffix") are also
+        // recognizable diagnostics, clearly flagged as such.
+        alias = aliasFor(node.data, { allowQualified: true });
+        qualified = Boolean(alias);
+      }
       if (!alias) continue;
       const parent = node.parentElement;
       if (!parent || records.has(parent)) continue;
@@ -301,6 +345,7 @@
       results.push({
         text: String(node.data).trim(),
         alias,
+        qualified,
         element: describeChain(parent)
       });
     }
