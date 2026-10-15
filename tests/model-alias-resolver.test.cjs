@@ -138,6 +138,10 @@ test("video player and detail metadata replace each original occurrence", () => 
     "CLVideo3.0(CLVideo3.0 原生 720p)"
   );
   assert.equal(
+    resolve("Seedance 2.5(Seedance 2.5 原生 720p\n)", context),
+    "CLVideo3.0(CLVideo3.0 原生 720p\n)"
+  );
+  assert.equal(
     resolve("Seedance 2.0（Seedance 2.0 原生1080P）", context),
     "CLVideo2.0（CLVideo2.0 原生1080P）"
   );
