@@ -119,9 +119,48 @@
       : null;
   }
 
+  /*
+    Image-generator scoped contexts (proposed_changes.md §5, 15 Oct).
+    The selected family is derived from the ACTIVE sidebar item's
+    provider-owned light-DOM text — never from a displayed alias and
+    never from list position (ordering can change upstream).
+  */
+  function activeImageFamily() {
+    const active = document.querySelector(
+      ".MainLayout-nav .NavList-list-item.active > span.label"
+    );
+    const source = resolver.normalize(active?.textContent);
+    // textContent is the provider-owned LIGHT-DOM text, even if the
+    // visible alias is rendered through a shadow root.
+    if (source === "即梦" || source === "即梦 seedream") return "seedream";
+    if (source === "flux krea" || source === "fluxkrea") return "flux-krea";
+    return null;
+  }
+
+  function imageContextFor(node) {
+    if (script.dataset.harsonModule !== "image-generator") return null;
+    if (node.matches(config.sidebarSelector)) {
+      return { module: "image-generator", surface: "image-sidebar" };
+    }
+    const family = activeImageFamily();
+    if (family === "seedream" &&
+        node.matches(".ToolLayout-header,.DefaultLayout-header,.header_fix > span")) {
+      return { module: "image-generator",
+               surface: "image-family-title", family };
+    }
+    if (family === "flux-krea") {
+      // Called only for existing, approved model-label selectors.
+      return { module: "image-generator",
+               surface: "image-page-label", family };
+    }
+    return null;
+  }
+
   function contextFor(node) {
+    // Version-tab precedence first, especially Seedream's short labels.
     const context = versionContextFor(node) ||
-      versionDropdownContextFor(node) || {};
+      versionDropdownContextFor(node) ||
+      imageContextFor(node) || {};
 
     if (
       qualifiedSelector &&
@@ -378,6 +417,17 @@
           if (mutation.type === "attributes" &&
               ["class", "contenteditable"].includes(mutation.attributeName)) {
             subtrees.add(element);
+            /*
+              Sidebar navigation (proposed_changes.md §5): when the active
+              sidebar item changes, the provider may REUSE an existing
+              middle heading instead of replacing it — queue a full
+              approved-label rescan so scoped family contexts re-resolve.
+              The microtask scheduler coalesces this into one pass.
+            */
+            if (mutation.attributeName === "class" &&
+                element.matches(".MainLayout-nav .NavList-list-item")) {
+              subtrees.add(document.documentElement);
+            }
           }
         }
         mutation.addedNodes.forEach(node => {

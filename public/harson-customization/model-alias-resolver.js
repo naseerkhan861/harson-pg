@@ -150,6 +150,44 @@
     }
 
     /*
+      Image-generator scoped overrides (proposed_changes.md §4, 15 Oct).
+
+      The image-creation sidebar needs position-specific display names that
+      must NOT become global mappings: 全能图片 stays CLImage-5.0 everywhere
+      except its sidebar row; 即梦's bare heading keeps CLImage except as a
+      sidebar row; FLUX Krea inner-page labels rename only inside the
+      selected FLUX Krea view. Evaluated BEFORE the global exact/variants
+      lookups so the scoped values win; returns null for anything else so
+      the global mapping applies. Never maps the alias string "CLImage"
+      itself, and one-pass resolution is preserved.
+    */
+    function imageGeneratorOverride(key, context) {
+      if (!context || context.module !== "image-generator") {
+        return null;
+      }
+
+      if (context.surface === "image-sidebar") {
+        if (key === "全能图片") return "CLImage-5.1";
+        if (key === "即梦" || key === "即梦 seedream") return "CLImage-3.3";
+        if (key === "flux krea" || key === "fluxkrea") return "CLImage-1.0";
+      }
+
+      if (context.surface === "image-family-title" &&
+          context.family === "seedream" &&
+          key === "seedream") {
+        return "CLImage";
+      }
+
+      if (context.surface === "image-page-label" &&
+          context.family === "flux-krea" &&
+          (key === "flux krea" || key === "fluxkrea")) {
+        return "CLImage-1.0";
+      }
+
+      return null;
+    }
+
+    /*
       context (all fields optional):
         module          provider module key
         surface         e.g. "model-version-tab"
@@ -165,6 +203,11 @@
 
       if (!key) {
         return null;
+      }
+
+      const scoped = imageGeneratorOverride(key, context);
+      if (scoped !== null) {
+        return scoped;
       }
 
       if (Object.prototype.hasOwnProperty.call(exact, key)) {

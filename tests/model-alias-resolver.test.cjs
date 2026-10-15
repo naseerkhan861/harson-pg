@@ -175,6 +175,45 @@ test("版本 dropdown: image-2版 renames only in clothing/e-commerce context", 
   assert.equal(resolve("  IMAGE-2版 ", version("clothing")), "CLImage4.0");
 });
 
+test("image-generator sidebar/headings: scoped overrides win only in context", () => {
+  const imageSidebar = { module: "image-generator", surface: "image-sidebar" };
+  const seedreamTitle = {
+    module: "image-generator", surface: "image-family-title", family: "seedream"
+  };
+  const fluxPage = {
+    module: "image-generator", surface: "image-page-label", family: "flux-krea"
+  };
+
+  // Scoped sidebar values (items 2, 3, 7).
+  assert.equal(resolve("全能图片", imageSidebar), "CLImage-5.1");
+  assert.equal(resolve("即梦", imageSidebar), "CLImage-3.3");
+  assert.equal(resolve("FLUX Krea", imageSidebar), "CLImage-1.0");
+
+  // Global mappings unchanged everywhere else.
+  assert.equal(resolve("全能图片"), "CLImage-5.0");
+  assert.equal(resolve("即梦"), "CLImage");
+  assert.equal(resolve("Seedream"), "CLVideo");
+  assert.equal(resolve("FLUX Krea"), "CLImage");
+
+  // Existing versioned identities keep their own mappings.
+  assert.equal(resolve("全能图片 Pro", imageSidebar), "CLImage-5.1");
+  assert.equal(resolve("Seedream 5.0 Pro", seedreamTitle), "CLImage-3.3");
+
+  // Seedream family heading inside the selected 即梦 view.
+  assert.equal(resolve("Seedream", seedreamTitle), "CLImage");
+
+  // FLUX Krea inner-page labels inside the selected FLUX Krea view.
+  assert.equal(resolve("FLUX Krea", fluxPage), "CLImage-1.0");
+
+  // The alias string itself is never a source; other labels unaffected.
+  assert.equal(resolve("CLImage", fluxPage), null);
+  assert.equal(resolve("image-2.5", imageSidebar), "CLImage-4.1");
+
+  // Spelling variants covered by the scoped rule.
+  assert.equal(resolve("FLUXKrea", imageSidebar), "CLImage-1.0");
+  assert.equal(resolve("即梦 Seedream", imageSidebar), "CLImage-3.3");
+});
+
 test("mapping info reports schema and hash", () => {
   const info = resolver.mappingInfo();
 

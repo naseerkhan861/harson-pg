@@ -543,7 +543,7 @@ async function main() {
         configAsset.body
           .toString()
           .includes(
-            "all-pages-8"
+            "all-pages-9"
           )
     );
 
