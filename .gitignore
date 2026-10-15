@@ -72,3 +72,6 @@ data/aigc-reset-backup-*/
 
 # Runtime AIGC generated media
 public/generated/
+
+# Local agent proposal scratch file (deliberately kept out of the repo)
+tab_customization/proposed_changes.md
