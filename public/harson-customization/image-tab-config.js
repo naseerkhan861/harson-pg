@@ -86,4 +86,3 @@
   if (typeof module === "object" && module.exports) module.exports = config;
   else root.HarsonImageTabConfig = config;
 })(typeof window === "object" ? window : globalThis);
-

@@ -163,4 +163,3 @@ test("mapping info reports schema and hash", () => {
   assert.equal(info.schemaVersion, 1);
   assert.match(info.mappingHash, /^[0-9a-f]{12}$/);
 });
-
