@@ -227,7 +227,7 @@
     */
     let aggregate = null;
     if (eligible && (metadataAlias || allowsAggregation(node))) {
-      aggregate = aliasFor(node.textContent, context);
+      aggregate = metadataAlias || aliasFor(node.textContent, context);
     }
 
     let record = records.get(node);
@@ -256,7 +256,8 @@
         // children were consumed by the aggregate resolution.
         const joined = String(node.textContent || "");
         fragment.appendChild(document.createTextNode(
-          joined.match(/^\s*/)[0] + aggregate + joined.match(/\s*$/)[0]
+          metadataAlias ? aggregate :
+            joined.match(/^\s*/)[0] + aggregate + joined.match(/\s*$/)[0]
         ));
         children.forEach(child => {
           if (child.nodeType === Node.ELEMENT_NODE &&
