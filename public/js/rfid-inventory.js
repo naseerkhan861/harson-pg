@@ -1247,10 +1247,173 @@ document.addEventListener(
 
 
     /* =====================================================
-       Initial
-       ===================================================== */
+   Demo data
+   页面初始展示模拟 RFID 盘点结果。
+   用户真正导入库存后，现有导入逻辑会覆盖这些数据。
+   ===================================================== */
+
+  function loadDemoData() {
+
+    inventoryRecords = [
+      {
+        epc: "E2806894000040039A1B0001",
+        sku: "HS-LOAFER-001",
+        name: "男士商务乐福鞋",
+        spec: "黑色 / 42",
+        quantity: "1",
+        remark: ""
+      },
+      {
+        epc: "E2806894000040039A1B0002",
+        sku: "HS-LOAFER-002",
+        name: "男士商务乐福鞋",
+        spec: "棕色 / 41",
+        quantity: "1",
+        remark: ""
+      },
+      {
+        epc: "E2806894000040039A1B0003",
+        sku: "HS-SNEAKER-001",
+        name: "轻量休闲运动鞋",
+        spec: "白色 / 40",
+        quantity: "1",
+        remark: ""
+      },
+      {
+        epc: "E2806894000040039A1B0004",
+        sku: "HS-SNEAKER-002",
+        name: "轻量休闲运动鞋",
+        spec: "灰色 / 43",
+        quantity: "1",
+        remark: ""
+      },
+      {
+        epc: "E2806894000040039A1B0005",
+        sku: "HS-BOOT-001",
+        name: "男士短筒皮靴",
+        spec: "黑色 / 42",
+        quantity: "1",
+        remark: ""
+      },
+      {
+        epc: "E2806894000040039A1B0006",
+        sku: "HS-DERBY-001",
+        name: "经典德比鞋",
+        spec: "棕色 / 41",
+        quantity: "1",
+        remark: ""
+      },
+      {
+        epc: "E2806894000040039A1B0007",
+        sku: "HS-CASUAL-001",
+        name: "都市休闲鞋",
+        spec: "米色 / 39",
+        quantity: "1",
+        remark: ""
+      },
+      {
+        epc: "E2806894000040039A1B0008",
+        sku: "HS-CASUAL-002",
+        name: "都市休闲鞋",
+        spec: "黑色 / 44",
+        quantity: "1",
+        remark: ""
+      }
+    ];
+
+
+    scannedTags = new Map([
+      [
+        "E2806894000040039A1B0001",
+        {
+          rssi: "-42",
+          count: 6
+        }
+      ],
+      [
+        "E2806894000040039A1B0002",
+        {
+          rssi: "-47",
+          count: 4
+        }
+      ],
+      [
+        "E2806894000040039A1B0003",
+        {
+          rssi: "-51",
+          count: 3
+        }
+      ],
+      [
+        "E2806894000040039A1B0004",
+        {
+          rssi: "-45",
+          count: 5
+        }
+      ],
+      [
+        "E2806894000040039A1B0005",
+        {
+          rssi: "-56",
+          count: 2
+        }
+      ],
+
+      /* 模拟一个库存中不存在、但实际扫到的 EPC */
+      [
+        "E2806894000040039A1B0099",
+        {
+          rssi: "-61",
+          count: 2
+        }
+      ]
+    ]);
+
+
+    inventoryFinished = false;
+
+
+    inventoryStatus.textContent =
+      "演示库存 · 8 EPC";
+
+    deviceStatus.textContent =
+      "C72 · 已连接";
+
+    sessionStatus.textContent =
+      "盘点进行中";
+
+    liveStateText.textContent =
+      "设备在线";
+
+    logStatus.textContent =
+      "演示盘点中";
+
+
+    finishButton.disabled =
+      false;
+
+    resetButton.disabled =
+      false;
+
+
+    addLog(
+      "演示",
+      "已载入 RFID 模拟库存与扫描数据"
+    );
+
 
     refreshUI();
+  }
+
+
+  /* =====================================================
+    Initial
+    ===================================================== */
+
+  loadDemoData();
+
+
+      
 
   }
 );
