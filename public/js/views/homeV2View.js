@@ -383,17 +383,17 @@ export class HomeV2View {
       "营销素材生产":
         "Production of Marketing Materials",
 
-      "需求预测":
-        "Demand Forecasting",
+      "3D模型设计":
+        "3D Modeling & Design",
 
-      "库存优化":
-        "Inventory Optimization",
+      "模型切片优化":
+        "Slicing & Optimization",
 
-      "订单与交付协同":
-        "Order & Delivery Collaboration",
+      "3D打印成型":
+        "3D Printing",
 
-      "供应链可视化":
-        "Supply Chain Visualization",
+      "成品后处理":
+        "Post-Processing",
 
       "移动机器人调度":
         "Mobile Robot Scheduling",

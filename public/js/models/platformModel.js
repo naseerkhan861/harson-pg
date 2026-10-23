@@ -5,7 +5,7 @@ export const platformModel = {
     { label: "账号管理", href: "/account-management" },
     { label: "核心平台", href: "#platforms" },
     { label: "CL-AIGC（BETA）", href: "#cl-aigc" },
-    { label: "CL-SCM", href: "#cl-scm" },
+    { label: "CL-3DLab", href: "#cl-3dlab" },
     { label: "CL-iRobot", href: "#cl-irobot" },
     { label: "CL-iStore", href: "#cl-istore" },
     { label: "生态合作", href: "#ecosystem" }
@@ -47,33 +47,33 @@ export const platformModel = {
     },
 
     {
-      id: "cl-scm",
-      title: "CL-SCM",
-      subtitle: "端到端智能供应链",
-      description: "面向采购、生产、仓储和物流团队，帮助企业提升需求判断、库存配置和订单交付协同能力。",
-      badge: "供应协同",
-      actionLabel: "查看供应链能力",
+      id: "cl-3dlab",
+      title: "CL-3DLab",
+      subtitle: "三维设计与增材制造",
+      description: "面向产品设计、研发打样与个性化制造场景，融合三维建模、模型处理与3D打印技术，实现从数字设计到实体产品的快速转化，提升产品开发效率与创新能力。",
+      badge: "数字制造",
+      actionLabel: "查看3D能力",
       icon: "fas fa-network-wired",
       badgeIcon: "fas fa-globe",
       features: [
         [
-          "需求预测",
-          "结合销售、库存与市场变化，辅助企业判断补货和生产节奏。",
+          "3D模型设计",
+          "根据产品需求进行三维建模与结构设计，将创意构想转化为可编辑的数字模型。",
           "fas fa-chart-line"
         ],
         [
-          "库存优化",
-          "识别库存积压、缺货风险和周转问题，提高库存配置效率。",
+          "模型切片优化",
+          "对三维模型进行切片处理与打印参数配置，优化打印精度、材料使用及成型效果。",
           "fas fa-boxes"
         ],
         [
-          "订单与交付协同",
-          "连接订单、生产、仓储与物流节点，提升供应链执行透明度。",
+          "3D打印成型",
+          "通过增材制造技术将数字模型转化为实体产品，支持快速原型制作与个性化打样。",
           "fas fa-truck"
         ],
         [
-          "供应链可视化",
-          "通过控制塔视图监控关键节点、异常状态与业务风险。",
+          "成品后处理",
+          "对打印成品进行支撑去除、表面处理与质量检查，提升产品外观及使用性能。",
           "fas fa-eye"
         ]
       ]
@@ -86,6 +86,7 @@ export const platformModel = {
       description: "面向工厂、仓库和门店现场作业，支持机器人调度、物料搬运和重复性任务自动化执行。",
       badge: "自动化执行",
       actionLabel: "查看机器人能力",
+      link: "/cl-irobot.html",
       icon: "fas fa-robot",
       badgeIcon: "fas fa-microchip",
       features: [
