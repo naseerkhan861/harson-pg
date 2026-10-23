@@ -66,6 +66,8 @@ app.use(
           "blob:",
           "https://cl-base.yibaiaigc.com",
           "https://yibaiaigc.com",
+          // 云町360 iframe测试
+          "https://yd.yunding360.com",
           // Gateway frame origin (image tab only) when enabled;
           // default CSP is unchanged. Direct provider entries stay
           // for instant rollback.
@@ -219,6 +221,21 @@ app.get(
       req,
       res,
       "rfid-inventory.html"
+    );
+  }
+);
+
+// iStore - 客流分析与巡店管理
+app.get(
+  [
+    "/istore-store-analytics",
+    "/istore-store-analytics.html"
+  ],
+  (req, res) => {
+    return sendAuthenticatedPage(
+      req,
+      res,
+      "istore-store-analytics.html"
     );
   }
 );

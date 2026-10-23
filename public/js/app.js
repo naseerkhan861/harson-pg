@@ -1152,8 +1152,9 @@ async function initEnterpriseDashboardAnalytics() {
       );
 
     image.src = imageUrl;
-    image.alt = `${title}大图`;
-    caption.textContent = title;
+    image.alt = "创作任务大图";
+    caption.textContent = "";
+    caption.hidden = true;
 
     preview.hidden = false;
 
@@ -1243,7 +1244,7 @@ async function initEnterpriseDashboardAnalytics() {
           task.imageUrl;
 
         thumbnail.alt =
-          `${task.title || "AIGC 创作任务"}封面`;
+          `${"AIGC 创作任务"}封面`;
 
         thumbnail.loading =
           "lazy";
@@ -1281,7 +1282,7 @@ async function initEnterpriseDashboardAnalytics() {
 
         previewButton.setAttribute(
           "aria-label",
-          `放大查看${task.title || "创作任务"}封面`
+          `放大查看${"创作任务"}封面`
         );
 
         previewButton.append(
@@ -1293,8 +1294,8 @@ async function initEnterpriseDashboardAnalytics() {
           () => {
             openTaskImagePreview(
               task.imageUrl,
-              task.title ||
-                "AIGC 创作任务"
+              
+              "AIGC 创作任务"
             );
           }
         );
