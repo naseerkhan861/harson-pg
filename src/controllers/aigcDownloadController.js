@@ -15,7 +15,12 @@ const ALLOWED_EXTENSIONS = new Set([
   ".jpeg",
   ".webp",
   ".gif",
-  ".mp4"
+  ".mp4",
+  ".svg",
+  ".psd",
+  ".eps",
+  ".pdf",
+  ".dxf"
 ]);
 
 function sanitizeFilename(filename, targetUrl) {
