@@ -180,6 +180,23 @@ function startFixture() {
     }
   );
 
+  /* Color-match pricing + cast-correction sessions (route exceptions) */
+  for (const method of ["post", "get"]) {
+    app[method](
+      "/app/color-match/pricing",
+      (req, res) => {
+        res.json({ code: 200, data: { price: 3 } });
+      }
+    );
+
+    app[method](
+      "/app/color-match/cast-correction-sessions",
+      (req, res) => {
+        res.json({ code: 200, data: { sessions: [] } });
+      }
+    );
+  }
+
   /* Viral video replicator link resolver (route-policy exception) */
   app.post(
     "/app/viral-video/link/resolve",
@@ -1036,6 +1053,55 @@ async function main() {
     check(
       "video-generator session on the color-match path stays 404",
       colorWrongModule.status === 404
+    );
+
+    /* 7e. cast-correction sessions + color-match pricing (clothing) */
+    const sessionsPost = await request(
+      `${GATEWAY_ORIGIN}/app/color-match/cast-correction-sessions`,
+      {
+        method: "POST",
+        headers: {
+          Cookie: `harson_aigc_gateway=${clothingSession.sessionId}`
+        }
+      }
+    );
+
+    check(
+      "clothing POST cast-correction-sessions passes + JSON returns",
+      sessionsPost.status === 200 &&
+        Array.isArray(
+          JSON.parse(sessionsPost.body.toString()).data.sessions
+        )
+    );
+
+    const pricingGet = await request(
+      `${GATEWAY_ORIGIN}/app/color-match/pricing`,
+      {
+        headers: {
+          Cookie: `harson_aigc_gateway=${clothingSession.sessionId}`
+        }
+      }
+    );
+
+    check(
+      "clothing GET color-match/pricing passes route policy",
+      pricingGet.status === 200 &&
+        JSON.parse(pricingGet.body.toString()).data.price === 3
+    );
+
+    const sessionsWrongModule = await request(
+      `${GATEWAY_ORIGIN}/app/color-match/cast-correction-sessions`,
+      {
+        method: "POST",
+        headers: {
+          Cookie: `harson_aigc_gateway=${videoSession.sessionId}`
+        }
+      }
+    );
+
+    check(
+      "video-generator session on color-match sessions stays 404",
+      sessionsWrongModule.status === 404
     );
 
     /* 8. JSON passthrough (extra path) + no-store */

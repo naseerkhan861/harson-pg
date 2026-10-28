@@ -51,15 +51,17 @@ function isAllowedReplicatorRequest(req) {
 }
 
 /*
-  AI 服装 → 参考图校色 subtool exceptions (suggest_changes.md §3, 28 Oct).
+  AI 服装 → 参考图校色 subtool exceptions (suggest_changes.md, 28–29 Oct).
 
-  Entries carry RECORDED method/path pairs from the live gateway logs
-  (finish-log 404s during the user's 偏色校正 session, 2026-10-28
-  15:40–15:47 UTC) — never inferred from truncated screenshots. The
-  console-observed ...color-match/pricing 404 predates the surviving
-  container logs; if it differs from the entry below it will surface as
-  a fresh finish-log 404 on the next retry and must be added here with
-  its own recorded values before admission.
+  Entries carry RECORDED method/path pairs from the live gateway logs —
+  never inferred from truncated screenshots. The local-repair pricing
+  entry was recorded 2026-10-28 15:40–15:47Z; the four color-match
+  entries (pricing + cast-correction sessions, both methods) were
+  recorded 15:53–15:54Z after the pricing deploy, exactly the
+  fresh-finish-log surfacing the previous guide prescribed. Still
+  unrecorded and therefore NOT admitted: beginRepair and
+  viralVideoRecords paths — they must surface with their own recorded
+  method/path before admission.
 */
 const COLOR_MATCH_EXCEPTIONS = Object.freeze([
   {
@@ -67,6 +69,30 @@ const COLOR_MATCH_EXCEPTIONS = Object.freeze([
     path: "/app/local-repair/pricing",
     module: "clothing",
     reason: "pricing lookup for the reference color-match subtool"
+  },
+  {
+    method: "POST",
+    path: "/app/color-match/pricing",
+    module: "clothing",
+    reason: "pricing lookup for the color-match subtool (recorded 2026-10-28 15:53:43Z)"
+  },
+  {
+    method: "GET",
+    path: "/app/color-match/pricing",
+    module: "clothing",
+    reason: "pricing refresh by the color-match subtool (recorded 2026-10-28 15:54:45Z)"
+  },
+  {
+    method: "POST",
+    path: "/app/color-match/cast-correction-sessions",
+    module: "clothing",
+    reason: "cast-correction session list for 偏色校正 (recorded 2026-10-28 15:53:57Z)"
+  },
+  {
+    method: "GET",
+    path: "/app/color-match/cast-correction-sessions",
+    module: "clothing",
+    reason: "cast-correction session refresh for 偏色校正 (recorded 2026-10-28 15:54:50Z)"
   }
 ]);
 

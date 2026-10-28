@@ -186,10 +186,40 @@ test("clothing color-match pricing admits only its reviewed request", () => {
 });
 
 test("color-match exception equals the exact recorded gateway-log value", () => {
-  // Recorded from the live gateway finish log, 2026-10-28 15:40–15:47 UTC.
-  assert.equal(COLOR_MATCH_EXCEPTIONS.length, 1);
-  assert.equal(COLOR_MATCH_EXCEPTIONS[0].method, "POST");
-  assert.equal(COLOR_MATCH_EXCEPTIONS[0].path, "/app/local-repair/pricing");
+  // Recorded from the live gateway finish log:
+  // 2026-10-28 15:40-15:47Z (local-repair) and 15:53-15:54Z (color-match).
+  assert.equal(COLOR_MATCH_EXCEPTIONS.length, 5);
+
+  const admitted = COLOR_MATCH_EXCEPTIONS.map(
+    entry => `${entry.method} ${entry.path}`
+  );
+
+  assert.ok(admitted.includes("POST /app/local-repair/pricing"));
+  assert.ok(admitted.includes("POST /app/color-match/pricing"));
+  assert.ok(admitted.includes("GET /app/color-match/pricing"));
+  assert.ok(admitted.includes("POST /app/color-match/cast-correction-sessions"));
+  assert.ok(admitted.includes("GET /app/color-match/cast-correction-sessions"));
+
+  for (const entry of COLOR_MATCH_EXCEPTIONS) {
+    assert.equal(entry.module, "clothing");
+  }
+});
+
+test("cast-correction sessions admit both recorded methods, clothing only", () => {
+  const { method, path, module } = COLOR_MATCH_EXCEPTIONS[3];
+  assert.equal(method, "POST");
+  assert.equal(path, "/app/color-match/cast-correction-sessions");
+
+  assert.equal(isAllowedColorMatchRequest(request({ method, path, module })), true);
+  assert.equal(isAllowedColorMatchRequest(request({
+    method: "DELETE", path, module
+  })), false);
+  assert.equal(isAllowedColorMatchRequest(request({
+    method, path, module: "e-commerce"
+  })), false);
+  assert.equal(isAllowedColorMatchRequest(request({
+    method, path: "/app/color-match/cast-correction-sessions/other", module
+  })), false);
 });
 
 test("exception table stays exact and video-generator only", () => {
