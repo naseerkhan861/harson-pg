@@ -237,6 +237,11 @@ test("local repair submit is exact and clothing-only", () => {
       method: "POST",
       path: "/app/proxy/viralVideoRecords",
       module: "clothing"
+    },
+    {
+      method: "POST",
+      path: "/app/proxy/viralVideoTaskDetail",
+      module: "clothing"
     }]
   );
   const check = (method, path, module) =>
@@ -260,6 +265,18 @@ test("local repair history endpoint admits only the recorded request", () => {
   assert.equal(check("POST", "/app/proxy/viralVideoRecords", undefined), false);
   assert.equal(check("POST", "/app/proxy/viralVideoRecords/extra", "clothing"), false);
   assert.equal(check("POST", "/app/proxy/otherRecords", "clothing"), false);
+});
+
+test("local repair task-detail polling is exact and clothing-only", () => {
+  const check = (method, path, module) =>
+    isAllowedLocalRepairRequest(request({ method, path, module }));
+
+  assert.equal(check("POST", "/app/proxy/viralVideoTaskDetail", "clothing"), true);
+  assert.equal(check("GET", "/app/proxy/viralVideoTaskDetail", "clothing"), false);
+  assert.equal(check("POST", "/app/proxy/viralVideoTaskDetail", "image-generator"), false);
+  assert.equal(check("POST", "/app/proxy/viralVideoTaskDetail", undefined), false);
+  assert.equal(check("POST", "/app/proxy/viralVideoTaskDetail/extra", "clothing"), false);
+  assert.equal(check("POST", "/app/proxy/viralVideoTaskDetails", "clothing"), false);
 });
 
 test("cast-correction per-session UUID patterns are strict", () => {

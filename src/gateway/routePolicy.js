@@ -161,6 +161,12 @@ const LOCAL_REPAIR_EXCEPTIONS = Object.freeze([
     path: "/app/proxy/viralVideoRecords",
     module: "clothing",
     reason: "load the local-repair subtool's task history (recorded 2026-10-28 17:54-17:55Z: the page polls it on load; the provider reuses this records API for its sub-tool history, behind the 本地历史记录暂不可用 toast)"
+  },
+  {
+    method: "POST",
+    path: "/app/proxy/viralVideoTaskDetail",
+    module: "clothing",
+    reason: "poll task detail for the local-repair subtool (recorded 88x in the 2026-10-29 console export: the post-submit status poll that leaves the UI at 生成中)"
   }
 ]);
 

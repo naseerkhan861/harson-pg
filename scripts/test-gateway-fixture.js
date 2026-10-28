@@ -1241,6 +1241,32 @@ async function main() {
       historyWrongModule.status === 404
     );
 
+    const clothingDetailRes = await request(
+      `${GATEWAY_ORIGIN}/app/proxy/viralVideoTaskDetail`,
+      {
+        method: "POST",
+        headers: {
+          Cookie: `harson_aigc_gateway=${clothingSession.sessionId}`
+        }
+      }
+    );
+
+    check(
+      "clothing POST viralVideoTaskDetail reaches mock provider",
+      clothingDetailRes.status === 200 &&
+        JSON.parse(clothingDetailRes.body.toString()).data.task === "fixture-task"
+    );
+
+    const clothingDetailGet = await request(
+      `${GATEWAY_ORIGIN}/app/proxy/viralVideoTaskDetail`,
+      {
+        headers: {
+          Cookie: `harson_aigc_gateway=${clothingSession.sessionId}`
+        }
+      }
+    );
+    check("clothing GET viralVideoTaskDetail stays 404", clothingDetailGet.status === 404);
+
     /* 8. JSON passthrough (extra path) + no-store */
     const jsonRes =
       await request(
