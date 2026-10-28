@@ -746,7 +746,7 @@ app.use(async (req, res, next) => {
       reproduction.
     */
     isAllowedLocalRepairRequest(req) ||
-    /* AI 电商: four recorded POST/method/session-module triples. */
+    /* AI 电商: reviewed exact method/session routes and strict UUID patterns. */
     isAllowedEcommerceRequest(req);
 
   if (!allowed) {

@@ -29,26 +29,45 @@ function request({ method, path, module }) {
   };
 }
 
-test("e-commerce exceptions match the four screenshot-recorded POSTs", () => {
+const ecommerceExpectedPairs = [
+  ["POST", "/app/proxy/viralVideoTaskDetail"],
+  ["POST", "/app/viral-video/pricing"],
+  ["POST", "/app/viral-video/link/resolve"],
+  ["POST", "/app/color-match/pricing"],
+  ["GET", "/app/color-match/pricing"],
+  ["POST", "/app/local-repair/pricing"],
+  ["POST", "/app/color-match/cast-correction-sessions"],
+  ["GET", "/app/color-match/cast-correction-sessions"]
+];
+const ecommerceExpectedKeys = new Set(
+  ecommerceExpectedPairs.map(([method, path]) => `${method} ${path}`)
+);
+
+test("e-commerce exact rules match the reviewed color-match contract", () => {
   assert.deepEqual(
-    ECOMMERCE_EXCEPTIONS.map(({ method, path, module }) => ({ method, path, module })),
-    [
-      "/app/proxy/viralVideoTaskDetail",
-      "/app/viral-video/pricing",
-      "/app/viral-video/link/resolve",
-      "/app/color-match/pricing"
-    ].map(path => ({ method: "POST", path, module: "e-commerce" }))
+    ECOMMERCE_EXCEPTIONS.map(entry =>
+      `${entry.method} ${entry.path} ${entry.module}`
+    ).sort(),
+    ecommerceExpectedPairs.map(([method, path]) =>
+      `${method} ${path} e-commerce`
+    ).sort()
   );
   for (const entry of ECOMMERCE_EXCEPTIONS) {
     assert.equal(isAllowedEcommerceRequest(request(entry)), true);
   }
 });
 
-test("e-commerce exceptions reject other methods, modules, and nearby paths", () => {
-  for (const entry of ECOMMERCE_EXCEPTIONS) {
-    for (const method of ["GET", "HEAD", "PUT", "DELETE", "OPTIONS"]) {
-      assert.equal(isAllowedEcommerceRequest(request({ ...entry, method })), false);
+test("e-commerce method/module/path matrix remains exact", () => {
+  const paths = [...new Set(ecommerceExpectedPairs.map(pair => pair[1]))];
+  for (const path of paths) {
+    for (const method of ["POST", "GET", "HEAD", "PUT", "DELETE", "OPTIONS", "PATCH"]) {
+      assert.equal(
+        isAllowedEcommerceRequest(request({ method, path, module: "e-commerce" })),
+        ecommerceExpectedKeys.has(`${method} ${path}`)
+      );
     }
+  }
+  for (const entry of ECOMMERCE_EXCEPTIONS) {
     for (const module of ["clothing", "video-generator", "image-generator", undefined]) {
       assert.equal(isAllowedEcommerceRequest(request({ ...entry, module })), false);
     }
@@ -57,12 +76,39 @@ test("e-commerce exceptions reject other methods, modules, and nearby paths", ()
     }
   }
   for (const path of [
-    "/app", "/app/proxy", "/app/proxy/otherEndpoint",
-    "/app/color-match/cast-correction-sessions"
+    "/app", "/app/proxy", "/app/proxy/otherEndpoint"
   ]) {
     assert.equal(isAllowedEcommerceRequest(request({
       method: "POST", path, module: "e-commerce"
     })), false);
+  }
+});
+
+test("e-commerce cast-correction session UUID operations are strict", () => {
+  const id = "62f614d0-23ac-4e89-afd4-c175fe60e9c7";
+  const root = "/app/color-match/cast-correction-sessions/";
+  for (const [method, path] of [
+    ["POST", root + id + "/process"],
+    ["DELETE", root + id]
+  ]) {
+    assert.equal(isAllowedEcommerceRequest(request({
+      method, path, module: "e-commerce"
+    })), true);
+    for (const wrongMethod of ["POST", "GET", "HEAD", "PUT", "DELETE", "PATCH"].filter(m => m !== method)) {
+      assert.equal(isAllowedEcommerceRequest(request({
+        method: wrongMethod, path, module: "e-commerce"
+      })), false);
+    }
+    for (const module of ["clothing", "video-generator", "image-generator", undefined]) {
+      assert.equal(isAllowedEcommerceRequest(request({ method, path, module })), false);
+    }
+    for (const badPath of [
+      path + "/extra", path.replace(id, "not-a-uuid"), path.replace(id, id + "a")
+    ]) {
+      assert.equal(isAllowedEcommerceRequest(request({
+        method, path: badPath, module: "e-commerce"
+      })), false);
+    }
   }
 });
 

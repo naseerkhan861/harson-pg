@@ -179,9 +179,10 @@ function isAllowedLocalRepairRequest(req) {
 }
 
 /*
-  AI 电商: exact POSTs shown in the supplied e-commerce screenshots.
+  AI 电商: exact shared-tool requests, scoped to the outer session module.
   Nested tools retain the outer e-commerce gateway session module.
-  The supplied console also includes a separate color-match pricing call.
+  Color-match session POST is confirmed by the supplied screenshot;
+  its follow-up operations mirror the reviewed clothing contract.
 */
 const ECOMMERCE_EXCEPTIONS = Object.freeze([
   {
@@ -207,14 +208,62 @@ const ECOMMERCE_EXCEPTIONS = Object.freeze([
     path: "/app/color-match/pricing",
     module: "e-commerce",
     reason: "load color-match pricing during e-commerce navigation"
+  },
+  {
+    method: "GET",
+    path: "/app/color-match/pricing",
+    module: "e-commerce",
+    reason: "refresh color-match pricing"
+  },
+  {
+    method: "POST",
+    path: "/app/local-repair/pricing",
+    module: "e-commerce",
+    reason: "load the shared color-match/local-repair pricing contract"
+  },
+  {
+    method: "POST",
+    path: "/app/color-match/cast-correction-sessions",
+    module: "e-commerce",
+    reason: "allow the screenshot-confirmed cast-correction session operation"
+  },
+  {
+    method: "GET",
+    path: "/app/color-match/cast-correction-sessions",
+    module: "e-commerce",
+    reason: "refresh cast-correction sessions"
+  }
+]);
+
+const ECOMMERCE_PATTERNS = Object.freeze([
+  {
+    method: "POST",
+    pattern: new RegExp(
+      `^/app/color-match/cast-correction-sessions/${UUID_SEGMENT}/process$`,
+      "i"
+    ),
+    module: "e-commerce"
+  },
+  {
+    method: "DELETE",
+    pattern: new RegExp(
+      `^/app/color-match/cast-correction-sessions/${UUID_SEGMENT}$`,
+      "i"
+    ),
+    module: "e-commerce"
   }
 ]);
 
 function isAllowedEcommerceRequest(req) {
+  const moduleName = req.harsonGatewaySession?.moduleName;
   return ECOMMERCE_EXCEPTIONS.some(entry =>
-    req.harsonGatewaySession?.moduleName === entry.module &&
+    moduleName === entry.module &&
     req.method === entry.method &&
     req.path === entry.path
+  ) || ECOMMERCE_PATTERNS.some(entry =>
+    moduleName === entry.module &&
+    req.method === entry.method &&
+    entry.pattern.test(req.path)
   );
 }
 

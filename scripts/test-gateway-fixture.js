@@ -1306,13 +1306,45 @@ async function main() {
       const ecommerceGet = await request(`${GATEWAY_ORIGIN}${apiPath}`, {
         headers: { Cookie: `harson_aigc_gateway=${ecommerceSession.sessionId}` }
       });
-      check(`e-commerce GET ${apiPath} stays 404`, ecommerceGet.status === 404);
+      const expectedGetStatus = apiPath === "/app/color-match/pricing" ? 200 : 404;
+      check(
+        `e-commerce GET ${apiPath} returns ${expectedGetStatus}`,
+        ecommerceGet.status === expectedGetStatus
+      );
 
       const imagePost = await request(`${GATEWAY_ORIGIN}${apiPath}`, {
         method: "POST",
         headers: { Cookie: `harson_aigc_gateway=${first.sessionId}` }
       });
       check(`image POST ${apiPath} stays 404`, imagePost.status === 404);
+    }
+
+    const ecommerceColorRequests = [
+      ["GET", "/app/color-match/pricing"],
+      ["POST", "/app/local-repair/pricing"],
+      ["POST", "/app/color-match/cast-correction-sessions"],
+      ["GET", "/app/color-match/cast-correction-sessions"],
+      ["POST", `/app/color-match/cast-correction-sessions/${SESSION_ID}/process`],
+      ["DELETE", `/app/color-match/cast-correction-sessions/${SESSION_ID}`]
+    ];
+    for (const [method, apiPath] of ecommerceColorRequests) {
+      const direct = await request(`${FIXTURE_ORIGIN}${apiPath}`, { method });
+      const proxied = await request(`${GATEWAY_ORIGIN}${apiPath}`, {
+        method,
+        headers: { Cookie: `harson_aigc_gateway=${ecommerceSession.sessionId}` }
+      });
+      check(
+        `e-commerce color-match ${method} ${apiPath} reaches provider unchanged`,
+        direct.status === 200 && proxied.status === 200 && proxied.body.equals(direct.body)
+      );
+      const wrongModule = await request(`${GATEWAY_ORIGIN}${apiPath}`, {
+        method,
+        headers: { Cookie: `harson_aigc_gateway=${first.sessionId}` }
+      });
+      check(
+        `image session ${method} ${apiPath} stays 404`,
+        wrongModule.status === 404
+      );
     }
 
     const ecommerceUpstreamFailure = await request(
