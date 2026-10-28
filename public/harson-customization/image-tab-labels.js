@@ -134,7 +134,31 @@
     // visible alias is rendered through a shadow root.
     if (source === "即梦" || source === "即梦 seedream") return "seedream";
     if (source === "flux krea" || source === "fluxkrea") return "flux-krea";
+    if (source === "flux.1 kontext" || source === "flux.1kontext") {
+      return "flux-kontext";
+    }
     return null;
+  }
+
+  /*
+    Kontext selected variant (suggest_changes.md §3B): reads the ORIGINAL
+    provider-owned light-DOM text of the 模型 dropdown's selected value —
+    never the displayed shadow alias. Returns "pro"/"max" only when
+    exactly one recognized Kontext selection exists on the page.
+  */
+  function selectedKontextVariant() {
+    const originalValues = [...document.querySelectorAll(
+      ".IcbsMenuSelect-header-content"
+    )].map(node => resolver.normalize(node.textContent));
+
+    const selections = originalValues.filter(value =>
+      value === "kontext-pro" || value === "kontext-max" ||
+      value === "flux.1 kontext pro" ||
+      value === "flux.1 kontext max"
+    );
+
+    if (selections.length !== 1) return null;
+    return selections[0].endsWith("max") ? "max" : "pro";
   }
 
   function imageContextFor(node) {
@@ -143,6 +167,15 @@
       return { module: "image-generator", surface: "image-sidebar" };
     }
     const family = activeImageFamily();
+    if (family === "flux-kontext" &&
+        node.matches(".ToolLayout-header,.DefaultLayout-header,.header_fix > span")) {
+      return {
+        module: "image-generator",
+        surface: "image-family-title",
+        family,
+        variant: selectedKontextVariant()
+      };
+    }
     if (family === "seedream" &&
         node.matches(".ToolLayout-header,.DefaultLayout-header,.header_fix > span")) {
       return { module: "image-generator",
@@ -397,6 +430,26 @@
       mutations.forEach(mutation => {
         const element = mutation.target.nodeType === Node.ELEMENT_NODE
           ? mutation.target : mutation.target.parentElement;
+        /*
+          Kontext title refresh (suggest_changes.md §3B): changing the
+          selected 模型 dropdown may not queue the separate title node.
+          When the selection changes, queue the small approved title set;
+          the microtask scheduler rerenders it once, no reload.
+        */
+        const selectedModelSelector = ".IcbsMenuSelect-header-content";
+        const selectionChanged =
+          element?.matches?.(selectedModelSelector) ||
+          element?.closest?.(selectedModelSelector) ||
+          [...mutation.addedNodes].some(node =>
+            node.nodeType === Node.ELEMENT_NODE &&
+            (node.matches(selectedModelSelector) ||
+              Boolean(node.querySelector(selectedModelSelector)))
+          );
+        if (selectionChanged) {
+          document.querySelectorAll(
+            ".ToolLayout-header,.DefaultLayout-header,.header_fix > span"
+          ).forEach(title => pending.add(title));
+        }
         if (element) {
           if (records.has(element) || element.matches(selector)) pending.add(element);
           if (videoModule) {

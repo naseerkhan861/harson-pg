@@ -178,6 +178,19 @@
         return "CLImage";
       }
 
+      /*
+        Kontext form title (suggest_changes.md §3A, 28 Oct): the generic
+        family title follows the SELECTED variant. Presentational only —
+        an unknown variant falls through to the generic family alias,
+        and this can never relabel historical cards.
+      */
+      if (context.surface === "image-family-title" &&
+          context.family === "flux-kontext" &&
+          (key === "flux.1 kontext" || key === "flux.1kontext")) {
+        if (context.variant === "max") return "CLImage-1.2";
+        if (context.variant === "pro") return "CLImage-1.1";
+      }
+
       if (context.surface === "image-page-label" &&
           context.family === "flux-krea" &&
           (key === "flux krea" || key === "fluxkrea")) {

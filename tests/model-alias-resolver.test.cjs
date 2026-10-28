@@ -37,7 +37,7 @@ test("display-spelling correspondences resolve through canonical keys", () => {
   assert.equal(resolve("悠船M| V7"), "CLImage-2.0");
   assert.equal(resolve("全能图片2"), "CLImage-5.2");
   assert.equal(resolve("HappyHorse"), "CL Dragon");
-  assert.equal(resolve("kontext-max"), "CLImage-1.1");
+  assert.equal(resolve("kontext-max"), "CLImage-1.2");
   assert.equal(resolve("FLUXKrea"), "CLImage");
 });
 
@@ -212,6 +212,31 @@ test("image-generator sidebar/headings: scoped overrides win only in context", (
   // Spelling variants covered by the scoped rule.
   assert.equal(resolve("FLUXKrea", imageSidebar), "CLImage-1.0");
   assert.equal(resolve("即梦 Seedream", imageSidebar), "CLImage-3.3");
+});
+
+test("Kontext pro and max keep distinct display identities", () => {
+  assert.equal(resolve("kontext-pro"), "CLImage-1.1");
+  assert.equal(resolve("kontext-max"), "CLImage-1.2");
+  assert.equal(resolve("FLUX.1 Kontext pro"), "CLImage-1.1");
+  assert.equal(resolve("FLUX.1 Kontext max"), "CLImage-1.2");
+
+  // The generic family name is not evidence of a max selection.
+  assert.equal(resolve("FLUX.1 Kontext"), "CLImage-1.1");
+  assert.equal(resolve("CLImage-1.2"), null); // aliases are not source keys
+});
+
+test("Kontext title follows only its own selected variant", () => {
+  const title = variant => ({
+    module: "image-generator",
+    surface: "image-family-title",
+    family: "flux-kontext",
+    variant
+  });
+  assert.equal(resolve("FLUX.1 Kontext", title("pro")), "CLImage-1.1");
+  assert.equal(resolve("FLUX.1 Kontext", title("max")), "CLImage-1.2");
+  assert.equal(resolve("FLUX.1 Kontext", title(null)), "CLImage-1.1");
+  assert.equal(resolve("FLUX.1 Kontext"), "CLImage-1.1");
+  assert.equal(resolve("kontext-max", title("pro")), "CLImage-1.2");
 });
 
 test("mapping info reports schema and hash", () => {
