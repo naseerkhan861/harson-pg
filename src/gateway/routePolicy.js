@@ -50,7 +50,38 @@ function isAllowedReplicatorRequest(req) {
   );
 }
 
+/*
+  AI 服装 → 参考图校色 subtool exceptions (suggest_changes.md §3, 28 Oct).
+
+  Entries carry RECORDED method/path pairs from the live gateway logs
+  (finish-log 404s during the user's 偏色校正 session, 2026-10-28
+  15:40–15:47 UTC) — never inferred from truncated screenshots. The
+  console-observed ...color-match/pricing 404 predates the surviving
+  container logs; if it differs from the entry below it will surface as
+  a fresh finish-log 404 on the next retry and must be added here with
+  its own recorded values before admission.
+*/
+const COLOR_MATCH_EXCEPTIONS = Object.freeze([
+  {
+    method: "POST",
+    path: "/app/local-repair/pricing",
+    module: "clothing",
+    reason: "pricing lookup for the reference color-match subtool"
+  }
+]);
+
+function isAllowedColorMatchRequest(req) {
+  const moduleName = req.harsonGatewaySession?.moduleName;
+  return COLOR_MATCH_EXCEPTIONS.some(entry =>
+    entry.module === moduleName &&
+    entry.method === req.method &&
+    entry.path === req.path
+  );
+}
+
 module.exports = {
   isAllowedReplicatorRequest,
-  REPLICATOR_EXCEPTIONS
+  REPLICATOR_EXCEPTIONS,
+  isAllowedColorMatchRequest,
+  COLOR_MATCH_EXCEPTIONS
 };

@@ -133,7 +133,8 @@ function startFixture() {
   for (const path of [
     "/aigc/image-generator",
     "/aigc/upscaler",
-    "/aigc/video-generator"
+    "/aigc/video-generator",
+    "/aigc/clothing"
   ]) {
     app.get(
       path,
@@ -171,6 +172,15 @@ function startFixture() {
     }
   );
 
+  /* Clothing color-match subtool pricing (route-policy exception) */
+  app.post(
+    "/app/local-repair/pricing",
+    (req, res) => {
+      res.json({ code: 200, data: { price: 5 } });
+    }
+  );
+
+  /* Viral video replicator link resolver (route-policy exception) */
   app.post(
     "/app/viral-video/link/resolve",
     (req, res) => {
@@ -988,6 +998,44 @@ async function main() {
     check(
       "unknown /app/viral-video/* path stays 404",
       unknownViral.status === 404
+    );
+
+    /* 7d. clothing color-match pricing exception */
+    const clothingSession = await withSession(
+      "clothing",
+      "/aigc/clothing?embed=2"
+    );
+
+    const colorPricing = await request(
+      `${GATEWAY_ORIGIN}/app/local-repair/pricing`,
+      {
+        method: "POST",
+        headers: {
+          Cookie: `harson_aigc_gateway=${clothingSession.sessionId}`
+        }
+      }
+    );
+
+    check(
+      "clothing POST local-repair/pricing passes route policy + JSON returns",
+      colorPricing.status === 200 &&
+        JSON.parse(colorPricing.body.toString()).data
+          .price === 5
+    );
+
+    const colorWrongModule = await request(
+      `${GATEWAY_ORIGIN}/app/local-repair/pricing`,
+      {
+        method: "POST",
+        headers: {
+          Cookie: `harson_aigc_gateway=${videoSession.sessionId}`
+        }
+      }
+    );
+
+    check(
+      "video-generator session on the color-match path stays 404",
+      colorWrongModule.status === 404
     );
 
     /* 8. JSON passthrough (extra path) + no-store */

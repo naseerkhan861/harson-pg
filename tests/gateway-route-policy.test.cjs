@@ -10,7 +10,9 @@ const assert = require("node:assert/strict");
 
 const {
   isAllowedReplicatorRequest,
-  REPLICATOR_EXCEPTIONS
+  REPLICATOR_EXCEPTIONS,
+  isAllowedColorMatchRequest,
+  COLOR_MATCH_EXCEPTIONS
 } = require("../src/gateway/routePolicy.js");
 
 function request({ method, path, module }) {
@@ -159,6 +161,35 @@ test("rejects similarly named and arbitrary /app paths (no broad prefix)", () =>
       `${path} must stay rejected`
     );
   }
+});
+
+test("clothing color-match pricing admits only its reviewed request", () => {
+  const { method, path, module } = COLOR_MATCH_EXCEPTIONS[0];
+  assert.equal(module, "clothing");
+  assert.ok(method === "GET" || method === "POST");
+  assert.ok(path.startsWith("/app/"));
+  assert.ok(!path.includes("<"));
+
+  assert.equal(isAllowedColorMatchRequest(request({ method, path, module })), true);
+  assert.equal(isAllowedColorMatchRequest(request({
+    method: method === "GET" ? "POST" : "GET", path, module
+  })), false);
+  assert.equal(isAllowedColorMatchRequest(request({
+    method, path, module: "video-generator"
+  })), false);
+  assert.equal(isAllowedColorMatchRequest(request({
+    method, path: `${path}/unexpected`, module
+  })), false);
+  assert.equal(isAllowedColorMatchRequest(request({
+    method, path: "/app/unrelated", module
+  })), false);
+});
+
+test("color-match exception equals the exact recorded gateway-log value", () => {
+  // Recorded from the live gateway finish log, 2026-10-28 15:40–15:47 UTC.
+  assert.equal(COLOR_MATCH_EXCEPTIONS.length, 1);
+  assert.equal(COLOR_MATCH_EXCEPTIONS[0].method, "POST");
+  assert.equal(COLOR_MATCH_EXCEPTIONS[0].path, "/app/local-repair/pricing");
 });
 
 test("exception table stays exact and video-generator only", () => {

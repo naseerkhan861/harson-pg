@@ -45,7 +45,9 @@ const {
   injectImageTabAssets
 } = require("../services/yibaiDisplayInjection");
 const {
-  isAllowedReplicatorRequest
+  isAllowedReplicatorRequest,
+  isAllowedColorMatchRequest,
+  COLOR_MATCH_EXCEPTIONS
 } = require("./routePolicy");
 const {
   removeGatewayCookie,
@@ -730,7 +732,12 @@ app.use(async (req, res, next) => {
       method + path + video-generator session triples only. Everything
       else under /app or /app/proxy stays rejected.
     */
-    isAllowedReplicatorRequest(req);
+    isAllowedReplicatorRequest(req) ||
+    /*
+      AI 服装 color-match subtool exceptions (suggest_changes.md §3,
+      28 Oct): exact recorded method/path + clothing session triples.
+    */
+    isAllowedColorMatchRequest(req);
 
   if (!allowed) {
     return res.status(404).end();
@@ -875,6 +882,22 @@ async function handleProxyResponse(
   ) {
     console.info(
       `[gateway] link/resolve upstream status=${proxyRes.statusCode}`
+    );
+  }
+
+  /*
+    Status provenance for the clothing color-match subtool's admitted
+    requests (suggest_changes.md §4): records only the upstream status.
+    No bodies, signed URLs, cookies, or query strings.
+  */
+  if (
+    req.harsonGatewaySession?.moduleName === "clothing" &&
+    COLOR_MATCH_EXCEPTIONS.some(
+      entry => entry.method === req.method && entry.path === req.path
+    )
+  ) {
+    console.info(
+      `[gateway] clothing color-match upstream status=${proxyRes.statusCode}`
     );
   }
 
