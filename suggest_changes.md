@@ -1,137 +1,264 @@
-# Fix “通过链接上传” returning 404 in 爆款视频复刻
+# 爆款视频复刻：通过链接上传返回 500 — `temp-main` 实施指南
 
-**Repository:** [`naseerkhan861/harson-pg` → `temp-main`](https://github.com/naseerkhan861/harson-pg/tree/temp-main)  
-**Affected UI:** `视频创作` → left item `爆款视频复刻` → `上传参考视频` → `通过链接上传` → `确认`  
+**Repository:** [`naseerkhan861/harson-pg`, branch `temp-main`](https://github.com/naseerkhan861/harson-pg/tree/temp-main)  
+**Affected flow:** 视频创作 → 爆款视频复刻 → 通过链接上传 → 确认  
 **Gateway:** `https://ai.harson-base.com`  
 **Prepared:** 28 October 2026  
-**Purpose:** code changes to apply and test in your VS Code checkout. This document does not modify your GitHub repository or production server.
+**Scope:** Instructions and code to apply in your own VS Code checkout. This document has not changed the GitHub repository or production server.
 
-## 1. Evidence and likely cause
+## 1. What changed since the previous 404
 
-Your screenshots show a red **“Request failed with status code 404”** toast after `确认`. The nested `app-viral-video-replicator` frame sends:
+The new screenshots show:
 
-```http
+```text
 POST https://ai.harson-base.com/app/viral-video/link/resolve
+500 Internal Server Error
 ```
 
-The browser reports a 404 for that exact request. The link dialog says it accepts Xiaohongshu links or direct video addresses; the screenshot shows a Xiaohongshu URL, but **the 404 occurs before we can conclude whether YiBai accepts that particular link**.
+The latest `temp-main` **already contains** the exact `POST` exception in `src/gateway/routePolicy.js` and tests for it in `tests/gateway-route-policy.test.cjs`. Do not add another exception or widen `YIBAI_GATEWAY_EXTRA_PATHS`. The browser now receives a 500 rather than the former 404. The request can be passing the gateway's path gate, but the console alone does **not** identify whether Nginx, the Harson gateway, or YiBai emitted the 500.
 
-The current `temp-main` [gateway route policy](https://github.com/naseerkhan861/harson-pg/blob/temp-main/src/gateway/routePolicy.js) permits the previous two viral-video requests as exact `(method, path, module)` combinations:
+The code provides a useful clue: for ordinary JSON/API responses, `src/gateway/server.js` forwards the **upstream status code and body** (`handleProxyResponse`, around lines 1003–1025). Its explicit proxy network error handler returns **502**, and its denied-route handler returns **404**. Therefore an upstream 500 is likely, subject to verification with the response and gateway logs. The repeated `aigc-workspace.js:747` model-category warnings and `allowfullscreen` warning are separate from this request.
 
-| Method | Path | Module | Current policy |
-| --- | --- | --- | --- |
-| `POST` | `/app/proxy/viralVideoTaskDetail` | `video-generator` | Allowed |
-| `POST` | `/app/viral-video/pricing` | `video-generator` | Allowed |
-| `POST` | **`/app/viral-video/link/resolve`** | `video-generator` | **Missing** |
+Two concrete weaknesses in the current proxy are worth fixing and testing:
 
-[`src/gateway/server.js`](https://github.com/naseerkhan861/harson-pg/blob/temp-main/src/gateway/server.js) calls `isAllowedReplicatorRequest(req)` after checking provider menu routes and `YIBAI_GATEWAY_EXTRA_PATHS`; otherwise it returns an empty 404 **before** proxying to YiBai. [`.env.example`](https://github.com/naseerkhan861/harson-pg/blob/temp-main/.env.example) also does not include `/app/viral-video/link/resolve`. This is the **leading explanation**, provided the deployed `.env` has no broader matching prefix and the 404 really comes from that gateway. The running `.env` and Nginx response were not visible, so confirm in Network before attributing the 404 conclusively.
+1. `selfHandleResponse: true` makes the gateway responsible for outgoing headers. The current `cookieDomainRewrite: ""` option does not run in the library's normal outgoing response passes, while `copyResponseHeaders()` copies the upstream `Set-Cookie` verbatim. A cookie with `Domain=yibaiaigc.com` cannot become a cookie for `ai.harson-base.com` in the browser. Whether this particular resolver requires such a cookie remains to be checked.
+2. The gateway cookie is read at the session gate but the original `Cookie` request header is subsequently proxied as-is. The Harson gateway session cookie should not be sent to YiBai. Other provider cookies should continue to pass through.
 
-The repeated warnings from `aigc-workspace.js:747` about uncategorized `CLImage`/`CLVideo` tools, and the iframe `allowfullscreen` warning, do not explain this POST failure. The previous **history** issue used another endpoint; this fix adds the **link resolver** only.
+Neither weakness alone proves the cause of the shown 500. The changes below correct them without modifying URL input, request payload, model names, or the vendor's UI JavaScript.
 
-## 2. Check the failing request before editing
+## 2. First establish which component returns the 500
 
-1. Open the nested tool's DevTools **Network** panel, select **Preserve log**, click `通过链接上传`, enter a known valid supported link, and press `确认`.
-2. Select the failed `link/resolve` request. Verify **Request Method = POST** and **Path = `/app/viral-video/link/resolve`**. Check the Response tab and response headers. Avoid copying cookies, the link if private, provider tokens, session tickets, or request body into public reports.
-3. If the 404 response is **empty**, Harson's gateway route gate is a strong match: its code calls `res.status(404).end()`. If it is an Nginx error page or YiBai JSON error, first identify which layer returned it.
-4. Inspect the live, uncommitted `.env` on the server for `YIBAI_GATEWAY_EXTRA_PATHS`. The example file does not prove the production value. If production has a broad `/app` or `/app/viral-video` prefix, the request may already pass the gate, and the 404 would require a different investigation.
-5. For comparison, try the **same authorized link** directly in YiBai's original interface under the same account. If it fails there too, check link validity and the provider's resolver rather than changing Harson's proxy policy.
+Use Chrome DevTools **Network**, select the failed `link/resolve` request, and inspect **Headers**, **Response**, and **Payload** locally. Record only the following non-secret facts:
 
-## 3. Exact code change in `temp-main`
+- Request method/path, response status, response `Content-Type`, whether the response is JSON or HTML, and the vendor's **error code/category** if one exists.
+- Whether a provider `Cookie` header is present (cookie **names only**) and whether earlier proxied YiBai responses attempted `Set-Cookie` with a `Domain=yibaiaigc.com` attribute. Use the browser's Issues/Application panel to check for rejected cookies.
+- Whether the **same link** works in YiBai's original, signed-in interface. Also try one clearly valid, public, supported link; the screenshot displays only a truncated URL.
 
-### A. Add the third reviewed exception
+Do not copy a HAR file, provider token, cookies, session ticket, a private link, or the complete response body to a public issue. Do not use a browser-console `fetch` to an unrelated host. The vendor may return a 500 for an invalid, inaccessible, expired, or rate-limited Xiaohongshu item; a 500 does not prove the proxy changed the submitted URL.
 
-In [`src/gateway/routePolicy.js`](https://github.com/naseerkhan861/harson-pg/blob/temp-main/src/gateway/routePolicy.js), append one entry to `REPLICATOR_EXCEPTIONS` after the existing pricing entry:
+## 3. Exact code changes for proxy headers and status provenance
+
+### 3A. Add `src/gateway/proxyHeaders.js`
+
+This module makes the two header transformations testable without importing `server.js` (which calls `app.listen()` during import). Keep cookie values out of logs.
 
 ```js
-{
-  method: "POST",
-  path: "/app/viral-video/link/resolve",
-  module: "video-generator",
-  reason: "resolve a supported video link for the viral video replicator"
+"use strict";
+
+function removeGatewayCookie(rawCookie, gatewayCookieName) {
+  return String(rawCookie || "")
+    .split(";")
+    .map(part => part.trim())
+    .filter(part => {
+      const equals = part.indexOf("=");
+      return equals > 0 &&
+        part.slice(0, equals).trim() !== gatewayCookieName;
+    })
+    .join("; ");
+}
+
+function rewriteProviderSetCookie(value, upstreamOrigin) {
+  if (value == null) return value;
+
+  const upstreamHost = new URL(upstreamOrigin).hostname.toLowerCase();
+
+  function rewriteOne(cookie) {
+    return String(cookie).replace(
+      /;\s*domain\s*=\s*([^;]+)/gi,
+      (attribute, rawDomain) => {
+        const domain = rawDomain.trim().replace(/^\./, "").toLowerCase();
+        const belongsToUpstream =
+          upstreamHost === domain ||
+          upstreamHost.endsWith(`.${domain}`);
+
+        // No Domain attribute means host-only on ai.harson-base.com.
+        // Leave unrelated domains untouched; the browser will reject them.
+        return belongsToUpstream ? "" : attribute;
+      }
+    );
+  }
+
+  return Array.isArray(value) ? value.map(rewriteOne) : rewriteOne(value);
+}
+
+module.exports = { removeGatewayCookie, rewriteProviderSetCookie };
+```
+
+This preserves each cookie's value, `Path`, `Secure`, `HttpOnly`, `SameSite`, and multiple independent `Set-Cookie` headers. It removes `Domain` only when the domain is the actual configured YiBai target host or one of its parent domains.
+
+### 3B. Apply it in `src/gateway/server.js`
+
+Next to the existing import from `./routePolicy`, add:
+
+```js
+const {
+  removeGatewayCookie,
+  rewriteProviderSetCookie
+} = require("./proxyHeaders");
+```
+
+In the existing `copyResponseHeaders(proxyRes, overrides)`, after constructing `headers` from `proxyRes.headers` and before returning it, add:
+
+```js
+if (headers["set-cookie"]) {
+  headers["set-cookie"] = rewriteProviderSetCookie(
+    headers["set-cookie"],
+    UPSTREAM_ORIGIN
+  );
 }
 ```
 
-Include the comma between object entries. `isAllowedReplicatorRequest(req)` already requires a `video-generator` gateway session and exact method/path equality; **no change to that function or to `server.js` is needed** for this endpoint. The existing CSRF/session checks and streaming of non-HTML API responses remain in place.
+Keep its existing `content-length` and `transfer-encoding` removal and the `...overrides` return. This single insertion covers both the HTML-injection and non-HTML response paths. Remove `cookieDomainRewrite: ""` from the `createProxyMiddleware` options so it does not misleadingly imply an automatic rewrite is active while `selfHandleResponse: true` remains in use.
 
-Do **not** use `YIBAI_GATEWAY_EXTRA_PATHS=/app` or `/app/viral-video` as a permanent workaround. Those settings accept whole path prefixes and any method, allowing unrelated authenticated provider operations. An exact policy entry matches the existing pattern established for the history and pricing fixes.
+In the existing `createProxyMiddleware({ ..., on: { ... } })` object, add `proxyReq` **beside** `proxyRes` and `error`:
 
-### B. Extend the focused policy tests
-
-In [`tests/gateway-route-policy.test.cjs`](https://github.com/naseerkhan861/harson-pg/blob/temp-main/tests/gateway-route-policy.test.cjs):
-
-1. Add a positive assertion beside the two existing permitted requests:
-
-   ```js
-   assert.equal(
-     isAllowedReplicatorRequest(
-       request({
-         method: "POST",
-         path: "/app/viral-video/link/resolve",
-         module: "video-generator"
-       })
-     ),
-     true
-   );
-   ```
-
-2. Add a **GET** for the same path to “rejects wrong method”; it must be `false`.
-3. Test the exact path under `image-generator`, `clothing`, and no gateway session; each must be `false`.
-4. Add `/app/viral-video/link/resolve/extra`, `/app/viral-video/link/resolves`, and `/app/viral-video/other` to the rejected-path list.
-5. Change the test describing **“two verified replicator endpoints”** to **“three”** and change `REPLICATOR_EXCEPTIONS.length >= 2` to an exact assertion for the reviewed set (or `>= 3` if the repository intentionally permits independently reviewed future entries). Keep its checks that each exception is `POST` and `video-generator`.
-
-These tests matter because the route accepts a request that can ask the provider to resolve an external URL; the gateway must not become a generic `/app` proxy.
-
-### C. Update the configuration example and documentation
-
-The [`.env.example`](https://github.com/naseerkhan861/harson-pg/blob/temp-main/.env.example) comment above `YIBAI_GATEWAY_EXTRA_PATHS` currently names the history and pricing exceptions. Add:
-
-```text
-# POST /app/viral-video/link/resolve is also admitted by
-# src/gateway/routePolicy.js for video-generator sessions only.
+```js
+on: {
+  proxyReq: (proxyReq, req) => {
+    const providerCookies = removeGatewayCookie(
+      req.headers.cookie,
+      SESSION_COOKIE_NAME
+    );
+    if (providerCookies) {
+      proxyReq.setHeader("cookie", providerCookies);
+    } else {
+      proxyReq.removeHeader("cookie");
+    }
+  },
+  proxyRes: handleProxyResponse,
+  error: handleProxyError
+}
 ```
 
-Leave the `YIBAI_GATEWAY_EXTRA_PATHS` value unchanged. **Do not commit production `.env`**, credentials, or copied link URLs. If a temporary broad `/app` entry was added during troubleshooting, remove it once the exact route policy is deployed, after checking whether other independently needed routes rely on it.
+This filters only the Harson gateway's session cookie; it does not strip the provider's login cookies or parse/rewrite the POST body. There are two gateway-cookie names in `server.js` depending on `YIBAI_FRAME_PUBLIC_ORIGIN`, and `SESSION_COOKIE_NAME` handles both.
 
-## 4. Tests and deployment
+At the **start** of `handleProxyResponse(proxyRes, req, res)`, before the existing `rewriteLocationHeader(proxyRes)` call, add a narrowly scoped status log:
 
-From your VS Code repository checkout based on the latest `temp-main`:
+```js
+if (
+  req.method === "POST" &&
+  req.path === "/app/viral-video/link/resolve"
+) {
+  console.info(
+    `[gateway] link/resolve upstream status=${proxyRes.statusCode}`
+  );
+}
+```
+
+The existing `res.on("finish")` log already records the **final** response status. The new line records only a status from an actual YiBai response. It does not read or buffer the response body, log the submitted link, expose cookies, or alter the status. A completed request might now produce two status-only lines.
+
+### 3C. Add focused tests in `tests/gateway-proxy-headers.test.cjs`
+
+```js
+"use strict";
+
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const {
+  removeGatewayCookie,
+  rewriteProviderSetCookie
+} = require("../src/gateway/proxyHeaders.js");
+
+test("removes only the gateway session cookie", () => {
+  assert.equal(
+    removeGatewayCookie(
+      "provider_sid=one; __Host-harson_aigc=private==; other=two",
+      "__Host-harson_aigc"
+    ),
+    "provider_sid=one; other=two"
+  );
+  assert.equal(
+    removeGatewayCookie("harson_aigc_gateway=private", "harson_aigc_gateway"),
+    ""
+  );
+});
+
+test("rewrites only provider cookie domains and keeps separate headers", () => {
+  assert.deepEqual(
+    rewriteProviderSetCookie(
+      [
+        "sid=abc; Domain=.yibaiaigc.com; Path=/; HttpOnly; Secure; SameSite=None",
+        "other=xyz; Domain=unrelated.example; Path=/"
+      ],
+      "https://cl-base.yibaiaigc.com"
+    ),
+    [
+      "sid=abc; Path=/; HttpOnly; Secure; SameSite=None",
+      "other=xyz; Domain=unrelated.example; Path=/"
+    ]
+  );
+});
+```
+
+Run:
 
 ```bash
-node --test tests/gateway-route-policy.test.cjs
+node --test tests/gateway-proxy-headers.test.cjs tests/gateway-route-policy.test.cjs
 node --test tests/image-tab-injection.test.cjs
 ```
 
-The first checks the precise gateway exception. The second protects the gateway's existing HTML injection behavior. If your repo has a gateway integration test harness, also send a `POST` through the gateway to a mock YiBai upstream and verify it forwards the method and request body unchanged, while an unknown `/app/viral-video/*` path stays 404.
+These are focused tests for identity/security behavior and the existing three exact viral-video routes. If your test setup has a mock upstream, add one integration check: a resolver POST must reach that upstream with the same JSON body and provider cookies but **without** the Harson session cookie; a fake `Set-Cookie: Domain=.yibaiaigc.com` must reach the browser without that Domain attribute; upstream 500 must remain 500 with its original body. Avoid network calls to the real provider in automated tests.
 
-After committing and pushing your reviewed change, update the server checkout and rebuild **the gateway container**. The repository's `docker-compose.yml` uses a separate `gateway` service:
+## 4. Deploy and classify the outcome
+
+Pull your reviewed `temp-main` changes onto the server, then rebuild the **gateway service**, which is separate from `app` in `docker-compose.yml`:
 
 ```bash
 docker compose --profile gateway up -d --build --no-deps --force-recreate gateway
-docker compose --profile gateway exec gateway grep -n 'link/resolve' /app/src/gateway/routePolicy.js
+docker compose --profile gateway exec gateway grep -n 'link/resolve upstream status' /app/src/gateway/server.js
 docker compose logs --tail=100 gateway
 ```
 
-The second command verifies the running image contains the new rule; do not paste sensitive logs publicly. A browser reload after deployment loads the updated server behavior. You do not need to reload the iframe for every subsequent link submission.
+Confirm the running gateway contains the new code. A single browser refresh after deployment is enough to establish a fresh iframe session; there should be no extra iframe reload on each link submission. Retry with a supported public link. Read the status-only log and the failed request's **Network → Response**, then follow this table:
 
-## 5. Accept or investigate the next result
+| Observation | Interpretation | Action |
+| --- | --- | --- |
+| No `[gateway] link/resolve upstream status=...` line, but browser sees 500 | The response did not reach this gateway proxy response handler, or a different gateway/Nginx instance served it | Check `docker compose ps`, deployed image, Nginx routing for `ai.harson-base.com`, and gateway error logs. Do not edit the vendor URL. |
+| Log says `upstream status=500` and browser says 500 | YiBai returned 500 to the proxy; Harson forwarded it | Compare direct-provider result and response code/category. Continue with Section 5 only if the same link succeeds directly. |
+| Log says `upstream status=200` but browser still says 500 | Harson response handling or Nginx is failing after the upstream response | Inspect gateway stack trace and the response-header path; the proxy handler should preserve the upstream status. |
+| 200 after the cookie fixes | Cookie/session flow was the likely cause | Confirm video preview and `下一步` work; verify other YiBai tabs still log in normally. |
+| 400/422 | Vendor now returned a validation error rather than a proxy error | Correct the link according to the vendor's actual message; do not mask it with a generic toast. |
+| 500 both via `ai.harson-base.com` and the direct YiBai interface using the same authorized account/link | Vendor resolver, the link, or vendor availability is the leading issue | Try a supported working link and report the vendor's request ID/error category to YiBai; Harson cannot guarantee vendor-side extraction from its gateway. |
 
-| Result after deployment | Meaning and next action |
-| --- | --- |
-| `POST /app/viral-video/link/resolve` returns 200 and a valid video appears in the reference upload/workflow | Route fix worked. Check that `下一步` works and that a generated result uses the intended provider model. |
-| 400/422 with a provider validation message | Gateway now forwards the request. Test a supported, accessible Xiaohongshu item or direct video URL; preserve the provider's validation message rather than masking it. |
-| 401/403 from upstream | Investigate nested iframe session and provider authentication; the route rule is no longer the blocker. |
-| Still 404 with an empty Harson response | Verify gateway image was recreated, live `routePolicy.js` contains the rule, and the request path/method/module match exactly. Inspect Nginx location forwarding. |
-| Still 404 with YiBai's response body | The request reaches upstream; compare the direct-provider origin, exact path, and method. The gateway's `GATEWAY_UPSTREAM` may differ from the nested tool's actual API host. Do not invent a target or rewrite the link without evidence. |
-| Resolver returns a video URL but preview/video loading fails | Treat as a **separate media/CORS or CDN** issue, like the MP4 problem in the prior history guide; the URL resolver's 404 has been repaired. |
+## 5. Only if direct YiBai succeeds but the gateway still gets upstream 500
 
-The red toast is a consequence of the request failure. Do not suppress the toast, change the button text, weaken browser security, or store provider credentials in client-side JavaScript to make the symptom disappear.
+Compare, **without disclosing secret values**, the direct-provider and proxied requests: target host, method/path, content type, payload field names and sizes, presence of provider cookies, `Origin`, and `Referer`. The current gateway sets `changeOrigin: true`, which changes the target **Host** header; it does not by itself guarantee that `Origin` and `Referer` match the provider origin. If the provider rejects only the proxied origin, the following optional, **resolver-only** normalization may be warranted:
 
-## 6. Acceptance checklist
+```js
+// Add inside the existing proxyReq callback, after the cookie filtering.
+if (
+  req.method === "POST" &&
+  req.path === "/app/viral-video/link/resolve" &&
+  PUBLIC_ORIGIN &&
+  req.headers.origin === PUBLIC_ORIGIN
+) {
+  const targetOrigin = new URL(UPSTREAM_ORIGIN).origin;
+  proxyReq.setHeader("origin", targetOrigin);
 
-- A supported link resolves through `POST /app/viral-video/link/resolve` in the `video-generator` session.
-- The returned video is shown in the provider's reference-video step, and the workflow can proceed.
-- The earlier `viralVideoTaskDetail` and pricing exceptions still work.
-- `GET` on the resolver path, requests from other modules, and arbitrary `/app` paths still fail at the gateway.
-- Other model aliases, history, local upload, and login behavior are unchanged.
+  try {
+    const originalReferer = new URL(String(req.headers.referer || ""));
+    if (originalReferer.origin === PUBLIC_ORIGIN) {
+      proxyReq.setHeader(
+        "referer",
+        targetOrigin + originalReferer.pathname + originalReferer.search
+      );
+    }
+  } catch {
+    // An absent/invalid Referer is left alone.
+  }
+}
+```
 
-**Confidence:** the missing exact route is established in the current `temp-main` source. The screenshot establishes the POST 404. Whether that specific live 404 is produced by Harson or upstream still requires the Network Response and current server configuration checks in Section 2.
+Apply this only after the direct-vs-proxy comparison points to an origin/referrer mismatch. Keep the existing `video-generator` session gate and exact allowlist; test that other paths are not rewritten. Do not broaden the rewrite to all API requests, disable TLS verification, add `/app` to the prefix list, bypass CSRF/session checks, or build a generic server-side URL fetcher for Xiaohongshu links. Such changes would create security and compatibility problems without establishing the real cause.
+
+## 6. Completion criteria
+
+- With a valid supported link, `POST /app/viral-video/link/resolve` returns a successful provider response, the video is accepted into the tool, and the user can proceed.
+- The gateway never sends `__Host-harson_aigc` / `harson_aigc_gateway` to YiBai, while YiBai login cookies still work.
+- Provider cookies with a target domain are accepted by the browser under `ai.harson-base.com` when necessary; separate `Set-Cookie` headers are preserved.
+- A provider 4xx/5xx stays visible as the original provider status; the gateway does not silently change it to 200.
+- Existing `viralVideoTaskDetail`, pricing, local upload, history, names/aliases, and other navigation paths still work.
+
+**Limit of what can be concluded now:** the screenshots establish an HTTP 500 for the resolver, and `temp-main` establishes the two proxy header flaws above. The vendor's 500 response body, request headers, gateway runtime log, and result from the same link on the original provider interface were not provided. It would be misleading to promise a single code change will fix a vendor-generated 500 without those checks.
+
+**Technical reference:** [http-proxy-middleware documentation](https://github.com/chimurai/http-proxy-middleware/blob/master/README.md) explains that `selfHandleResponse` skips ordinary outgoing passes and `changeOrigin` changes the Host header; the repository pins `http-proxy-middleware` at `3.0.7`.
