@@ -1,141 +1,142 @@
-# AI 图案设计 → 参考图校色: history, pricing and session 404 fixes
+# AI 图案设计 → 局部修复: history and submission 404 fixes
 
 **Repository:** [naseerkhan861/harson-pg](https://github.com/naseerkhan861/harson-pg/tree/temp-main)  
-**Reviewed branch/commit:** `temp-main` at `52c22b23d56441ea6c41fffa29e1830a4e08fdb1`  
+**Reviewed branch/commit:** `temp-main` at `70126bd2c5d4e4f41dc0458d8eec9c0a89e73e4b`  
 **Date:** 29 October 2026
 
-This guide contains the exact proposed source/test changes for your development checkout. They were tested locally using the real gateway and a mock provider. No GitHub commit, production deployment or live paid generation was performed.
+This guide contains the exact proposed source/test edits for your development checkout. They were verified locally using the real gateway and a mock provider. No GitHub commit, production deployment or live repair generation was performed.
 
-## 1. What the two screenshots show
+## 1. What your screenshots establish
 
-| Action | Exact failed request | Effect |
+| Stage | Evidence | Relevant request |
 | --- | --- | --- |
-| Open 参考图校色 / load its price | `POST /app/color-match/pricing` → 404 | Pricing fails to load. |
-| Click a right-panel history item | `POST /app/proxy/viralVideoTaskDetail` → 404 | The UI cannot fetch the selected task's details to restore its inputs/result. |
-| Select 偏色校正, upload the shoe and press 开始校色 | `POST /app/color-match/cast-correction-sessions` → 404 | Red toast: `本地校色服务请求失败`. |
+| Open AI 图案设计 → 局部修复 | Red toast: `本地历史记录暂不可用，仍可继续编辑图片。`; resource ending in `viralVideoRecords` returns 404 | The reviewed shared provider history contract is `POST /app/proxy/viralVideoRecords`. The screenshot abbreviates this URL; the exact path/method is already established by the working clothing/e-commerce implementation. |
+| After painting both images and pressing 确认修复区域并生成 | Red toast: `修复任务提交失败，请稍后重试。`; exact console line shows a POST 404 | `POST https://ai.harson-base.com/app/local-repair/beginRepair` |
+| Image/mask handling | Two direct OSS PNG HEAD 404 entries, STS refresh recommendations, Canvas readback warnings | Separate asset/upload checks; these messages alone do not establish the cause of the gateway POST 404. |
 
-These three exact POSTs are visible in the screenshots. The SDK's yellow STS refresh recommendation is a separate message, not proof of an expired token or failed upload.
+The mask editor renders both images, but that preview can be local. It does not prove remote upload succeeded. Conversely, an OSS HEAD 404 alone does not prove a subsequent upload failed.
 
-## 2. Root cause in the reviewed source
+## 2. Why this still fails on the latest branch
 
-`src/controllers/aigcSessionController.js` maps **AI图案设计** to the gateway module **`pattern-design`**.
+AI 图案设计 uses the outer gateway session module **`pattern-design`**. Opening a nested 局部修复 page keeps that module.
 
-The existing gateway rules admit the shared requests for clothing, e-commerce, or the video module as appropriate. They do not admit the screenshot requests under a pattern-design session. Opening a nested 参考图校色 page keeps that outer session module.
+The preceding reference-color-correction fix is present in the reviewed branch. It permits pricing and task-detail requests under `pattern-design`, but the two repair operations below remain unadmitted:
 
-In `src/gateway/server.js`, a request that matches neither the configured prefixes nor an exact exception predicate receives an empty 404 before the provider is called.
+- `POST /app/proxy/viralVideoRecords` — repair history.
+- `POST /app/local-repair/beginRepair` — repair submission.
 
-The previous clothing/e-commerce fixes are already in this baseline. A new pattern-design-specific rule is needed for this workflow.
+The same requests are permitted for clothing/e-commerce by their own rules. Those predicates do not match a pattern-design session.
 
-## 3. Requests covered by the proposed rule
+The gateway returns an empty 404 before contacting YiBai when no configured route prefix or exact exception predicate matches.
 
-All entries below require the authenticated gateway session module to be `pattern-design`.
+## 3. Complete repair-route state after this fix
 
-| Method | Path | Basis |
+| Operation | Exact request | Rule |
 | --- | --- | --- |
-| POST | `/app/proxy/viralVideoTaskDetail` | Screenshot-confirmed history-detail failure |
-| POST | `/app/color-match/pricing` | Screenshot-confirmed pricing failure |
-| GET | `/app/color-match/pricing` | Reviewed shared pricing-refresh contract |
-| POST | `/app/local-repair/pricing` | Shared pricing request reviewed in the working clothing/e-commerce color-match policy |
-| POST | `/app/color-match/cast-correction-sessions` | Screenshot-confirmed session failure |
-| GET | `/app/color-match/cast-correction-sessions` | Reviewed shared session-refresh contract |
-| POST | `/app/color-match/cast-correction-sessions/<UUID>/process` | Reviewed 偏色校正 processing contract |
-| DELETE | `/app/color-match/cast-correction-sessions/<UUID>` | Reviewed session-removal contract |
+| Pricing | `POST /app/local-repair/pricing` | Already admitted by the pattern shared color-match rule |
+| History | `POST /app/proxy/viralVideoRecords` | **Add the new pattern local-repair rule** |
+| Submit painted regions | `POST /app/local-repair/beginRepair` | **Add the new pattern local-repair rule** |
+| Task detail / polling | `POST /app/proxy/viralVideoTaskDetail` | Already admitted by the pattern shared color-match rule |
 
-This is **six exact entries and two anchored UUID patterns**. The screenshot directly establishes three POST failures; the supporting operations mirror the already-reviewed working shared-tool contract.
+Preserve the earlier pattern-design reference-color rules, including their UUID patterns. The new rule adds exactly **two POST/method/path/module triples**.
 
-## 4. Apply the changes in this order
+## 4. Implementation steps
 
-**Appendix A contains the complete tested diff for all four files.**
+**Appendix A contains the complete tested four-file diff.**
 
-### Step 1 — route policy
+### Step 1 — add a dedicated repair predicate
 
 File: `src/gateway/routePolicy.js`
 
-Before `module.exports`, add:
+Before the existing `module.exports`, add:
 
-- `PATTERN_COLOR_MATCH_EXCEPTIONS`: the six exact method/path/module entries.
-- `PATTERN_COLOR_MATCH_PATTERNS`: the process POST and session DELETE regexes, reusing the existing `UUID_SEGMENT`.
-- `isAllowedPatternColorMatchRequest(req)`: check session module, method and exact path or strict regex.
+- `PATTERN_LOCAL_REPAIR_EXCEPTIONS` containing only the two missing POSTs, both with `module: "pattern-design"`.
+- `isAllowedPatternLocalRepairRequest(req)`, checking session module, exact method and exact path.
 
-Add the predicate and exact-entry table to the **existing** export object. The regex table can remain private.
+Add those two names to the existing export object.
 
-Do not rename the session to clothing/e-commerce or replace the existing rules. Do not add broad `/app`, `/app/proxy` or `/app/color-match` prefixes.
+Use a separate repair predicate so the existing `isAllowedPatternColorMatchRequest` keeps its current scope. Do not change the outer session module or replace the existing rule tables.
 
-### Step 2 — gateway integration
+### Step 2 — connect the predicate to the gateway
 
 File: `src/gateway/server.js`
 
-Import the new predicate alongside the existing ones. Append it to the current allowlist expression:
+Import `isAllowedPatternLocalRepairRequest` alongside the existing predicates.
+
+Append it to the allowlist expression:
 
 ```js
-isAllowedEcommerceRequest(req) ||
-isAllowedPatternColorMatchRequest(req);
+isAllowedPatternColorMatchRequest(req) ||
+isAllowedPatternLocalRepairRequest(req);
 ```
 
-Keep all the preceding prefix, video, clothing and e-commerce checks.
+Keep all preceding prefix, video, clothing and e-commerce checks.
 
-Inside `handleProxyResponse`, add the status-only log from Appendix A:
+Extend the existing pattern-design upstream-status logging condition to include either predicate:
 
 ```js
-if (isAllowedPatternColorMatchRequest(req)) {
+if (
+  isAllowedPatternColorMatchRequest(req) ||
+  isAllowedPatternLocalRepairRequest(req)
+) {
   console.info(
     `[gateway] pattern-design ${req.method} ${req.path} upstream status=${proxyRes.statusCode}`
   );
 }
 ```
 
-This records method, path and status. It does not log query strings, image bodies, submitted URLs, cookies or tokens. No new body parser or fabricated provider response is needed.
+This logs method, path and status only. No new proxy, production API handler or request-body parser is required.
 
-### Step 3 — policy tests
+Do not add broad `/app` or `/app/proxy` prefixes to `YIBAI_GATEWAY_EXTRA_PATHS`, or suppress the provider UI's red messages to hide failed requests.
+
+### Step 3 — test the new predicate
 
 File: `tests/gateway-route-policy.test.cjs`
 
-Add the new imports and tests for:
+Add the new imports and tests that establish:
 
-- Exactly the six reviewed entries.
-- The method/path acceptance matrix.
-- Wrong modules and missing sessions.
-- UUID shape, wrong methods and extra suffixes.
-- Rejection of unrelated operations.
+- The table contains exactly the two reviewed POSTs for pattern-design.
+- Other methods, other modules and missing sessions do not match this predicate.
+- Nearby paths and broad prefixes remain rejected.
 
-The existing clothing, e-commerce and video tests remain in place.
+**Keep the existing color-match predicate test that rejects these repair paths.** It tests only `isAllowedPatternColorMatchRequest`. The complete gateway now admits repair through the separate new predicate.
 
-### Step 4 — full gateway fixture
+### Step 4 — update the full gateway fixture
 
 File: `scripts/test-gateway-fixture.js`
 
-Add the mock HTML menu path `/aigc/pattern-design` and obtain a real fixture-issued pattern-design session. Exercise all eight operations through the real gateway and compare their JSON responses with the mock provider.
+The existing fixture has a real pattern-design session and mock provider handlers for both repair requests.
 
-The mock provider already has the necessary shared handlers. The added HTML path is fixture scaffolding, not a new production API.
+Add positive forwarding checks for both POSTs, plus GET/image/video rejection checks.
 
-Keep the existing cookie, upload transport, upstream-error and other-module regression checks.
+Remove the old **whole-gateway** fixture expectation that a pattern-design `POST /app/proxy/viralVideoRecords` must return 404. That expectation is obsolete after this repair fix.
 
-## 5. Local reproduction and results
+The distinction matters: the individual color-match predicate still rejects this operation; the combined gateway now admits it through the repair predicate.
 
-Before the policy edit, all eight operations in section 3 returned **200 directly from the mock provider**, but **empty 404 through the gateway** when using a pattern-design session.
+Keep the existing pricing/task-detail, color-correction, cookie, multipart and upstream-error checks.
 
-After the edit:
+## 5. Local reproduction and test results
 
-| Check | Result |
-| --- | --- |
-| Eight reviewed operations through pattern-design gateway session | 200, with the provider's JSON unchanged |
-| Same operations through image-generator session | Still 404 |
-| GET on the task-detail path | Still 404 |
-| PUT on the session collection | Still 404 |
-| Unrelated records operation | Still 404 |
-| Existing clothing/e-commerce/video checks | Still pass |
+I ran the repository's real gateway and launch-ticket/session flow against the loopback mock provider.
+
+| Request | Direct mock | Before the edit, through pattern-design gateway | After the edit |
+| --- | --- | --- | --- |
+| `POST /app/local-repair/beginRepair` | 200 | **Empty 404** | **200; original mock JSON unchanged** |
+| `POST /app/proxy/viralVideoRecords` | 200 | **Empty 404** | **200; original mock JSON unchanged** |
+
+GET on either path remained 404. Image-generator and video-generator POSTs remained 404 for these two paths. Existing clothing/e-commerce and pattern-design color-correction checks continued to pass.
 
 Completed:
 
-- `node --test tests/gateway-route-policy.test.cjs`: **19/19 passed**.
+- `node --test tests/gateway-route-policy.test.cjs`: **21/21 passed**.
 - `node scripts/test-gateway-fixture.js`: **all checks passed**.
 - `git diff --check`: passed.
 
-This establishes the gateway policy defect and corrected forwarding against a mock provider. It does not establish a completed live YiBai operation or restored real history item.
+These are gateway-forwarding results with a mock provider. The fixture does not establish successful live repair processing or emulate the full real task/result lifecycle.
 
-## 6. Apply and test in your VS Code checkout
+## 6. Apply and validate in your VS Code checkout
 
-Apply Appendix A against the reviewed baseline, or merge equivalent additions if your branch has advanced. Preserve newer reviewed rules. If using a patch file, run `git apply --check` against it before applying.
+Apply Appendix A to the reviewed baseline, or merge equivalent changes if your branch has advanced. Preserve newer reviewed rules and avoid duplicate predicates/entries. If using a patch file, run `git apply --check` against it before applying.
 
 Run:
 
@@ -145,362 +146,254 @@ node scripts/test-gateway-fixture.js
 git diff --check
 ```
 
-The fixture requires free loopback ports **3100–3102**. Its sample prices/results are test data and must not be copied into production behavior.
+The fixture requires free loopback ports **3100–3102**. Its sample prices/results are test data, not production values.
 
-## 7. Deploy the updated gateway
+## 7. Deploy the gateway code
 
-After your usual review, commit/push and server-checkout update:
+After your normal review, commit/push and server-checkout update:
 
 ```bash
 git rev-parse --short HEAD
 docker compose --profile gateway up -d --build --no-deps --force-recreate gateway
-docker compose --profile gateway logs --since=10m gateway | grep -E 'pattern-design .*upstream status|viralVideoTaskDetail|cast-correction-sessions|color-match/pricing|local-repair/pricing'
+docker compose --profile gateway logs --since=10m gateway | grep -E 'pattern-design .*upstream status|beginRepair|viralVideoRecords|viralVideoTaskDetail|local-repair/pricing'
 ```
 
-Reopen/refresh the main Harson workspace afterward to obtain a fresh iframe session; gateway sessions are kept in memory.
+Reopen/refresh the main Harson workspace afterward. The recreated gateway loses its in-memory sessions, so the iframe needs a fresh launch session.
 
-Updating only the main app container or `suggest_changes.md` does not replace the running gateway code.
+Updating only `suggest_changes.md` or only the main application container does not replace the gateway's running code.
 
-## 8. Verify history selection and generation separately
+## 8. Check the actual workflow after deployment
 
-### History selection
+1. Open **AI 图案设计 → 局部修复** with a fresh session.
+2. Inspect the history POST and its response. If the provider succeeds, the startup history toast should disappear and history should load.
+3. Upload the source and correct-detail images.
+4. Enter **涂抹修复区域** and paint valid regions on both images as required.
+5. Click **确认修复区域并生成** once.
+6. Inspect `POST /app/local-repair/beginRepair` and its provider JSON business result/task identifier.
+7. Follow the existing `POST /app/proxy/viralVideoTaskDetail` polling request for that same task.
+8. Verify a terminal provider state and a successful result-image request.
+9. Reopen the history entry to confirm restoration of the saved result.
 
-1. Open **AI 图案设计 → 参考图校色**.
-2. Clear DevTools Network, then click one existing right-panel history item.
-3. Check `POST /app/proxy/viralVideoTaskDetail`.
-4. Verify the response refers to the selected task and contains the expected provider data.
-5. Confirm the correct route/mode, inputs and result are restored.
-6. If JSON succeeds but an image remains blank, inspect that image's own GET and URL.
+Confirm the submission response/task identifier before submitting again. An HTTP 200 alone is insufficient if the JSON contains a business error.
 
-Do not replace the history click handler or frame bridge to work around a task-detail request that is still returning 404.
+## 9. Check the OSS messages separately
 
-### 偏色校正
+The direct `yb-ai.oss-accelerate.aliyuncs.com` HEAD errors are outside these two Harson gateway routes.
 
-1. Select **偏色校正** and upload the image.
-2. Click **开始校色** once.
-3. Inspect the session POST response.
-4. Check the subsequent POST to the returned UUID's `/process` route.
-5. Inspect the provider's JSON business status and result-image request.
-6. Verify refresh/delete calls if those UI operations are used.
+For one source image and one generated mask, inspect the full Network sequence:
 
-The reviewed generation contract here is the known 偏色校正 session flow. The screenshots also show the 整图还原正确颜色 mode before history selection, but do not show that mode's own generation request. If a different mode still fails after these observed requests succeed, capture its actual method/path/response before adding another exact rule.
+- Any preliminary HEAD request.
+- The actual upload PUT/POST and its response.
+- The stored object/preview GET or final URL.
+- The subsequent repair-submission request.
 
-## 9. If errors remain after deployment
+A HEAD 404 can precede a successful upload, while a local editor preview can exist even if a remote upload fails. Use the actual upload response to distinguish these cases.
 
-| Evidence | Meaning / next step |
+If a direct OSS upload returns an error or an expired-token response, inspect YiBai's upload/STS result separately. The gateway route addition does not change external bucket objects or credentials.
+
+The yellow Canvas readback and STS recommendations, category warnings, `allowfullscreen` and performance logs do not explain an empty policy-generated `beginRepair` 404.
+
+## 10. If a red message remains
+
+| Evidence | Interpretation / next step |
 | --- | --- |
-| Final 404 with no matching pattern-design upstream-status line | Verify the deployed gateway code, current session module and Nginx target; the request may still be rejected locally or reaching a stale instance. |
-| `pattern-design ... upstream status=404` | The new rule forwarded the request and YiBai returned 404. Inspect the actual response, task/session ID and provider session. |
-| Upstream 500 | Forwarding succeeded; inspect the provider error. Do not hide it with a fake 200. |
-| HTTP 200 but a red toast or blank panel | Check the JSON business result, expected task/session fields and subsequent requests. HTTP 200 alone does not establish success. |
-| Yellow STS refresh recommendation | Inspect the actual upload PUT/POST if upload failure is suspected. The warning alone does not prove expired credentials. |
+| Final 404 without a matching pattern-design upstream-status line | Verify the running gateway version, session module and Nginx target; the request may still be rejected locally or reaching a stale instance. |
+| `pattern-design POST /app/local-repair/beginRepair upstream status=404` | The new rule forwarded the request; YiBai returned the 404. Inspect the actual response and provider session/payload. |
+| History request logs upstream 404 | Inspect YiBai's history response. Another gateway exception will not repair that response. |
+| Upstream 500 | Forwarding succeeded; inspect the provider error. Do not return a fabricated success. |
+| Submission succeeds but the UI stays at 生成中 | Inspect the returned task ID, task-detail polling response, JSON business state and result-image request. The polling path is already admitted. |
 
-The category warnings from `aigc-workspace.js:747`, `allowfullscreen`, performance metrics and frame-bridge MessageEvent logs do not explain the three exact POST 404s.
-
-Capture exact method/path, redacted response JSON and the corresponding gateway status line for any remaining failure. Keep tokens, cookies and signed URLs out of shared logs.
+Capture exact request method/path, redacted response JSON and matching gateway status lines for any remaining failure. Keep cookies, tokens and signed URLs out of shared logs.
 
 ## Appendix A — exact tested diff
 
-Apply to the reviewed `52c22b2` baseline, preserving the preceding clothing/e-commerce fixes.
+Apply to the reviewed `70126bd` baseline, preserving the earlier pattern-design color-correction fix.
 
 ```diff
 diff --git a/scripts/test-gateway-fixture.js b/scripts/test-gateway-fixture.js
-index 75dc67d..234e9b5 100644
+index 234e9b5..42bda7b 100644
 --- a/scripts/test-gateway-fixture.js
 +++ b/scripts/test-gateway-fixture.js
-@@ -153,7 +153,8 @@ function startFixture() {
-     "/aigc/upscaler",
-     "/aigc/video-generator",
-     "/aigc/clothing",
--    "/aigc/e-commerce"
-+    "/aigc/e-commerce",
-+    "/aigc/pattern-design"
-   ]) {
-     app.get(
-       path,
-@@ -1376,6 +1377,48 @@ async function main() {
-       }
+@@ -1409,8 +1409,7 @@ async function main() {
+ 
+     for (const [method, apiPath] of [
+       ["GET", "/app/proxy/viralVideoTaskDetail"],
+-      ["PUT", "/app/color-match/cast-correction-sessions"],
+-      ["POST", "/app/proxy/viralVideoRecords"]
++      ["PUT", "/app/color-match/cast-correction-sessions"]
+     ]) {
+       const denied = await request(`${GATEWAY_ORIGIN}${apiPath}`, {
+         method,
+@@ -1419,6 +1418,34 @@ async function main() {
+       check(`pattern-design ${method} ${apiPath} stays 404`, denied.status === 404);
      }
  
-+    const patternSession = await withSession(
-+      "pattern-design", "/aigc/pattern-design?embed=2"
-+    );
-+    const patternColorRequests = [
-+      ["POST", "/app/proxy/viralVideoTaskDetail"],
-+      ["POST", "/app/color-match/pricing"],
-+      ["GET", "/app/color-match/pricing"],
-+      ["POST", "/app/local-repair/pricing"],
-+      ["POST", "/app/color-match/cast-correction-sessions"],
-+      ["GET", "/app/color-match/cast-correction-sessions"],
-+      ["POST", `/app/color-match/cast-correction-sessions/${SESSION_ID}/process`],
-+      ["DELETE", `/app/color-match/cast-correction-sessions/${SESSION_ID}`]
-+    ];
-+    for (const [method, apiPath] of patternColorRequests) {
-+      const direct = await request(`${FIXTURE_ORIGIN}${apiPath}`, { method });
++    for (const apiPath of [
++      "/app/local-repair/beginRepair",
++      "/app/proxy/viralVideoRecords"
++    ]) {
++      const direct = await request(`${FIXTURE_ORIGIN}${apiPath}`, { method: "POST" });
 +      const proxied = await request(`${GATEWAY_ORIGIN}${apiPath}`, {
-+        method,
++        method: "POST",
 +        headers: { Cookie: `harson_aigc_gateway=${patternSession.sessionId}` }
 +      });
 +      check(
-+        `pattern-design color-match ${method} ${apiPath} reaches provider unchanged`,
++        `pattern-design repair POST ${apiPath} reaches provider unchanged`,
 +        direct.status === 200 && proxied.status === 200 && proxied.body.equals(direct.body)
 +      );
-+      const wrongModule = await request(`${GATEWAY_ORIGIN}${apiPath}`, {
-+        method,
-+        headers: { Cookie: `harson_aigc_gateway=${first.sessionId}` }
-+      });
-+      check(`image session ${method} ${apiPath} stays 404`, wrongModule.status === 404);
-+    }
-+
-+    for (const [method, apiPath] of [
-+      ["GET", "/app/proxy/viralVideoTaskDetail"],
-+      ["PUT", "/app/color-match/cast-correction-sessions"],
-+      ["POST", "/app/proxy/viralVideoRecords"]
-+    ]) {
-+      const denied = await request(`${GATEWAY_ORIGIN}${apiPath}`, {
-+        method,
++      const wrongMethod = await request(`${GATEWAY_ORIGIN}${apiPath}`, {
 +        headers: { Cookie: `harson_aigc_gateway=${patternSession.sessionId}` }
 +      });
-+      check(`pattern-design ${method} ${apiPath} stays 404`, denied.status === 404);
++      check(`pattern-design GET ${apiPath} stays 404`, wrongMethod.status === 404);
++      for (const [module, sessionId] of [
++        ["image", first.sessionId], ["video", videoSession.sessionId]
++      ]) {
++        const wrongModule = await request(`${GATEWAY_ORIGIN}${apiPath}`, {
++          method: "POST",
++          headers: { Cookie: `harson_aigc_gateway=${sessionId}` }
++        });
++        check(`${module} POST ${apiPath} stays 404`, wrongModule.status === 404);
++      }
 +    }
 +
      const ecommerceUpstreamFailure = await request(
        `${GATEWAY_ORIGIN}/app/viral-video/link/resolve?fail=1`,
        {
 diff --git a/src/gateway/routePolicy.js b/src/gateway/routePolicy.js
-index 4ec72df..2a935a4 100644
+index 2a935a4..d24410c 100644
 --- a/src/gateway/routePolicy.js
 +++ b/src/gateway/routePolicy.js
-@@ -279,6 +279,82 @@ function isAllowedEcommerceRequest(req) {
+@@ -355,6 +355,30 @@ function isAllowedPatternColorMatchRequest(req) {
    );
  }
  
-+/*
-+  AI 图案设计 → 参考图校色 keeps the outer pattern-design session.
-+  The screenshot confirms POST pricing, history detail, and session calls;
-+  follow-up color-match operations mirror the reviewed shared contract.
-+*/
-+const PATTERN_COLOR_MATCH_EXCEPTIONS = Object.freeze([
++/* AI 图案设计 → 局部修复 uses the shared provider repair contract. */
++const PATTERN_LOCAL_REPAIR_EXCEPTIONS = Object.freeze([
 +  {
 +    method: "POST",
-+    path: "/app/proxy/viralVideoTaskDetail",
++    path: "/app/local-repair/beginRepair",
 +    module: "pattern-design",
-+    reason: "restore a reference color-match task from history"
++    reason: "submit the painted-region local-repair task"
 +  },
 +  {
 +    method: "POST",
-+    path: "/app/color-match/pricing",
++    path: "/app/proxy/viralVideoRecords",
 +    module: "pattern-design",
-+    reason: "load color-match pricing"
-+  },
-+  {
-+    method: "GET",
-+    path: "/app/color-match/pricing",
-+    module: "pattern-design",
-+    reason: "refresh color-match pricing"
-+  },
-+  {
-+    method: "POST",
-+    path: "/app/local-repair/pricing",
-+    module: "pattern-design",
-+    reason: "load shared color-match/local-repair pricing"
-+  },
-+  {
-+    method: "POST",
-+    path: "/app/color-match/cast-correction-sessions",
-+    module: "pattern-design",
-+    reason: "allow the screenshot-confirmed cast-correction session operation"
-+  },
-+  {
-+    method: "GET",
-+    path: "/app/color-match/cast-correction-sessions",
-+    module: "pattern-design",
-+    reason: "refresh cast-correction sessions"
++    reason: "load local-repair history using the reviewed shared provider contract"
 +  }
 +]);
 +
-+const PATTERN_COLOR_MATCH_PATTERNS = Object.freeze([
-+  {
-+    method: "POST",
-+    pattern: new RegExp(
-+      `^/app/color-match/cast-correction-sessions/${UUID_SEGMENT}/process$`,
-+      "i"
-+    ),
-+    module: "pattern-design"
-+  },
-+  {
-+    method: "DELETE",
-+    pattern: new RegExp(
-+      `^/app/color-match/cast-correction-sessions/${UUID_SEGMENT}$`,
-+      "i"
-+    ),
-+    module: "pattern-design"
-+  }
-+]);
-+
-+function isAllowedPatternColorMatchRequest(req) {
-+  const moduleName = req.harsonGatewaySession?.moduleName;
-+  return PATTERN_COLOR_MATCH_EXCEPTIONS.some(entry =>
-+    moduleName === entry.module &&
++function isAllowedPatternLocalRepairRequest(req) {
++  return PATTERN_LOCAL_REPAIR_EXCEPTIONS.some(entry =>
++    req.harsonGatewaySession?.moduleName === entry.module &&
 +    req.method === entry.method &&
 +    req.path === entry.path
-+  ) || PATTERN_COLOR_MATCH_PATTERNS.some(entry =>
-+    moduleName === entry.module &&
-+    req.method === entry.method &&
-+    entry.pattern.test(req.path)
 +  );
 +}
 +
  module.exports = {
    isAllowedReplicatorRequest,
    REPLICATOR_EXCEPTIONS,
-@@ -287,5 +363,7 @@ module.exports = {
-   isAllowedLocalRepairRequest,
-   LOCAL_REPAIR_EXCEPTIONS,
+@@ -365,5 +389,7 @@ module.exports = {
    isAllowedEcommerceRequest,
--  ECOMMERCE_EXCEPTIONS
-+  ECOMMERCE_EXCEPTIONS,
-+  isAllowedPatternColorMatchRequest,
-+  PATTERN_COLOR_MATCH_EXCEPTIONS
+   ECOMMERCE_EXCEPTIONS,
+   isAllowedPatternColorMatchRequest,
+-  PATTERN_COLOR_MATCH_EXCEPTIONS
++  PATTERN_COLOR_MATCH_EXCEPTIONS,
++  isAllowedPatternLocalRepairRequest,
++  PATTERN_LOCAL_REPAIR_EXCEPTIONS
  };
 diff --git a/src/gateway/server.js b/src/gateway/server.js
-index 7b2a2a9..1c926ad 100644
+index 1c926ad..cda6a1a 100644
 --- a/src/gateway/server.js
 +++ b/src/gateway/server.js
-@@ -48,7 +48,8 @@ const {
-   isAllowedReplicatorRequest,
+@@ -49,7 +49,8 @@ const {
    isAllowedColorMatchRequest,
    isAllowedLocalRepairRequest,
--  isAllowedEcommerceRequest
-+  isAllowedEcommerceRequest,
-+  isAllowedPatternColorMatchRequest
+   isAllowedEcommerceRequest,
+-  isAllowedPatternColorMatchRequest
++  isAllowedPatternColorMatchRequest,
++  isAllowedPatternLocalRepairRequest
  } = require("./routePolicy");
  const {
    removeGatewayCookie,
-@@ -747,7 +748,9 @@ app.use(async (req, res, next) => {
-     */
-     isAllowedLocalRepairRequest(req) ||
+@@ -750,7 +751,9 @@ app.use(async (req, res, next) => {
      /* AI 电商: reviewed exact method/session routes and strict UUID patterns. */
--    isAllowedEcommerceRequest(req);
-+    isAllowedEcommerceRequest(req) ||
-+    /* AI 图案设计 reference color-match: exact routes and strict UUID patterns. */
-+    isAllowedPatternColorMatchRequest(req);
+     isAllowedEcommerceRequest(req) ||
+     /* AI 图案设计 reference color-match: exact routes and strict UUID patterns. */
+-    isAllowedPatternColorMatchRequest(req);
++    isAllowedPatternColorMatchRequest(req) ||
++    /* AI 图案设计 local repair: exact submission/history POSTs only. */
++    isAllowedPatternLocalRepairRequest(req);
  
    if (!allowed) {
      return res.status(404).end();
-@@ -922,6 +925,12 @@ async function handleProxyResponse(
+@@ -925,7 +928,10 @@ async function handleProxyResponse(
      );
    }
  
-+  if (isAllowedPatternColorMatchRequest(req)) {
-+    console.info(
-+      `[gateway] pattern-design ${req.method} ${req.path} upstream status=${proxyRes.statusCode}`
-+    );
-+  }
-+
-   rewriteLocationHeader(
-     proxyRes
-   );
+-  if (isAllowedPatternColorMatchRequest(req)) {
++  if (
++    isAllowedPatternColorMatchRequest(req) ||
++    isAllowedPatternLocalRepairRequest(req)
++  ) {
+     console.info(
+       `[gateway] pattern-design ${req.method} ${req.path} upstream status=${proxyRes.statusCode}`
+     );
 diff --git a/tests/gateway-route-policy.test.cjs b/tests/gateway-route-policy.test.cjs
-index 2c7a104..84e9c97 100644
+index 84e9c97..c7cd7fa 100644
 --- a/tests/gateway-route-policy.test.cjs
 +++ b/tests/gateway-route-policy.test.cjs
-@@ -16,7 +16,9 @@ const {
-   isAllowedLocalRepairRequest,
-   LOCAL_REPAIR_EXCEPTIONS,
+@@ -18,7 +18,9 @@ const {
    isAllowedEcommerceRequest,
--  ECOMMERCE_EXCEPTIONS
-+  ECOMMERCE_EXCEPTIONS,
-+  isAllowedPatternColorMatchRequest,
-+  PATTERN_COLOR_MATCH_EXCEPTIONS
+   ECOMMERCE_EXCEPTIONS,
+   isAllowedPatternColorMatchRequest,
+-  PATTERN_COLOR_MATCH_EXCEPTIONS
++  PATTERN_COLOR_MATCH_EXCEPTIONS,
++  isAllowedPatternLocalRepairRequest,
++  PATTERN_LOCAL_REPAIR_EXCEPTIONS
  } = require("../src/gateway/routePolicy.js");
  
  function request({ method, path, module }) {
-@@ -29,6 +31,85 @@ function request({ method, path, module }) {
+@@ -31,6 +33,39 @@ function request({ method, path, module }) {
    };
  }
  
-+const patternColorExpectedPairs = [
-+  ["POST", "/app/proxy/viralVideoTaskDetail"],
-+  ["POST", "/app/color-match/pricing"],
-+  ["GET", "/app/color-match/pricing"],
-+  ["POST", "/app/local-repair/pricing"],
-+  ["POST", "/app/color-match/cast-correction-sessions"],
-+  ["GET", "/app/color-match/cast-correction-sessions"]
-+];
-+
-+test("pattern-design color-match exact entries match the reviewed contract", () => {
++test("pattern-design local repair adds only the reviewed history/submit POSTs", () => {
 +  assert.deepEqual(
-+    PATTERN_COLOR_MATCH_EXCEPTIONS.map(entry =>
-+      `${entry.method} ${entry.path} ${entry.module}`
-+    ).sort(),
-+    patternColorExpectedPairs.map(([method, path]) =>
-+      `${method} ${path} pattern-design`
-+    ).sort()
++    PATTERN_LOCAL_REPAIR_EXCEPTIONS.map(({ method, path, module }) => ({ method, path, module })),
++    [
++      { method: "POST", path: "/app/local-repair/beginRepair", module: "pattern-design" },
++      { method: "POST", path: "/app/proxy/viralVideoRecords", module: "pattern-design" }
++    ]
 +  );
 +});
 +
-+test("pattern-design color-match method/module/path matrix remains exact", () => {
-+  const allowed = new Set(patternColorExpectedPairs.map(([method, path]) => `${method} ${path}`));
-+  for (const path of new Set(patternColorExpectedPairs.map(pair => pair[1]))) {
-+    for (const method of ["GET", "POST", "HEAD", "OPTIONS", "PUT", "DELETE", "PATCH"]) {
-+      assert.equal(isAllowedPatternColorMatchRequest(request({
++test("pattern-design repair predicate rejects other methods/modules and nearby paths", () => {
++  for (const path of ["/app/local-repair/beginRepair", "/app/proxy/viralVideoRecords"]) {
++    for (const method of ["POST", "GET", "HEAD", "PUT", "DELETE", "OPTIONS", "PATCH"]) {
++      assert.equal(isAllowedPatternLocalRepairRequest(request({
 +        method, path, module: "pattern-design"
-+      })), allowed.has(`${method} ${path}`));
++      })), method === "POST");
 +    }
-+  }
-+  for (const [method, path] of patternColorExpectedPairs) {
 +    for (const module of ["clothing", "e-commerce", "video-generator", "image-generator", undefined]) {
-+      assert.equal(isAllowedPatternColorMatchRequest(request({ method, path, module })), false);
++      assert.equal(isAllowedPatternLocalRepairRequest(request({ method: "POST", path, module })), false);
 +    }
 +    for (const badPath of [path + "/extra", path + "s"]) {
-+      assert.equal(isAllowedPatternColorMatchRequest(request({
-+        method, path: badPath, module: "pattern-design"
++      assert.equal(isAllowedPatternLocalRepairRequest(request({
++        method: "POST", path: badPath, module: "pattern-design"
 +      })), false);
 +    }
 +  }
-+});
-+
-+test("pattern-design cast-correction UUID operations remain strict", () => {
-+  const id = "62f614d0-23ac-4e89-afd4-c175fe60e9c7";
-+  const root = "/app/color-match/cast-correction-sessions/";
-+  for (const [method, path] of [
-+    ["POST", root + id + "/process"],
-+    ["DELETE", root + id]
-+  ]) {
-+    assert.equal(isAllowedPatternColorMatchRequest(request({
-+      method, path, module: "pattern-design"
-+    })), true);
-+    for (const otherMethod of ["GET", "POST", "HEAD", "OPTIONS", "PUT", "DELETE", "PATCH"].filter(m => m !== method)) {
-+      assert.equal(isAllowedPatternColorMatchRequest(request({
-+        method: otherMethod, path, module: "pattern-design"
-+      })), false);
-+    }
-+    for (const module of ["clothing", "e-commerce", "image-generator", undefined]) {
-+      assert.equal(isAllowedPatternColorMatchRequest(request({ method, path, module })), false);
-+    }
-+    for (const badPath of [path + "/extra", path.replace(id, "not-a-uuid"), path.replace(id, id + "a")]) {
-+      assert.equal(isAllowedPatternColorMatchRequest(request({
-+        method, path: badPath, module: "pattern-design"
-+      })), false);
-+    }
-+  }
-+});
-+
-+test("pattern color-match rules do not admit unrelated app operations", () => {
-+  for (const path of [
-+    "/app", "/app/proxy", "/app/color-match",
-+    "/app/local-repair/beginRepair", "/app/proxy/viralVideoRecords",
-+    "/app/viral-video/link/resolve", "/app/viral-video/pricing"
-+  ]) {
-+    assert.equal(isAllowedPatternColorMatchRequest(request({
++  for (const path of ["/app", "/app/proxy", "/app/local-repair", "/app/proxy/viralVideoTaskDetail"]) {
++    assert.equal(isAllowedPatternLocalRepairRequest(request({
 +      method: "POST", path, module: "pattern-design"
 +    })), false);
 +  }
 +});
 +
- const ecommerceExpectedPairs = [
+ const patternColorExpectedPairs = [
    ["POST", "/app/proxy/viralVideoTaskDetail"],
-   ["POST", "/app/viral-video/pricing"],
+   ["POST", "/app/color-match/pricing"],
 ```
 
