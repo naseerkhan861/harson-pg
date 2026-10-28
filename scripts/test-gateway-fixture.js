@@ -32,6 +32,9 @@ const FIXTURE_PORT = 3102;
 const GATEWAY_ORIGIN = `http://127.0.0.1:${GATEWAY_PORT}`;
 const FIXTURE_ORIGIN = `http://127.0.0.1:${FIXTURE_PORT}`;
 
+// Recorded cast-correction session id (gateway finish log, 2026-10-28).
+const SESSION_ID = "62f614d0-23ac-4e89-afd4-c175fe60e9c7";
+
 const HTML_BODY =
   "<!DOCTYPE html><html><head><title>YiBai fixture</title>" +
   "</head><body><div>悠船Midjourney V7</div>" +
@@ -196,6 +199,26 @@ function startFixture() {
       }
     );
   }
+
+  /* Per-session cast-correction process/delete (UUID-pattern exceptions) */
+  app.post(
+    `/app/color-match/cast-correction-sessions/${SESSION_ID}/process`,
+    (req, res) => {
+      res.json({ code: 200, data: { corrected: true } });
+    }
+  );
+
+  app.delete(
+    `/app/color-match/cast-correction-sessions/${SESSION_ID}`,
+    (req, res) => {
+      res.json({ code: 200, data: { deleted: true } });
+    }
+  );
+
+  /* Local repair submission (route-policy exception) */
+  app.post("/app/local-repair/beginRepair", (_req, res) => {
+    res.json({ code: 200, data: { task: "fixture-repair" } });
+  });
 
   /* Viral video replicator link resolver (route-policy exception) */
   app.post(
@@ -1103,6 +1126,85 @@ async function main() {
       "video-generator session on color-match sessions stays 404",
       sessionsWrongModule.status === 404
     );
+
+    /* 7f. cast-correction per-session process/delete + beginRepair */
+    const processRes = await request(
+      `${GATEWAY_ORIGIN}/app/color-match/cast-correction-sessions/${SESSION_ID}/process`,
+      {
+        method: "POST",
+        headers: {
+          Cookie: `harson_aigc_gateway=${clothingSession.sessionId}`
+        }
+      }
+    );
+
+    check(
+      "clothing POST session/process (UUID pattern) reaches provider",
+      processRes.status === 200 &&
+        JSON.parse(processRes.body.toString()).data.corrected === true
+    );
+
+    const deleteRes = await request(
+      `${GATEWAY_ORIGIN}/app/color-match/cast-correction-sessions/${SESSION_ID}`,
+      {
+        method: "DELETE",
+        headers: {
+          Cookie: `harson_aigc_gateway=${clothingSession.sessionId}`
+        }
+      }
+    );
+
+    check(
+      "clothing DELETE session (UUID pattern) reaches provider",
+      deleteRes.status === 200 &&
+        JSON.parse(deleteRes.body.toString()).data.deleted === true
+    );
+
+    const badId = await request(
+      `${GATEWAY_ORIGIN}/app/color-match/cast-correction-sessions/not-a-uuid/process`,
+      {
+        method: "POST",
+        headers: {
+          Cookie: `harson_aigc_gateway=${clothingSession.sessionId}`
+        }
+      }
+    );
+
+    check(
+      "non-UUID session id stays 404",
+      badId.status === 404
+    );
+
+    const repairSubmit = await request(
+      `${GATEWAY_ORIGIN}/app/local-repair/beginRepair`,
+      {
+        method: "POST",
+        headers: {
+          Cookie: `harson_aigc_gateway=${clothingSession.sessionId}`
+        }
+      }
+    );
+
+    check(
+      "clothing POST beginRepair reaches mock provider",
+      repairSubmit.status === 200 &&
+        JSON.parse(repairSubmit.body.toString()).data.task === "fixture-repair"
+    );
+
+    const repairWrongMethod = await request(
+      `${GATEWAY_ORIGIN}/app/local-repair/beginRepair`,
+      { headers: { Cookie: `harson_aigc_gateway=${clothingSession.sessionId}` } }
+    );
+    check("GET beginRepair stays 404", repairWrongMethod.status === 404);
+
+    const repairWrongModule = await request(
+      `${GATEWAY_ORIGIN}/app/local-repair/beginRepair`,
+      {
+        method: "POST",
+        headers: { Cookie: `harson_aigc_gateway=${videoSession.sessionId}` }
+      }
+    );
+    check("video POST beginRepair stays 404", repairWrongModule.status === 404);
 
     /* 8. JSON passthrough (extra path) + no-store */
     const jsonRes =

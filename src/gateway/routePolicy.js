@@ -98,10 +98,71 @@ const COLOR_MATCH_EXCEPTIONS = Object.freeze([
 
 function isAllowedColorMatchRequest(req) {
   const moduleName = req.harsonGatewaySession?.moduleName;
-  return COLOR_MATCH_EXCEPTIONS.some(entry =>
+  if (COLOR_MATCH_EXCEPTIONS.some(entry =>
     entry.module === moduleName &&
     entry.method === req.method &&
     entry.path === req.path
+  )) {
+    return true;
+  }
+
+  /*
+    Per-session cast-correction calls carry a dynamic UUID session id
+    (recorded 2026-10-28 16:16:37Z: process) and 16:16:38Z: DELETE).
+    Strictly shaped patterns — never broad prefixes.
+  */
+  return COLOR_MATCH_PATTERNS.some(entry =>
+    entry.module === moduleName &&
+    entry.method === req.method &&
+    entry.pattern.test(req.path)
+  );
+}
+
+const UUID_SEGMENT =
+  "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+
+const COLOR_MATCH_PATTERNS = Object.freeze([
+  {
+    method: "POST",
+    pattern: new RegExp(
+      `^/app/color-match/cast-correction-sessions/${UUID_SEGMENT}/process$`,
+      "i"
+    ),
+    module: "clothing",
+    reason: "run the 偏色校正 process for one recorded cast-correction session"
+  },
+  {
+    method: "DELETE",
+    pattern: new RegExp(
+      `^/app/color-match/cast-correction-sessions/${UUID_SEGMENT}$`,
+      "i"
+    ),
+    module: "clothing",
+    reason: "delete one recorded cast-correction session"
+  }
+]);
+
+/*
+  AI 服装 → 局部修复 submission (suggest_changes.md, 29 Oct): the exact
+  POST was confirmed three ways — full console line
+  (POST https://ai.harson-base.com/app/local-repair/beginRepair 404),
+  the live gateway finish log (2026-10-28 16:17:02Z), and an isolated
+  local reproduction (empty gateway 404 against a 200 mock upstream).
+*/
+const LOCAL_REPAIR_EXCEPTIONS = Object.freeze([
+  {
+    method: "POST",
+    path: "/app/local-repair/beginRepair",
+    module: "clothing",
+    reason: "submit painted region for the clothing local-repair subtool"
+  }
+]);
+
+function isAllowedLocalRepairRequest(req) {
+  return LOCAL_REPAIR_EXCEPTIONS.some(entry =>
+    req.harsonGatewaySession?.moduleName === entry.module &&
+    req.method === entry.method &&
+    req.path === entry.path
   );
 }
 
@@ -109,5 +170,7 @@ module.exports = {
   isAllowedReplicatorRequest,
   REPLICATOR_EXCEPTIONS,
   isAllowedColorMatchRequest,
-  COLOR_MATCH_EXCEPTIONS
+  COLOR_MATCH_EXCEPTIONS,
+  isAllowedLocalRepairRequest,
+  LOCAL_REPAIR_EXCEPTIONS
 };

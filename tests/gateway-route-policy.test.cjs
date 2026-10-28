@@ -12,7 +12,9 @@ const {
   isAllowedReplicatorRequest,
   REPLICATOR_EXCEPTIONS,
   isAllowedColorMatchRequest,
-  COLOR_MATCH_EXCEPTIONS
+  COLOR_MATCH_EXCEPTIONS,
+  isAllowedLocalRepairRequest,
+  LOCAL_REPAIR_EXCEPTIONS
 } = require("../src/gateway/routePolicy.js");
 
 function request({ method, path, module }) {
@@ -219,6 +221,69 @@ test("cast-correction sessions admit both recorded methods, clothing only", () =
   })), false);
   assert.equal(isAllowedColorMatchRequest(request({
     method, path: "/app/color-match/cast-correction-sessions/other", module
+  })), false);
+});
+
+test("local repair submit is exact and clothing-only", () => {
+  assert.deepEqual(
+    LOCAL_REPAIR_EXCEPTIONS.map(({ method, path, module }) =>
+      ({ method, path, module })),
+    [{
+      method: "POST",
+      path: "/app/local-repair/beginRepair",
+      module: "clothing"
+    }]
+  );
+  const check = (method, path, module) =>
+    isAllowedLocalRepairRequest(request({ method, path, module }));
+  assert.equal(check("POST", "/app/local-repair/beginRepair", "clothing"), true);
+  assert.equal(check("GET", "/app/local-repair/beginRepair", "clothing"), false);
+  assert.equal(check("POST", "/app/local-repair/beginRepair", "video-generator"), false);
+  assert.equal(check("POST", "/app/local-repair/beginRepair", undefined), false);
+  assert.equal(check("POST", "/app/local-repair/beginRepair/extra", "clothing"), false);
+  assert.equal(check("POST", "/app/local-repair/other", "clothing"), false);
+});
+
+test("cast-correction per-session UUID patterns are strict", () => {
+  const sessionId = "62f614d0-23ac-4e89-afd4-c175fe60e9c7";
+
+  // Recorded shapes: POST .../process and DELETE the session itself.
+  assert.equal(isAllowedColorMatchRequest(request({
+    method: "POST",
+    path: `/app/color-match/cast-correction-sessions/${sessionId}/process`,
+    module: "clothing"
+  })), true);
+  assert.equal(isAllowedColorMatchRequest(request({
+    method: "DELETE",
+    path: `/app/color-match/cast-correction-sessions/${sessionId}`,
+    module: "clothing"
+  })), true);
+
+  // Wrong methods, modules, and malformed shapes stay rejected.
+  assert.equal(isAllowedColorMatchRequest(request({
+    method: "GET",
+    path: `/app/color-match/cast-correction-sessions/${sessionId}/process`,
+    module: "clothing"
+  })), false);
+  assert.equal(isAllowedColorMatchRequest(request({
+    method: "DELETE",
+    path: `/app/color-match/cast-correction-sessions/${sessionId}`,
+    module: "video-generator"
+  })), false);
+  assert.equal(isAllowedColorMatchRequest(request({
+    method: "POST",
+    path: "/app/color-match/cast-correction-sessions/not-a-uuid/process",
+    module: "clothing"
+  })), false);
+  assert.equal(isAllowedColorMatchRequest(request({
+    method: "DELETE",
+    path: `/app/color-match/cast-correction-sessions/${sessionId}/extra`,
+    module: "clothing"
+  })), false);
+  assert.equal(isAllowedColorMatchRequest(request({
+    method: "POST",
+    path: `/app/color-match/cast-correction-sessions/${sessionId}/../../other`,
+    module: "clothing"
   })), false);
 });
 

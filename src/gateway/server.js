@@ -47,7 +47,7 @@ const {
 const {
   isAllowedReplicatorRequest,
   isAllowedColorMatchRequest,
-  COLOR_MATCH_EXCEPTIONS
+  isAllowedLocalRepairRequest
 } = require("./routePolicy");
 const {
   removeGatewayCookie,
@@ -735,9 +735,16 @@ app.use(async (req, res, next) => {
     isAllowedReplicatorRequest(req) ||
     /*
       AI 服装 color-match subtool exceptions (suggest_changes.md §3,
-      28 Oct): exact recorded method/path + clothing session triples.
+      28 Oct): exact recorded method/path + clothing session triples,
+      plus strictly shaped per-session UUID patterns (29 Oct).
     */
-    isAllowedColorMatchRequest(req);
+    isAllowedColorMatchRequest(req) ||
+    /*
+      AI 服装 局部修复 submission (suggest_changes.md, 29 Oct): the
+      exact recorded POST, confirmed by console, finish log and local
+      reproduction.
+    */
+    isAllowedLocalRepairRequest(req);
 
   if (!allowed) {
     return res.status(404).end();
@@ -888,16 +895,21 @@ async function handleProxyResponse(
   /*
     Status provenance for the clothing color-match subtool's admitted
     requests (suggest_changes.md §4): records only the upstream status.
-    No bodies, signed URLs, cookies, or query strings.
+    No bodies, signed URLs, cookies, or query strings. Covers both the
+    exact entries and the per-session UUID patterns.
   */
   if (
     req.harsonGatewaySession?.moduleName === "clothing" &&
-    COLOR_MATCH_EXCEPTIONS.some(
-      entry => entry.method === req.method && entry.path === req.path
-    )
+    isAllowedColorMatchRequest(req)
   ) {
     console.info(
       `[gateway] clothing color-match upstream status=${proxyRes.statusCode}`
+    );
+  }
+
+  if (isAllowedLocalRepairRequest(req)) {
+    console.info(
+      `[gateway] clothing local-repair upstream status=${proxyRes.statusCode}`
     );
   }
 
