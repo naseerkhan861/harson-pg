@@ -44,6 +44,9 @@ const {
   ASSET_PREFIX,
   injectImageTabAssets
 } = require("../services/yibaiDisplayInjection");
+const {
+  isAllowedReplicatorRequest
+} = require("./routePolicy");
 
 const PORT = Number(
   process.env.GATEWAY_PORT || 3001
@@ -707,16 +710,23 @@ app.use(async (req, res, next) => {
 
   const requestPath = req.path;
 
-  const allowed = prefixes.some(
-    prefix =>
-      requestPath === prefix ||
-      requestPath.startsWith(
-        `${prefix}/`
-      ) ||
-      requestPath.startsWith(
-        `${prefix}?`
-      )
-  );
+  const allowed =
+    prefixes.some(
+      prefix =>
+        requestPath === prefix ||
+        requestPath.startsWith(
+          `${prefix}/`
+        ) ||
+        requestPath.startsWith(
+          `${prefix}?`
+        )
+    ) ||
+    /*
+      Reviewed sub-tool exceptions (suggest_changes.md §3B): exact
+      method + path + video-generator session triples only. Everything
+      else under /app or /app/proxy stays rejected.
+    */
+    isAllowedReplicatorRequest(req);
 
   if (!allowed) {
     return res.status(404).end();

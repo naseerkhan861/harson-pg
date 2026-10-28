@@ -132,7 +132,8 @@ function startFixture() {
 
   for (const path of [
     "/aigc/image-generator",
-    "/aigc/upscaler"
+    "/aigc/upscaler",
+    "/aigc/video-generator"
   ]) {
     app.get(
       path,
@@ -151,6 +152,24 @@ function startFixture() {
       }
     );
   }
+
+  /* Viral video replicator sub-tool APIs (route-policy exceptions) */
+  app.post(
+    "/app/proxy/viralVideoTaskDetail",
+    (req, res) => {
+      res.json({
+        code: 200,
+        data: { task: "fixture-task", status: "success" }
+      });
+    }
+  );
+
+  app.post(
+    "/app/viral-video/pricing",
+    (req, res) => {
+      res.json({ code: 200, data: { price: 10 } });
+    }
+  );
 
   app.get(
     "/api/data.json",
@@ -777,6 +796,90 @@ async function main() {
           .includes(
             'data-harson-module="upscaler"'
           )
+    );
+
+    /* 7b. replicator route-policy exceptions (video-generator session) */
+    const videoSession = await withSession(
+      "video-generator",
+      "/aigc/video-generator?embed=2"
+    );
+
+    const detailRes = await request(
+      `${GATEWAY_ORIGIN}/app/proxy/viralVideoTaskDetail`,
+      {
+        method: "POST",
+        headers: {
+          Cookie: `harson_aigc_gateway=${videoSession.sessionId}`
+        }
+      }
+    );
+
+    check(
+      "video-generator POST viralVideoTaskDetail passes route policy + JSON returns",
+      detailRes.status === 200 &&
+        JSON.parse(detailRes.body.toString()).data
+          .task === "fixture-task"
+    );
+
+    const pricingRes = await request(
+      `${GATEWAY_ORIGIN}/app/viral-video/pricing`,
+      {
+        method: "POST",
+        headers: {
+          Cookie: `harson_aigc_gateway=${videoSession.sessionId}`
+        }
+      }
+    );
+
+    check(
+      "video-generator POST viral-video/pricing passes route policy",
+      pricingRes.status === 200 &&
+        JSON.parse(pricingRes.body.toString()).data
+          .price === 10
+    );
+
+    const wrongMethod = await request(
+      `${GATEWAY_ORIGIN}/app/proxy/viralVideoTaskDetail`,
+      {
+        headers: {
+          Cookie: `harson_aigc_gateway=${videoSession.sessionId}`
+        }
+      }
+    );
+
+    check(
+      "GET on the detail path stays 404 (method-aware policy)",
+      wrongMethod.status === 404
+    );
+
+    const arbitraryApp = await request(
+      `${GATEWAY_ORIGIN}/app/proxy/otherEndpoint`,
+      {
+        method: "POST",
+        headers: {
+          Cookie: `harson_aigc_gateway=${videoSession.sessionId}`
+        }
+      }
+    );
+
+    check(
+      "arbitrary /app/proxy path stays 404 (no broad prefix)",
+      arbitraryApp.status === 404
+    );
+
+    const wrongModule = await request(
+      `${GATEWAY_ORIGIN}/app/proxy/viralVideoTaskDetail`,
+      {
+        method: "POST",
+        headers: {
+          Cookie: `harson_aigc_gateway=${first.sessionId}`
+        }
+      }
+    );
+
+    check(
+      "image-generator session POST stays 404 (module-aware policy)",
+      wrongModule.status === 404
     );
 
     /* 8. JSON passthrough (extra path) + no-store */
