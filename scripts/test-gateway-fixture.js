@@ -171,6 +171,16 @@ function startFixture() {
     }
   );
 
+  app.post(
+    "/app/viral-video/link/resolve",
+    (req, res) => {
+      res.json({
+        code: 200,
+        data: { videoUrl: "https://image.yibaiaigc.com/fixture.mp4" }
+      });
+    }
+  );
+
   app.get(
     "/api/data.json",
     (req, res) => {
@@ -880,6 +890,38 @@ async function main() {
     check(
       "image-generator session POST stays 404 (module-aware policy)",
       wrongModule.status === 404
+    );
+
+    const linkResolveRes = await request(
+      `${GATEWAY_ORIGIN}/app/viral-video/link/resolve`,
+      {
+        method: "POST",
+        headers: {
+          Cookie: `harson_aigc_gateway=${videoSession.sessionId}`
+        }
+      }
+    );
+
+    check(
+      "video-generator POST link/resolve passes route policy + JSON returns",
+      linkResolveRes.status === 200 &&
+        JSON.parse(linkResolveRes.body.toString()).data
+          .videoUrl === "https://image.yibaiaigc.com/fixture.mp4"
+    );
+
+    const unknownViral = await request(
+      `${GATEWAY_ORIGIN}/app/viral-video/other`,
+      {
+        method: "POST",
+        headers: {
+          Cookie: `harson_aigc_gateway=${videoSession.sessionId}`
+        }
+      }
+    );
+
+    check(
+      "unknown /app/viral-video/* path stays 404",
+      unknownViral.status === 404
     );
 
     /* 8. JSON passthrough (extra path) + no-store */

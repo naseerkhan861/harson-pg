@@ -23,7 +23,7 @@ function request({ method, path, module }) {
   };
 }
 
-test("admits the two verified replicator endpoints for video-generator", () => {
+test("admits the three verified replicator endpoints for video-generator", () => {
   assert.equal(
     isAllowedReplicatorRequest(
       request({
@@ -40,6 +40,17 @@ test("admits the two verified replicator endpoints for video-generator", () => {
       request({
         method: "POST",
         path: "/app/viral-video/pricing",
+        module: "video-generator"
+      })
+    ),
+    true
+  );
+
+  assert.equal(
+    isAllowedReplicatorRequest(
+      request({
+        method: "POST",
+        path: "/app/viral-video/link/resolve",
         module: "video-generator"
       })
     ),
@@ -69,6 +80,17 @@ test("rejects wrong method on the same paths", () => {
     ),
     false
   );
+
+  assert.equal(
+    isAllowedReplicatorRequest(
+      request({
+        method: "GET",
+        path: "/app/viral-video/link/resolve",
+        module: "video-generator"
+      })
+    ),
+    false
+  );
 });
 
 test("rejects other modules and missing sessions", () => {
@@ -90,6 +112,25 @@ test("rejects other modules and missing sessions", () => {
       `${module || "no session"} must be rejected`
     );
   }
+
+  // The link resolver is equally module-gated.
+  for (const module of [
+    "image-generator",
+    "clothing",
+    undefined
+  ]) {
+    assert.equal(
+      isAllowedReplicatorRequest(
+        request({
+          method: "POST",
+          path: "/app/viral-video/link/resolve",
+          module
+        })
+      ),
+      false,
+      `link/resolve under ${module || "no session"} must be rejected`
+    );
+  }
 });
 
 test("rejects similarly named and arbitrary /app paths (no broad prefix)", () => {
@@ -101,6 +142,9 @@ test("rejects similarly named and arbitrary /app paths (no broad prefix)", () =>
     "/app/proxy",
     "/app",
     "/app/viral-video/pricing/extra",
+    "/app/viral-video/link/resolve/extra",
+    "/app/viral-video/link/resolves",
+    "/app/viral-video/other",
     "/app/viral-video"
   ]) {
     assert.equal(
@@ -118,7 +162,7 @@ test("rejects similarly named and arbitrary /app paths (no broad prefix)", () =>
 });
 
 test("exception table stays exact and video-generator only", () => {
-  assert.ok(REPLICATOR_EXCEPTIONS.length >= 2);
+  assert.equal(REPLICATOR_EXCEPTIONS.length, 3);
 
   for (const entry of REPLICATOR_EXCEPTIONS) {
     assert.equal(entry.method, "POST");

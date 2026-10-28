@@ -27,6 +27,12 @@ const REPLICATOR_EXCEPTIONS = Object.freeze([
     path: "/app/viral-video/pricing",
     module: "video-generator",
     reason: "pricing lookup for the viral video replicator sub-tool"
+  },
+  {
+    method: "POST",
+    path: "/app/viral-video/link/resolve",
+    module: "video-generator",
+    reason: "resolve a supported video link for the viral video replicator"
   }
 ]);
 
