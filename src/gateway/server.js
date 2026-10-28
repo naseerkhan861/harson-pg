@@ -47,6 +47,10 @@ const {
 const {
   isAllowedReplicatorRequest
 } = require("./routePolicy");
+const {
+  removeGatewayCookie,
+  rewriteProviderSetCookie
+} = require("./proxyHeaders");
 
 const PORT = Number(
   process.env.GATEWAY_PORT || 3001
@@ -816,6 +820,20 @@ function copyResponseHeaders(
     "transfer-encoding"
   ];
 
+  /*
+    selfHandleResponse means the library's cookieDomainRewrite never
+    runs: an upstream Set-Cookie with Domain=<provider host> would be
+    copied verbatim and rejected by the browser on the gateway origin.
+    Strip the Domain attribute only when it belongs to the configured
+    upstream host or one of its parent domains (suggest_changes.md §3B).
+  */
+  if (headers["set-cookie"]) {
+    headers["set-cookie"] = rewriteProviderSetCookie(
+      headers["set-cookie"],
+      UPSTREAM_ORIGIN
+    );
+  }
+
   return {
     ...headers,
     ...overrides
@@ -845,6 +863,21 @@ async function handleProxyResponse(
   req,
   res
 ) {
+  /*
+    Status provenance for the link resolver (suggest_changes.md §3B):
+    records ONLY a status code from an actual YiBai response, before
+    Harson's own handling. No body access, no submitted link, no
+    cookies. The finish log below records the final response status.
+  */
+  if (
+    req.method === "POST" &&
+    req.path === "/app/viral-video/link/resolve"
+  ) {
+    console.info(
+      `[gateway] link/resolve upstream status=${proxyRes.statusCode}`
+    );
+  }
+
   rewriteLocationHeader(
     proxyRes
   );
@@ -1054,9 +1087,27 @@ app.use(
     secure: true,
     xfwd: true,
     ws: true,
-    cookieDomainRewrite: "",
+    // Note: cookieDomainRewrite is intentionally absent — with
+    // selfHandleResponse it never runs; copyResponseHeaders performs the
+    // reviewed Set-Cookie Domain handling instead (proxyHeaders.js).
     selfHandleResponse: true,
     on: {
+      /*
+        Strip ONLY the Harson gateway session cookie before the request
+        reaches YiBai; provider login cookies pass through untouched
+        (suggest_changes.md §3B). The request body is never parsed.
+      */
+      proxyReq: (proxyReq, req) => {
+        const providerCookies = removeGatewayCookie(
+          req.headers.cookie,
+          SESSION_COOKIE_NAME
+        );
+        if (providerCookies) {
+          proxyReq.setHeader("cookie", providerCookies);
+        } else {
+          proxyReq.removeHeader("cookie");
+        }
+      },
       proxyRes:
         handleProxyResponse,
       error: handleProxyError

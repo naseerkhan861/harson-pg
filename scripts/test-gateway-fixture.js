@@ -174,9 +174,30 @@ function startFixture() {
   app.post(
     "/app/viral-video/link/resolve",
     (req, res) => {
-      res.json({
+      if (req.query.fail === "1") {
+        return res.status(500).json({
+          code: 500,
+          message: "fixture upstream failure"
+        });
+      }
+
+      // Exercise Set-Cookie Domain rewriting: the fixture gateway's
+      // upstream host is 127.0.0.1, so its Domain attribute must be
+      // stripped; the unrelated domain must survive untouched.
+      res.set(
+        "Set-Cookie",
+        [
+          "sid=abc; Domain=127.0.0.1; Path=/; HttpOnly",
+          "other=xyz; Domain=unrelated.example; Path=/"
+        ]
+      );
+
+      return res.json({
         code: 200,
-        data: { videoUrl: "https://image.yibaiaigc.com/fixture.mp4" }
+        data: {
+          videoUrl: "https://image.yibaiaigc.com/fixture.mp4",
+          upstreamCookieHeader: req.headers.cookie || ""
+        }
       });
     }
   );
@@ -897,7 +918,9 @@ async function main() {
       {
         method: "POST",
         headers: {
-          Cookie: `harson_aigc_gateway=${videoSession.sessionId}`
+          // Both cookies: the gateway session cookie must be filtered out
+          // before upstream; the provider cookie must survive.
+          Cookie: `harson_aigc_gateway=${videoSession.sessionId}; provider_sid=one`
         }
       }
     );
@@ -907,6 +930,49 @@ async function main() {
       linkResolveRes.status === 200 &&
         JSON.parse(linkResolveRes.body.toString()).data
           .videoUrl === "https://image.yibaiaigc.com/fixture.mp4"
+    );
+
+    /* 7c. proxy header behavior on the link resolver */
+    const echoedCookies = JSON.parse(
+      linkResolveRes.body.toString()
+    ).data.upstreamCookieHeader;
+
+    check(
+      "gateway session cookie NOT forwarded to upstream; provider cookie kept",
+      !echoedCookies.includes("harson_aigc_gateway") &&
+        echoedCookies.includes("provider_sid=one")
+    );
+
+    const setCookies =
+      linkResolveRes.headers["set-cookie"] || [];
+
+    check(
+      "upstream-host Domain attribute stripped from Set-Cookie; unrelated kept",
+      setCookies.some(c =>
+        c.startsWith("sid=abc") &&
+        !/domain/i.test(c) &&
+        c.includes("HttpOnly")
+      ) &&
+        setCookies.some(c =>
+          c.includes("Domain=unrelated.example")
+        )
+    );
+
+    const upstream500 = await request(
+      `${GATEWAY_ORIGIN}/app/viral-video/link/resolve?fail=1`,
+      {
+        method: "POST",
+        headers: {
+          Cookie: `harson_aigc_gateway=${videoSession.sessionId}`
+        }
+      }
+    );
+
+    check(
+      "upstream 500 stays 500 with its original body",
+      upstream500.status === 500 &&
+        JSON.parse(upstream500.body.toString()).message ===
+          "fixture upstream failure"
     );
 
     const unknownViral = await request(
