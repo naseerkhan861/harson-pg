@@ -1,0 +1,22 @@
+/* Loaded only into video-generator HTML through the Harson gateway. */
+.MainLayout-nav {
+  --harson-video-label-start: 40px;
+}
+
+.MainLayout-nav .NavList-list-item,
+.MainLayout-nav .NavList-list-item.active {
+  box-sizing: border-box;
+  padding-left: var(--harson-video-label-start) !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+
+.MainLayout-nav .NavList-list-item > span.label,
+.MainLayout-nav .NavList-list-item.active > span.label {
+  min-width: 0;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  text-indent: 0 !important;
+  transform: none !important;
+  text-align: left !important;
+}

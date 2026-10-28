@@ -6,6 +6,7 @@
 const ASSET_PREFIX = "/__harson_custom/image-tab-1";
 const SCRIPT_MARKER = "harson-image-tab-labels";
 const NAV_MARKER = "harson-nav-visibility";
+const VIDEO_NAV_MARKER = "harson-video-nav-alignment";
 const MAX_HTML_BYTES = 2 * 1024 * 1024;
 
 function injectImageTabAssets(html, {
@@ -34,6 +35,16 @@ function injectImageTabAssets(html, {
       '/nav-visibility.js"></script>'
     : "";
 
+  // Video-generator sidebar alignment (suggest_changes.md, 28 Oct):
+  // keeps the label start inset constant across normal/active rows.
+  // Scoped to video-generator HTML only; idempotent via its marker.
+  const videoNavTags =
+    moduleName === "video-generator" &&
+    !html.includes(`id="${VIDEO_NAV_MARKER}"`)
+      ? `<link id="${VIDEO_NAV_MARKER}" rel="stylesheet" ` +
+        `href="${ASSET_PREFIX}/video-nav-alignment.css">`
+      : "";
+
   // Model-name aliases: dependency order (runbook §13.1) — generated
   // data -> shared resolver -> adapter config -> DOM renderer, deferred.
   const aliasTags = enabled && !html.includes(`id="${SCRIPT_MARKER}"`)
@@ -44,7 +55,7 @@ function injectImageTabAssets(html, {
       `src="${ASSET_PREFIX}/image-tab-labels.js"></script>`
     : "";
 
-  return html.slice(0, end) + navTags + aliasTags + html.slice(end);
+  return html.slice(0, end) + navTags + videoNavTags + aliasTags + html.slice(end);
 }
 
 module.exports = {

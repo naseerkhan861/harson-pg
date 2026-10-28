@@ -269,3 +269,28 @@ test("navigation-only mode keeps the shared guards", () => {
   const noHead = "<html><body>partial</body>";
   assert.equal(inject(noHead, { enabled: false, hideVirtualSample: true }), noHead);
 });
+
+test("video sidebar alignment CSS is scoped and not duplicated", () => {
+  const video = inject(HTML, {
+    moduleName: "video-generator",
+    hideVirtualSample: true
+  });
+  const marker = 'id="harson-video-nav-alignment"';
+
+  assert.ok(video.includes(marker));
+  assert.ok(video.includes(
+    `${ASSET_PREFIX}/video-nav-alignment.css`
+  ));
+  assert.equal(video.split(marker).length - 1, 1);
+  assert.equal(inject(video, {
+    moduleName: "video-generator",
+    hideVirtualSample: true
+  }), video);
+
+  for (const otherModule of ["image-generator", "clothing", "e-commerce"]) {
+    assert.ok(!inject(HTML, {
+      moduleName: otherModule,
+      hideVirtualSample: true
+    }).includes(marker));
+  }
+});
