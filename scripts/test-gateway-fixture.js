@@ -1409,14 +1409,41 @@ async function main() {
 
     for (const [method, apiPath] of [
       ["GET", "/app/proxy/viralVideoTaskDetail"],
-      ["PUT", "/app/color-match/cast-correction-sessions"],
-      ["POST", "/app/proxy/viralVideoRecords"]
+      ["PUT", "/app/color-match/cast-correction-sessions"]
     ]) {
       const denied = await request(`${GATEWAY_ORIGIN}${apiPath}`, {
         method,
         headers: { Cookie: `harson_aigc_gateway=${patternSession.sessionId}` }
       });
       check(`pattern-design ${method} ${apiPath} stays 404`, denied.status === 404);
+    }
+
+    for (const apiPath of [
+      "/app/local-repair/beginRepair",
+      "/app/proxy/viralVideoRecords"
+    ]) {
+      const direct = await request(`${FIXTURE_ORIGIN}${apiPath}`, { method: "POST" });
+      const proxied = await request(`${GATEWAY_ORIGIN}${apiPath}`, {
+        method: "POST",
+        headers: { Cookie: `harson_aigc_gateway=${patternSession.sessionId}` }
+      });
+      check(
+        `pattern-design repair POST ${apiPath} reaches provider unchanged`,
+        direct.status === 200 && proxied.status === 200 && proxied.body.equals(direct.body)
+      );
+      const wrongMethod = await request(`${GATEWAY_ORIGIN}${apiPath}`, {
+        headers: { Cookie: `harson_aigc_gateway=${patternSession.sessionId}` }
+      });
+      check(`pattern-design GET ${apiPath} stays 404`, wrongMethod.status === 404);
+      for (const [module, sessionId] of [
+        ["image", first.sessionId], ["video", videoSession.sessionId]
+      ]) {
+        const wrongModule = await request(`${GATEWAY_ORIGIN}${apiPath}`, {
+          method: "POST",
+          headers: { Cookie: `harson_aigc_gateway=${sessionId}` }
+        });
+        check(`${module} POST ${apiPath} stays 404`, wrongModule.status === 404);
+      }
     }
 
     const ecommerceUpstreamFailure = await request(

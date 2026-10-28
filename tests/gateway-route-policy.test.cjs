@@ -18,7 +18,9 @@ const {
   isAllowedEcommerceRequest,
   ECOMMERCE_EXCEPTIONS,
   isAllowedPatternColorMatchRequest,
-  PATTERN_COLOR_MATCH_EXCEPTIONS
+  PATTERN_COLOR_MATCH_EXCEPTIONS,
+  isAllowedPatternLocalRepairRequest,
+  PATTERN_LOCAL_REPAIR_EXCEPTIONS
 } = require("../src/gateway/routePolicy.js");
 
 function request({ method, path, module }) {
@@ -30,6 +32,39 @@ function request({ method, path, module }) {
       : undefined
   };
 }
+
+test("pattern-design local repair adds only the reviewed history/submit POSTs", () => {
+  assert.deepEqual(
+    PATTERN_LOCAL_REPAIR_EXCEPTIONS.map(({ method, path, module }) => ({ method, path, module })),
+    [
+      { method: "POST", path: "/app/local-repair/beginRepair", module: "pattern-design" },
+      { method: "POST", path: "/app/proxy/viralVideoRecords", module: "pattern-design" }
+    ]
+  );
+});
+
+test("pattern-design repair predicate rejects other methods/modules and nearby paths", () => {
+  for (const path of ["/app/local-repair/beginRepair", "/app/proxy/viralVideoRecords"]) {
+    for (const method of ["POST", "GET", "HEAD", "PUT", "DELETE", "OPTIONS", "PATCH"]) {
+      assert.equal(isAllowedPatternLocalRepairRequest(request({
+        method, path, module: "pattern-design"
+      })), method === "POST");
+    }
+    for (const module of ["clothing", "e-commerce", "video-generator", "image-generator", undefined]) {
+      assert.equal(isAllowedPatternLocalRepairRequest(request({ method: "POST", path, module })), false);
+    }
+    for (const badPath of [path + "/extra", path + "s"]) {
+      assert.equal(isAllowedPatternLocalRepairRequest(request({
+        method: "POST", path: badPath, module: "pattern-design"
+      })), false);
+    }
+  }
+  for (const path of ["/app", "/app/proxy", "/app/local-repair", "/app/proxy/viralVideoTaskDetail"]) {
+    assert.equal(isAllowedPatternLocalRepairRequest(request({
+      method: "POST", path, module: "pattern-design"
+    })), false);
+  }
+});
 
 const patternColorExpectedPairs = [
   ["POST", "/app/proxy/viralVideoTaskDetail"],

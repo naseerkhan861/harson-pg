@@ -49,7 +49,8 @@ const {
   isAllowedColorMatchRequest,
   isAllowedLocalRepairRequest,
   isAllowedEcommerceRequest,
-  isAllowedPatternColorMatchRequest
+  isAllowedPatternColorMatchRequest,
+  isAllowedPatternLocalRepairRequest
 } = require("./routePolicy");
 const {
   removeGatewayCookie,
@@ -750,7 +751,9 @@ app.use(async (req, res, next) => {
     /* AI 电商: reviewed exact method/session routes and strict UUID patterns. */
     isAllowedEcommerceRequest(req) ||
     /* AI 图案设计 reference color-match: exact routes and strict UUID patterns. */
-    isAllowedPatternColorMatchRequest(req);
+    isAllowedPatternColorMatchRequest(req) ||
+    /* AI 图案设计 local repair: exact submission/history POSTs only. */
+    isAllowedPatternLocalRepairRequest(req);
 
   if (!allowed) {
     return res.status(404).end();
@@ -925,7 +928,10 @@ async function handleProxyResponse(
     );
   }
 
-  if (isAllowedPatternColorMatchRequest(req)) {
+  if (
+    isAllowedPatternColorMatchRequest(req) ||
+    isAllowedPatternLocalRepairRequest(req)
+  ) {
     console.info(
       `[gateway] pattern-design ${req.method} ${req.path} upstream status=${proxyRes.statusCode}`
     );

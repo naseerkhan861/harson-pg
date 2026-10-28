@@ -355,6 +355,30 @@ function isAllowedPatternColorMatchRequest(req) {
   );
 }
 
+/* AI 图案设计 → 局部修复 uses the shared provider repair contract. */
+const PATTERN_LOCAL_REPAIR_EXCEPTIONS = Object.freeze([
+  {
+    method: "POST",
+    path: "/app/local-repair/beginRepair",
+    module: "pattern-design",
+    reason: "submit the painted-region local-repair task"
+  },
+  {
+    method: "POST",
+    path: "/app/proxy/viralVideoRecords",
+    module: "pattern-design",
+    reason: "load local-repair history using the reviewed shared provider contract"
+  }
+]);
+
+function isAllowedPatternLocalRepairRequest(req) {
+  return PATTERN_LOCAL_REPAIR_EXCEPTIONS.some(entry =>
+    req.harsonGatewaySession?.moduleName === entry.module &&
+    req.method === entry.method &&
+    req.path === entry.path
+  );
+}
+
 module.exports = {
   isAllowedReplicatorRequest,
   REPLICATOR_EXCEPTIONS,
@@ -365,5 +389,7 @@ module.exports = {
   isAllowedEcommerceRequest,
   ECOMMERCE_EXCEPTIONS,
   isAllowedPatternColorMatchRequest,
-  PATTERN_COLOR_MATCH_EXCEPTIONS
+  PATTERN_COLOR_MATCH_EXCEPTIONS,
+  isAllowedPatternLocalRepairRequest,
+  PATTERN_LOCAL_REPAIR_EXCEPTIONS
 };
