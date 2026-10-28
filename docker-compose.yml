@@ -25,6 +25,8 @@ services:
   # YiBai iframe gateway for the image-tab display aliases (ai.harson-base.com).
   # Inactive by default — start explicitly with:
   #   docker compose --profile gateway up -d
+  # After alias code changes, rebuild and recreate this running service too:
+  #   docker compose --profile gateway up -d --build --no-deps --force-recreate gateway
   gateway:
     build: .
     image: harson-pg:latest
