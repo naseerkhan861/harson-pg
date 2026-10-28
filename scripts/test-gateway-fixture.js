@@ -1347,6 +1347,35 @@ async function main() {
       );
     }
 
+    for (const apiPath of [
+      "/app/local-repair/beginRepair",
+      "/app/proxy/viralVideoRecords"
+    ]) {
+      const direct = await request(`${FIXTURE_ORIGIN}${apiPath}`, { method: "POST" });
+      const proxied = await request(`${GATEWAY_ORIGIN}${apiPath}`, {
+        method: "POST",
+        headers: { Cookie: `harson_aigc_gateway=${ecommerceSession.sessionId}` }
+      });
+      check(
+        `e-commerce repair POST ${apiPath} reaches provider unchanged`,
+        direct.status === 200 && proxied.status === 200 && proxied.body.equals(direct.body)
+      );
+      const wrongMethod = await request(`${GATEWAY_ORIGIN}${apiPath}`, {
+        headers: { Cookie: `harson_aigc_gateway=${ecommerceSession.sessionId}` }
+      });
+      check(`e-commerce GET ${apiPath} stays 404`, wrongMethod.status === 404);
+      for (const [module, sessionId] of [
+        ["image", first.sessionId],
+        ["video", videoSession.sessionId]
+      ]) {
+        const wrongModule = await request(`${GATEWAY_ORIGIN}${apiPath}`, {
+          method: "POST",
+          headers: { Cookie: `harson_aigc_gateway=${sessionId}` }
+        });
+        check(`${module} POST ${apiPath} stays 404`, wrongModule.status === 404);
+      }
+    }
+
     const ecommerceUpstreamFailure = await request(
       `${GATEWAY_ORIGIN}/app/viral-video/link/resolve?fail=1`,
       {

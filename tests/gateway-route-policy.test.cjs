@@ -37,13 +37,15 @@ const ecommerceExpectedPairs = [
   ["GET", "/app/color-match/pricing"],
   ["POST", "/app/local-repair/pricing"],
   ["POST", "/app/color-match/cast-correction-sessions"],
-  ["GET", "/app/color-match/cast-correction-sessions"]
+  ["GET", "/app/color-match/cast-correction-sessions"],
+  ["POST", "/app/local-repair/beginRepair"],
+  ["POST", "/app/proxy/viralVideoRecords"]
 ];
 const ecommerceExpectedKeys = new Set(
   ecommerceExpectedPairs.map(([method, path]) => `${method} ${path}`)
 );
 
-test("e-commerce exact rules match the reviewed color-match contract", () => {
+test("e-commerce exact rules match the reviewed color-match and repair contracts", () => {
   assert.deepEqual(
     ECOMMERCE_EXCEPTIONS.map(entry =>
       `${entry.method} ${entry.path} ${entry.module}`

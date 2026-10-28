@@ -232,6 +232,18 @@ const ECOMMERCE_EXCEPTIONS = Object.freeze([
     path: "/app/color-match/cast-correction-sessions",
     module: "e-commerce",
     reason: "refresh cast-correction sessions"
+  },
+  {
+    method: "POST",
+    path: "/app/local-repair/beginRepair",
+    module: "e-commerce",
+    reason: "submit the painted-region local-repair task"
+  },
+  {
+    method: "POST",
+    path: "/app/proxy/viralVideoRecords",
+    module: "e-commerce",
+    reason: "load local-repair history using the reviewed shared provider contract"
   }
 ]);
 
