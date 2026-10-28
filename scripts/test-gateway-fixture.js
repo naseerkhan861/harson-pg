@@ -220,6 +220,11 @@ function startFixture() {
     res.json({ code: 200, data: { task: "fixture-repair" } });
   });
 
+  /* Local repair history (route-policy exception) */
+  app.post("/app/proxy/viralVideoRecords", (_req, res) => {
+    res.json({ code: 200, data: { records: [] } });
+  });
+
   /* Viral video replicator link resolver (route-policy exception) */
   app.post(
     "/app/viral-video/link/resolve",
@@ -1205,6 +1210,36 @@ async function main() {
       }
     );
     check("video POST beginRepair stays 404", repairWrongModule.status === 404);
+
+    const historyRes = await request(
+      `${GATEWAY_ORIGIN}/app/proxy/viralVideoRecords`,
+      {
+        method: "POST",
+        headers: {
+          Cookie: `harson_aigc_gateway=${clothingSession.sessionId}`
+        }
+      }
+    );
+
+    check(
+      "clothing POST viralVideoRecords history reaches provider",
+      historyRes.status === 200 &&
+        Array.isArray(
+          JSON.parse(historyRes.body.toString()).data.records
+        )
+    );
+
+    const historyWrongModule = await request(
+      `${GATEWAY_ORIGIN}/app/proxy/viralVideoRecords`,
+      {
+        method: "POST",
+        headers: { Cookie: `harson_aigc_gateway=${videoSession.sessionId}` }
+      }
+    );
+    check(
+      "video session on history endpoint stays 404",
+      historyWrongModule.status === 404
+    );
 
     /* 8. JSON passthrough (extra path) + no-store */
     const jsonRes =
