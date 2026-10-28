@@ -178,11 +178,53 @@ function isAllowedLocalRepairRequest(req) {
   );
 }
 
+/*
+  AI 电商: exact POSTs shown in the supplied e-commerce screenshots.
+  Nested tools retain the outer e-commerce gateway session module.
+  The supplied console also includes a separate color-match pricing call.
+*/
+const ECOMMERCE_EXCEPTIONS = Object.freeze([
+  {
+    method: "POST",
+    path: "/app/proxy/viralVideoTaskDetail",
+    module: "e-commerce",
+    reason: "open a viral video replicator task from history"
+  },
+  {
+    method: "POST",
+    path: "/app/viral-video/pricing",
+    module: "e-commerce",
+    reason: "load viral video replicator billing prices"
+  },
+  {
+    method: "POST",
+    path: "/app/viral-video/link/resolve",
+    module: "e-commerce",
+    reason: "resolve a supported reference video link"
+  },
+  {
+    method: "POST",
+    path: "/app/color-match/pricing",
+    module: "e-commerce",
+    reason: "load color-match pricing during e-commerce navigation"
+  }
+]);
+
+function isAllowedEcommerceRequest(req) {
+  return ECOMMERCE_EXCEPTIONS.some(entry =>
+    req.harsonGatewaySession?.moduleName === entry.module &&
+    req.method === entry.method &&
+    req.path === entry.path
+  );
+}
+
 module.exports = {
   isAllowedReplicatorRequest,
   REPLICATOR_EXCEPTIONS,
   isAllowedColorMatchRequest,
   COLOR_MATCH_EXCEPTIONS,
   isAllowedLocalRepairRequest,
-  LOCAL_REPAIR_EXCEPTIONS
+  LOCAL_REPAIR_EXCEPTIONS,
+  isAllowedEcommerceRequest,
+  ECOMMERCE_EXCEPTIONS
 };

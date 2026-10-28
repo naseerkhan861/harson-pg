@@ -14,7 +14,9 @@ const {
   isAllowedColorMatchRequest,
   COLOR_MATCH_EXCEPTIONS,
   isAllowedLocalRepairRequest,
-  LOCAL_REPAIR_EXCEPTIONS
+  LOCAL_REPAIR_EXCEPTIONS,
+  isAllowedEcommerceRequest,
+  ECOMMERCE_EXCEPTIONS
 } = require("../src/gateway/routePolicy.js");
 
 function request({ method, path, module }) {
@@ -26,6 +28,43 @@ function request({ method, path, module }) {
       : undefined
   };
 }
+
+test("e-commerce exceptions match the four screenshot-recorded POSTs", () => {
+  assert.deepEqual(
+    ECOMMERCE_EXCEPTIONS.map(({ method, path, module }) => ({ method, path, module })),
+    [
+      "/app/proxy/viralVideoTaskDetail",
+      "/app/viral-video/pricing",
+      "/app/viral-video/link/resolve",
+      "/app/color-match/pricing"
+    ].map(path => ({ method: "POST", path, module: "e-commerce" }))
+  );
+  for (const entry of ECOMMERCE_EXCEPTIONS) {
+    assert.equal(isAllowedEcommerceRequest(request(entry)), true);
+  }
+});
+
+test("e-commerce exceptions reject other methods, modules, and nearby paths", () => {
+  for (const entry of ECOMMERCE_EXCEPTIONS) {
+    for (const method of ["GET", "HEAD", "PUT", "DELETE", "OPTIONS"]) {
+      assert.equal(isAllowedEcommerceRequest(request({ ...entry, method })), false);
+    }
+    for (const module of ["clothing", "video-generator", "image-generator", undefined]) {
+      assert.equal(isAllowedEcommerceRequest(request({ ...entry, module })), false);
+    }
+    for (const path of [`${entry.path}/extra`, `${entry.path}s`]) {
+      assert.equal(isAllowedEcommerceRequest(request({ ...entry, path })), false);
+    }
+  }
+  for (const path of [
+    "/app", "/app/proxy", "/app/proxy/otherEndpoint",
+    "/app/color-match/cast-correction-sessions"
+  ]) {
+    assert.equal(isAllowedEcommerceRequest(request({
+      method: "POST", path, module: "e-commerce"
+    })), false);
+  }
+});
 
 test("admits the three verified replicator endpoints for video-generator", () => {
   assert.equal(

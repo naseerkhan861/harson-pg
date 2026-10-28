@@ -21,6 +21,8 @@
 const { spawn } = require("child_process");
 const http = require("http");
 const express = require("express");
+const fs = require("fs");
+const crypto = require("crypto");
 
 const INTERNAL_SECRET =
   "test-internal-secret-0001";
@@ -133,11 +135,25 @@ function startFixture() {
 
   const seenTokens = [];
 
+  // Loopback mock only: verifies multipart bytes and provider cookies
+  // survive the real gateway. This is NOT a production upload route.
+  app.post(
+    "/api/__fixture/upload-echo",
+    express.raw({ type: () => true, limit: "2mb" }),
+    (req, res) => res.json({
+      bytes: req.body.length,
+      sha256: crypto.createHash("sha256").update(req.body).digest("hex"),
+      contentType: req.headers["content-type"],
+      cookie: req.headers.cookie || ""
+    })
+  );
+
   for (const path of [
     "/aigc/image-generator",
     "/aigc/upscaler",
     "/aigc/video-generator",
-    "/aigc/clothing"
+    "/aigc/clothing",
+    "/aigc/e-commerce"
   ]) {
     app.get(
       path,
@@ -1266,6 +1282,85 @@ async function main() {
       }
     );
     check("clothing GET viralVideoTaskDetail stays 404", clothingDetailGet.status === 404);
+
+    const ecommerceSession = await withSession(
+      "e-commerce", "/aigc/e-commerce?embed=2"
+    );
+    for (const apiPath of [
+      "/app/proxy/viralVideoTaskDetail",
+      "/app/viral-video/pricing",
+      "/app/viral-video/link/resolve",
+      "/app/color-match/pricing"
+    ]) {
+      const upstreamRes = await request(`${FIXTURE_ORIGIN}${apiPath}`, { method: "POST" });
+      const ecommerceRes = await request(`${GATEWAY_ORIGIN}${apiPath}`, {
+        method: "POST",
+        headers: { Cookie: `harson_aigc_gateway=${ecommerceSession.sessionId}` }
+      });
+      check(
+        `e-commerce POST ${apiPath} reaches mock provider unchanged`,
+        upstreamRes.status === 200 && ecommerceRes.status === 200 &&
+          ecommerceRes.body.equals(upstreamRes.body)
+      );
+
+      const ecommerceGet = await request(`${GATEWAY_ORIGIN}${apiPath}`, {
+        headers: { Cookie: `harson_aigc_gateway=${ecommerceSession.sessionId}` }
+      });
+      check(`e-commerce GET ${apiPath} stays 404`, ecommerceGet.status === 404);
+
+      const imagePost = await request(`${GATEWAY_ORIGIN}${apiPath}`, {
+        method: "POST",
+        headers: { Cookie: `harson_aigc_gateway=${first.sessionId}` }
+      });
+      check(`image POST ${apiPath} stays 404`, imagePost.status === 404);
+    }
+
+    const ecommerceUpstreamFailure = await request(
+      `${GATEWAY_ORIGIN}/app/viral-video/link/resolve?fail=1`,
+      {
+        method: "POST",
+        headers: { Cookie: `harson_aigc_gateway=${ecommerceSession.sessionId}` }
+      }
+    );
+    check(
+      "e-commerce upstream resolver 500 retains original status and body",
+      ecommerceUpstreamFailure.status === 500 &&
+        JSON.parse(ecommerceUpstreamFailure.body.toString()).message === "fixture upstream failure"
+    );
+
+    // Optional real image paths for this local-only fixture. With no env
+    // configured, still exercise binary multipart bytes using a small buffer.
+    const samplePaths = JSON.parse(process.env.HARSON_FIXTURE_SAMPLE_IMAGES || "[]");
+    const uploadSamples = samplePaths.length
+      ? samplePaths.map(file => fs.readFileSync(file))
+      : [Buffer.from([0xff, 0xd8, 0x00, 0x80, 0xff, 0xd9])];
+    const boundary = "harson-fixture-boundary";
+    const contentType = `multipart/form-data; boundary=${boundary}`;
+    for (const [index, sample] of uploadSamples.entries()) {
+      const multipart = Buffer.concat([
+        Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="sample.jpeg"\r\nContent-Type: image/jpeg\r\n\r\n`),
+        sample,
+        Buffer.from(`\r\n--${boundary}--\r\n`)
+      ]);
+      const uploadRes = await request(`${GATEWAY_ORIGIN}/api/__fixture/upload-echo`, {
+        method: "POST",
+        headers: {
+          "Content-Type": contentType,
+          "Content-Length": multipart.length,
+          Cookie: `harson_aigc_gateway=${ecommerceSession.sessionId}; provider_sid=fixture-ecommerce`
+        },
+        body: multipart
+      });
+      const uploadData = JSON.parse(uploadRes.body.toString());
+      check(
+        `e-commerce multipart sample ${index + 1} bytes/content-type/cookie pass through`,
+        uploadRes.status === 200 &&
+          uploadData.bytes === multipart.length &&
+          uploadData.sha256 === crypto.createHash("sha256").update(multipart).digest("hex") &&
+          uploadData.contentType === contentType &&
+          uploadData.cookie === "provider_sid=fixture-ecommerce"
+      );
+    }
 
     /* 8. JSON passthrough (extra path) + no-store */
     const jsonRes =

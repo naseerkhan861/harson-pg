@@ -47,7 +47,8 @@ const {
 const {
   isAllowedReplicatorRequest,
   isAllowedColorMatchRequest,
-  isAllowedLocalRepairRequest
+  isAllowedLocalRepairRequest,
+  isAllowedEcommerceRequest
 } = require("./routePolicy");
 const {
   removeGatewayCookie,
@@ -744,7 +745,9 @@ app.use(async (req, res, next) => {
       exact recorded POST, confirmed by console, finish log and local
       reproduction.
     */
-    isAllowedLocalRepairRequest(req);
+    isAllowedLocalRepairRequest(req) ||
+    /* AI 电商: four recorded POST/method/session-module triples. */
+    isAllowedEcommerceRequest(req);
 
   if (!allowed) {
     return res.status(404).end();
@@ -910,6 +913,12 @@ async function handleProxyResponse(
   if (isAllowedLocalRepairRequest(req)) {
     console.info(
       `[gateway] clothing local-repair upstream status=${proxyRes.statusCode}`
+    );
+  }
+
+  if (isAllowedEcommerceRequest(req)) {
+    console.info(
+      `[gateway] e-commerce ${req.method} ${req.path} upstream status=${proxyRes.statusCode}`
     );
   }
 
