@@ -1,252 +1,258 @@
-# 图片创作 / FLUX.1 Kontext: separate pro and max display names
+# 局部修复 404: reproduced gateway fix and separate upload/history diagnosis
 
-**Repository:** [`naseerkhan861/harson-pg`, branch `temp-main`](https://github.com/naseerkhan861/harson-pg/tree/temp-main)  
-**Page:** 图片创作 → left item `CLImage-1.1` → `模型` dropdown and related form/gallery labels  
-**Prepared:** 28 October 2026  
-**Purpose:** Code changes for your own VS Code checkout. This document has not changed your GitHub repository or server.
+**Project:** [`naseerkhan861/harson-pg`](https://github.com/naseerkhan861/harson-pg)  
+**Branch inspected and run locally:** [`temp-main`](https://github.com/naseerkhan861/harson-pg/tree/temp-main) at commit `2cd8edc6d79b58fca0c539b9febf3aee718c9ce6`  
+**Comparison:** `feature/dashboard-ui` at `6ec4d1ff0645085ec924246a4d17bfa6b975f4ad`  
+**Prepared:** 29 October 2026  
+**Purpose:** Precise instructions for your own VS Code checkout and server deployment. Local experiments were performed in an isolated clone; **nothing was pushed to GitHub or changed on your production server**.
 
-## 1. Confirmed cause and mapping decision
+## 1. Updated evidence: three distinct failures
 
-The current `config/display-names/names.txt` contains **both**:
+The new screenshots are more useful than the earlier console capture:
 
-```text
-FLUX.1 Kontext pro,CLImage-1.1
-FLUX.1 Kontext max,CLImage-1.1
-```
-
-`config/display-names/display-correspondence.cjs` already maps the provider's short dropdown spellings `kontext-pro` and `kontext-max` to those **different canonical keys**. The resolver's lookup is one pass and keeps the provider-owned text in the light DOM. Thus the dropdown options are identical because the destinations above are identical. The requested assignment used below is **pro → CLImage-1.1** and **max → CLImage-1.2**. It follows the original pro/max dropdown order shown in earlier screenshots; if you intended the reverse, swap only those two destinations.
-
-| Provider-owned source | Surface | Proposed visible label |
+| When | Exact evidence from screenshots | Proven or likely owner |
 | --- | --- | --- |
-| `kontext-pro` / `FLUX.1 Kontext pro` | First dropdown option, selected value, explicitly versioned history metadata | `CLImage-1.1` |
-| `kontext-max` / `FLUX.1 Kontext max` | Second dropdown option, selected value, explicitly versioned history metadata | `CLImage-1.2` |
-| `FLUX.1 Kontext` | Generic left-menu family label | Keep current `CLImage-1.1` unless you separately choose a family label |
-| `FLUX.1 Kontex (pro/max)` | Existing canonical **generic** family key | Keep current `CLImage-1.1` |
+| Page opens in **AI 服装 → 局部修复** | Red toast: `本地历史记录暂不可用，仍可继续编辑图片。`; `ai.harson-base.com/a...viralVideoRecords` returns 404. The console shortens the **beginning** of the URL and does not show its method. | A separate history API. Its exact route and response provenance still need a Network or gateway-log check. |
+| Images selected/uploaded | Browser makes `HEAD` calls to `https://yb-ai.oss-accelerate.aliyuncs.com/...jpeg` and later `...png`, returning 404. An OSS SDK warns about renewing STS tokens. | These requests go **directly to Alibaba OSS**, outside `ai.harson-base.com` and its Node route gate. A preview alone does not prove an OSS upload succeeded. |
+| After **确认修复区域并生成** | Exact console line: **`POST https://ai.harson-base.com/app/local-repair/beginRepair 404 (Not Found)`**; toast: `修复任务提交失败，请稍后重试。` | The current `temp-main` gateway has no exception for this exact POST. This failure was reproduced locally. |
 
-The generic family name does **not** identify whether an individual historical image was made with pro or max. This distinction matters for the right-side image badges in your screenshot, all currently displaying `CLImage-1.1`.
+The latest screenshot does **not** show the former `/app/local-repair/pricing` 404. The newest branch already admits that pricing request for `clothing`, and the local fixture confirms it passes. Avoid changing pricing again while addressing the new 404s.
 
-## 2. Required change: canonical alias data
+The `aigc-workspace.js:747` “tool not categorized”, `allowfullscreen`, slow font, and Canvas `willReadFrequently` warnings are not the cause of an authenticated `/app/local-repair/beginRepair` 404. The STS warning deserves attention **only in conjunction with the actual OSS upload and HEAD requests**; it is not proof by itself that credentials expired.
 
-Edit **`config/display-names/names.txt`**. Change just its max row:
+## 2. What I ran locally
 
-```diff
- FLUX.1 Kontex (pro/max),CLImage-1.1
- FLUX.1 Kontext pro,CLImage-1.1
--FLUX.1 Kontext max,CLImage-1.1
-+FLUX.1 Kontext max,CLImage-1.2
-```
-
-Leave the `kontext-pro` / `kontext-max` entries in `config/display-names/display-correspondence.cjs` as they are. Do **not** alter the original model IDs, provider API requests, dropdown `value` attributes, request JSON, or image records.
-
-Regenerate the checked-in data file; **do not** hand-edit `public/harson-customization/model-aliases.generated.js`:
+I cloned `temp-main` at `2cd8edc…`, installed the repository's production dependencies, and ran:
 
 ```bash
-npm run aliases:build
-npm run aliases:check
+node --test tests/gateway-route-policy.test.cjs
+node scripts/test-gateway-fixture.js
 ```
 
-The generated file's `exact["flux.1 kontext max"]` becomes `CLImage-1.2`, while its existing `variants["kontext-max"]` continues to point to that canonical key. The mapping hash changes automatically. Existing selectors in `public/harson-customization/image-tab-config.js` cover `.IcbsMenuSelect-menu-item-label` (dropdown options) and `.IcbsMenuSelect-header-content` (selected value), so the two option labels and selected value should update without new selectors. Clicking either option must still submit the **provider's original identifier**.
+Baseline: all existing tests passed, but **none** exercised `beginRepair` or the local repair history call. I added a temporary mock YiBai `POST /app/local-repair/beginRepair` endpoint that returns JSON 200, issued the fixture's real `clothing` gateway session, and requested that path through the **real gateway**. Result: **empty 404**, even though the mock provider would have returned 200. This reproduces the Harson gateway route rejection for the exact browser POST.
 
-### Focused resolver tests
+In the isolated clone I then added only the exact `(POST, /app/local-repair/beginRepair, clothing)` admission described below. The same fixture request became **200 from the mock provider**. A GET to the same path and a video-generator POST still returned **404**. The focused route-policy suite passed **9/9**, and the complete gateway fixture passed, including its existing session/cookie, pricing, color-match, and video checks. `git diff --check` was clean.
 
-In **`tests/model-alias-resolver.test.cjs`**, change its existing assertion for `kontext-max` from `CLImage-1.1` to `CLImage-1.2`, then add these explicit checks:
+**Limit of this local proof:** the fixture uses a mock provider and test cookies; it does not log into YiBai or upload real images. It proves the existing gateway blocks this request and the narrow exception forwards it. It does **not** prove YiBai will accept the real job, that the OSS objects exist, or that the history request is safe to admit.
+
+## 3. Why the older branch can appear to work
+
+The iframe page, browser workspace script, session controller, and frame-ticket service are identical Git blobs in `feature/dashboard-ui` and `temp-main`. Both have the same optional origin switch: when `YIBAI_FRAME_PUBLIC_ORIGIN` is configured, `buildFrameUrl()` launches the frame via `ai.harson-base.com`; when it is empty, the frame points directly to YiBai. The real production `.env` files are not in Git.
+
+The older branch's gateway only allows provider menu prefixes and `YIBAI_GATEWAY_EXTRA_PATHS`, which do **not** include `/app` in `.env.example`. It also lacks the local repair submit exception. Therefore **copying the older gateway code cannot fix this proxied POST**. The older deployment may have bypassed this gateway, used a different `.env`/Nginx route, or faced different provider behavior. This is a runtime comparison to perform, not an established explanation. Keep your current proxy and its newer provider-cookie handling.
+
+## 4. Confirm the live gateway version, then add the verified submit route
+
+In the deployed server checkout, inspect the source and running container **without displaying secrets**:
+
+```bash
+git rev-parse HEAD
+docker compose --profile gateway ps gateway
+docker compose --profile gateway exec gateway node -e 'const p=require("./src/gateway/routePolicy"); console.log(p.COLOR_MATCH_EXCEPTIONS.map(x=>x.method+" "+x.path+" "+x.module))'
+```
+
+The current branch's `COLOR_MATCH_EXCEPTIONS` contains `POST /app/local-repair/pricing` and four `/app/color-match/...` entries. A gateway container missing them is stale. This check is important because `docker compose up -d --build` **without `--profile gateway`** does not rebuild the running gateway profile service.
+
+### Change A: `src/gateway/routePolicy.js`
+
+Preserve the existing `REPLICATOR_EXCEPTIONS`, `COLOR_MATCH_EXCEPTIONS`, and their functions. Insert this new table and function immediately before `module.exports`:
 
 ```js
-test("Kontext pro and max keep distinct display identities", () => {
-  assert.equal(resolve("kontext-pro"), "CLImage-1.1");
-  assert.equal(resolve("kontext-max"), "CLImage-1.2");
-  assert.equal(resolve("FLUX.1 Kontext pro"), "CLImage-1.1");
-  assert.equal(resolve("FLUX.1 Kontext max"), "CLImage-1.2");
+const LOCAL_REPAIR_EXCEPTIONS = Object.freeze([
+  {
+    method: "POST",
+    path: "/app/local-repair/beginRepair",
+    module: "clothing",
+    reason: "submit painted region for the clothing local-repair subtool"
+  }
+]);
 
-  // The generic family name is not evidence of a max selection.
-  assert.equal(resolve("FLUX.1 Kontext"), "CLImage-1.1");
-  assert.equal(resolve("CLImage-1.2"), null); // aliases are not source keys
+function isAllowedLocalRepairRequest(req) {
+  return LOCAL_REPAIR_EXCEPTIONS.some(entry =>
+    req.harsonGatewaySession?.moduleName === entry.module &&
+    req.method === entry.method &&
+    req.path === entry.path
+  );
+}
+```
+
+Add `isAllowedLocalRepairRequest` and `LOCAL_REPAIR_EXCEPTIONS` to that file's existing `module.exports`. This endpoint and its method are **confirmed by the new screenshot and by the local gateway reproduction**. It does not need to be inferred from an ellipsized console link.
+
+### Change B: `src/gateway/server.js`
+
+Add `isAllowedLocalRepairRequest` to the `require("./routePolicy")` destructuring near line 47. In the existing allowlist middleware near line 719, preserve its prefix and current exception logic, and append the new predicate:
+
+```js
+const allowed =
+  prefixes.some(prefix =>
+    requestPath === prefix ||
+    requestPath.startsWith(`${prefix}/`) ||
+    requestPath.startsWith(`${prefix}?`)
+  ) ||
+  isAllowedReplicatorRequest(req) ||
+  isAllowedColorMatchRequest(req) ||
+  isAllowedLocalRepairRequest(req);
+```
+
+Do not change the session gate, CSRF check, `prefixes.length === 0` guard, non-HTML response streaming, provider cookies, or request body. Do **not** add `/app`, `/app/local-repair`, or `/app/proxy` to `YIBAI_GATEWAY_EXTRA_PATHS`: a broad prefix would also forward unrelated provider actions.
+
+Immediately after the existing `clothing color-match upstream status` block in `handleProxyResponse()`, add a status-only diagnostic for the newly admitted POST:
+
+```js
+if (isAllowedLocalRepairRequest(req)) {
+  console.info(
+    `[gateway] clothing local-repair upstream status=${proxyRes.statusCode}`
+  );
+}
+```
+
+This line lets you distinguish “Harson now forwarded it but YiBai returned 404/500” from “Harson rejected it before forwarding.” Do not log image data, mask data, provider response bodies, tokens, cookies, query strings, or full signed OSS URLs.
+
+### Change C: meaningful tests
+
+In `tests/gateway-route-policy.test.cjs`, import the two new exports. Add a test that checks the exact table entry, permits the clothing POST, and rejects GET, `video-generator`, no session, `/extra`, and another `/app/local-repair/*` endpoint. The following is the focused test I ran locally:
+
+```js
+test("local repair submit is exact and clothing-only", () => {
+  assert.deepEqual(
+    LOCAL_REPAIR_EXCEPTIONS.map(({ method, path, module }) =>
+      ({ method, path, module })),
+    [{
+      method: "POST",
+      path: "/app/local-repair/beginRepair",
+      module: "clothing"
+    }]
+  );
+  const check = (method, path, module) =>
+    isAllowedLocalRepairRequest(request({ method, path, module }));
+  assert.equal(check("POST", "/app/local-repair/beginRepair", "clothing"), true);
+  assert.equal(check("GET", "/app/local-repair/beginRepair", "clothing"), false);
+  assert.equal(check("POST", "/app/local-repair/beginRepair", "video-generator"), false);
+  assert.equal(check("POST", "/app/local-repair/beginRepair", undefined), false);
+  assert.equal(check("POST", "/app/local-repair/beginRepair/extra", "clothing"), false);
+  assert.equal(check("POST", "/app/local-repair/other", "clothing"), false);
 });
 ```
+
+In `scripts/test-gateway-fixture.js`, add a mock provider handler near the existing local-repair pricing handler:
+
+```js
+app.post("/app/local-repair/beginRepair", (_req, res) => {
+  res.json({ code: 200, data: { task: "fixture-repair" } });
+});
+```
+
+After the existing `clothingSession` and pricing checks, add this test block. `videoSession`, `clothingSession`, `request`, `check`, and `GATEWAY_ORIGIN` already exist in the fixture:
+
+```js
+const repairSubmit = await request(
+  `${GATEWAY_ORIGIN}/app/local-repair/beginRepair`,
+  {
+    method: "POST",
+    headers: {
+      Cookie: `harson_aigc_gateway=${clothingSession.sessionId}`
+    }
+  }
+);
+check(
+  "clothing POST beginRepair reaches mock provider",
+  repairSubmit.status === 200 &&
+    JSON.parse(repairSubmit.body.toString()).data.task === "fixture-repair"
+);
+
+const repairWrongMethod = await request(
+  `${GATEWAY_ORIGIN}/app/local-repair/beginRepair`,
+  { headers: { Cookie: `harson_aigc_gateway=${clothingSession.sessionId}` } }
+);
+check("GET beginRepair stays 404", repairWrongMethod.status === 404);
+
+const repairWrongModule = await request(
+  `${GATEWAY_ORIGIN}/app/local-repair/beginRepair`,
+  {
+    method: "POST",
+    headers: { Cookie: `harson_aigc_gateway=${videoSession.sessionId}` }
+  }
+);
+check("video POST beginRepair stays 404", repairWrongModule.status === 404);
+```
+
+**Do not call the real YiBai endpoint from a test**; generation may consume credits.
 
 Run:
 
 ```bash
-node --test tests/model-alias-resolver.test.cjs
-node --test tests/image-tab-injection.test.cjs
+node --test tests/gateway-route-policy.test.cjs
+node scripts/test-gateway-fixture.js
+git diff --check
 ```
 
-## 3. Optional, requested form-title behavior: show the selected variant
+## 5. Fix the page-load history toast independently
 
-The current generic middle title is sourced from `FLUX.1 Kontext`, which maps to the **family** alias `CLImage-1.1`; changing `names.txt` alone will **not** turn that generic title into `CLImage-1.2` when max is chosen. If you want the **current generation form title** to follow the selected dropdown value, use this narrowly scoped context. This title is presentational only; it must never change the selected provider model.
+The new screenshot still abbreviates the history URL as `ai.harson-base.com/a...viralVideoRecords`. Unlike `beginRepair`, its **full path and method are still unknown**. The present `temp-main` exception tables contain no `viralVideoRecords` entry, but an upstream 404 or a different Nginx target is also possible. Do not paste a guessed `/app/proxy/viralVideoRecords` into production.
 
-### A. Add a contextual override to `model-alias-resolver.js`
+Collect the exact method/path from the gateway's existing path-only finish log during **one page load**:
 
-Inside `imageGeneratorOverride(key, context)` in **`public/harson-customization/model-alias-resolver.js`**, before its final `return null`, insert:
+```bash
+docker compose --profile gateway logs --since=10m gateway | grep -E 'viralVideoRecords|beginRepair|local-repair|color-match'
+```
+
+Or use Chrome DevTools → **Network → Fetch/XHR → request → Headers**, and copy just the method and **URL pathname**. In **Response**, decide whether the 404 body is empty (consistent with Harson's `res.status(404).end()` route gate) or a YiBai JSON error. If there is no matching gateway finish line, check Nginx's `ai.harson-base.com` upstream and any other gateway instance.
+
+If and only if (a) the request is from a `clothing` iframe session, (b) the gateway returns the empty 404, and (c) the endpoint is genuinely used to show this subtool's history, add an entry to `LOCAL_REPAIR_EXCEPTIONS` with the **recorded** method and **recorded** full pathname:
 
 ```js
-if (context.surface === "image-family-title" &&
-    context.family === "flux-kontext" &&
-    (key === "flux.1 kontext" || key === "flux.1kontext")) {
-  if (context.variant === "max") return "CLImage-1.2";
-  if (context.variant === "pro") return "CLImage-1.1";
+// Add to the array ONLY after recording both values from Network/logs:
+{
+  method: "<RECORDED_METHOD>",
+  path: "<RECORDED_FULL_PATHNAME>",
+  module: "clothing",
+  reason: "load local-repair history in the clothing subtool"
 }
 ```
 
-This override runs before the global exact/variant mapping and only for the form title of the active Kontext page. An unknown variant falls through to the current generic family alias. It cannot relabel historical cards from the currently selected model.
+Replace both placeholders before committing. Add an exact-entry unit test and a mock-provider fixture case for this history route, plus wrong-method, wrong-module, and nearby-path rejection. If the upstream YiBai site itself returns 404, or the endpoint fetches unrelated video records for the user's account, **do not whitelist it**; treat the history feature as a provider problem and keep the non-blocking history message truthful. The name `viralVideoRecords` is not enough evidence to make a cross-module access decision.
 
-### B. Pass the original selected model as context in `image-tab-labels.js`
+**Why the toast can persist after the submit fix:** loading history and submitting a repair call two different APIs. Whitelisting one does not make the other work.
 
-In **`public/harson-customization/image-tab-labels.js`**, add the Kontext family to `activeImageFamily()` after it computes `source`:
+## 6. Investigate the OSS `HEAD 404` separately
 
-```js
-if (source === "flux.1 kontext" || source === "flux.1kontext") {
-  return "flux-kontext";
-}
-```
+The failing host `yb-ai.oss-accelerate.aliyuncs.com` is outside the Harson gateway. Allowing `beginRepair` does **not** make a missing or inaccessible OSS object appear. The new screenshot shows at least two JPEG and two PNG `HEAD` failures; their timing suggests a connection with the uploaded images or mask, but the ellipsized keys prevent proving that from the screenshot alone.
 
-Add a helper near `activeImageFamily()`. The alias renderer keeps the provider's original selected text in the light DOM, so read `textContent`, not the displayed shadow text:
+For **one fresh, non-sensitive test image** in DevTools → Network (Preserve log; filters `Fetch/XHR`, `Img`, and `Other`), record locally:
 
-```js
-function selectedKontextVariant() {
-  const originalValues = [...document.querySelectorAll(
-    ".IcbsMenuSelect-header-content"
-  )].map(node => resolver.normalize(node.textContent));
+1. Which YiBai API requested temporary upload credentials or a presigned destination; whether that API succeeded. Do not share the credentials or signed URL.
+2. Whether an actual **PUT/POST upload** to OSS occurred, its status, and whether the returned object key is the same key later checked by `HEAD`.
+3. Whether the two previews represent local `blob:`/data URLs or remotely fetched OSS objects. A local preview can succeed while remote upload fails.
+4. Whether the failed PNG key is the painted-mask object or an older thumbnail. Compare keys **locally**, not full signed URLs in tickets or logs.
+5. Whether the same images upload and pass HEAD inside YiBai's original signed-in site with the same authorized account. Compare behavior, not private credentials.
 
-  const selections = originalValues.filter(value =>
-    value === "kontext-pro" || value === "kontext-max" ||
-    value === "flux.1 kontext pro" ||
-    value === "flux.1 kontext max"
-  );
+Interpretation:
 
-  if (selections.length !== 1) return null;
-  return selections[0].endsWith("max") ? "max" : "pro";
-}
-```
+| Observation | Fix owner/action |
+| --- | --- |
+| Upload PUT/POST fails, is absent, or returns a different object key from the HEAD | Repair the YiBai upload/credential/object-key flow. Harson's `/app` allowlist cannot fix direct OSS traffic. If only the proxied iframe fails, compare provider cookie **presence**, upload credential response, and allowed origin with the direct frame. |
+| PUT/POST succeeds but HEAD of that **same key** returns 404 | Collect redacted object key prefix, upload response status, and request/task ID for YiBai; investigate object path, host, authorization, or lifecycle with the provider. Do not substitute arbitrary public URLs. |
+| HEAD failures belong only to old history items | Keep this separate from the new repair submission; old thumbnails may be unavailable while current images are usable. |
+| Repair POST is forwarded but upstream status is 4xx/5xx or JSON reports a failure | Use the provider's short error code and job ID to investigate payload/OSS availability or ask YiBai. Another gateway route exception will not turn an upstream failure into success. |
 
-Before relying on this helper, confirm in the YiBai iframe's DevTools that the selected-value element has class `IcbsMenuSelect-header-content` and that its `textContent` retains exactly one of the four original spellings. If the provider changes its markup, update this selector to the **verified `模型` dropdown** rather than choosing the first arbitrary selector match.
+Do not expose `accessKeyId`, `accessKeySecret`, `securityToken`, signed query strings, cookies, full HAR exports, or private images in shared issue reports. The console's STS renewal **recommendation** alone is not a diagnosis; confirm the upload request and response first.
 
-In `imageContextFor(node)`, after `const family = activeImageFamily();` and before the current `seedream` branch, insert:
+## 7. Deploy, distinguish residual errors, and accept the fix
 
-```js
-if (family === "flux-kontext" &&
-    node.matches(".ToolLayout-header,.DefaultLayout-header,.header_fix > span")) {
-  return {
-    module: "image-generator",
-    surface: "image-family-title",
-    family,
-    variant: selectedKontextVariant()
-  };
-}
-```
-
-The current `MutationObserver` already tracks subtree text and class changes, but changing a selected dropdown may not queue the **separate title node**. Within the existing `mutations.forEach(mutation => { ... })` callback, immediately after `element` is defined, add:
-
-```js
-const selectedModelSelector = ".IcbsMenuSelect-header-content";
-const selectionChanged =
-  element?.matches?.(selectedModelSelector) ||
-  element?.closest?.(selectedModelSelector) ||
-  [...mutation.addedNodes].some(node =>
-    node.nodeType === Node.ELEMENT_NODE &&
-    (node.matches(selectedModelSelector) ||
-      Boolean(node.querySelector(selectedModelSelector)))
-  );
-if (selectionChanged) {
-  document.querySelectorAll(
-    ".ToolLayout-header,.DefaultLayout-header,.header_fix > span"
-  ).forEach(title => pending.add(title));
-}
-```
-
-The existing microtask scheduler then rerenders the small approved title set once. It does not reload the iframe. The existing `image-tab-config.js` heading selectors already include these titles.
-
-Add to `tests/model-alias-resolver.test.cjs`:
-
-```js
-test("Kontext title follows only its own selected variant", () => {
-  const title = variant => ({
-    module: "image-generator",
-    surface: "image-family-title",
-    family: "flux-kontext",
-    variant
-  });
-  assert.equal(resolve("FLUX.1 Kontext", title("pro")), "CLImage-1.1");
-  assert.equal(resolve("FLUX.1 Kontext", title("max")), "CLImage-1.2");
-  assert.equal(resolve("FLUX.1 Kontext", title(null)), "CLImage-1.1");
-  assert.equal(resolve("FLUX.1 Kontext"), "CLImage-1.1");
-  assert.equal(resolve("kontext-max", title("pro")), "CLImage-1.2");
-});
-```
-
-## 4. Right-side images and opened details: use each item's own original model
-
-The renderer already selects `.DemoCard .DemoCard-banner > span` and `.TextToImageCard .TextToImageCard-header-typeName > span`. After Section 2, any such element whose original text is `kontext-max` or `FLUX.1 Kontext max` automatically shows `CLImage-1.2`; pro shows `CLImage-1.1`. The same applies to existing selected title/dialog surfaces with explicit versioned original text.
-
-However, your screenshot shows **every image badge currently reading `CLImage-1.1`**. That is consistent with the provider displaying only its generic `FLUX.1 Kontext` family name on each card. If the original per-card text is generic, no client-side string replacement can honestly determine which images used max. **Do not** assign all right-side cards from the active dropdown, card order, current selection, or filename; history can mix pro and max from earlier sessions.
-
-Inspect the original source and model metadata **inside the iframe context** before adding a card-specific rule. This read-only diagnostic prints only selected model-looking strings and attribute **names**, not prompts, image URLs, or tokens:
-
-```js
-const options = [...document.querySelectorAll(
-  ".IcbsMenuSelect-menu-item-label"
-)].map(node => node.textContent.trim());
-const selected = [...document.querySelectorAll(
-  ".IcbsMenuSelect-header-content"
-)].map(node => node.textContent.trim());
-const cards = [...document.querySelectorAll(".DemoCard")].slice(0, 5)
-  .map((card, index) => ({
-    index,
-    sourceBadge: card.querySelector(".DemoCard-banner > span")?.textContent.trim(),
-    dataAttributeNames: [...card.attributes]
-      .filter(attr => attr.name.startsWith("data-"))
-      .map(attr => attr.name)
-  }));
-console.table({ options, selected, cards });
-```
-
-If each card carries a verified **provider-owned per-task model field** such as `data-model` or an authenticated history record keyed by the card's stable task ID, extend `imageContextFor(node)` for the **badge and its opened detail only**:
-
-```js
-// Illustration: use ONLY after confirming this exact attribute exists on
-// each provider-owned card and contains its actual model identifier.
-if (node.matches(".DemoCard .DemoCard-banner > span")) {
-  const card = node.closest(".DemoCard");
-  const sourceModel = resolver.normalize(card?.getAttribute("data-model"));
-  const variant = sourceModel === "kontext-max" ? "max"
-    : sourceModel === "kontext-pro" ? "pro" : null;
-  if (variant) {
-    return {
-      module: "image-generator",
-      surface: "kontext-card-badge",
-      variant
-    };
-  }
-}
-```
-
-Then, in `imageGeneratorOverride` before its final `return null`, map only the generic **card badge** with a verified per-card variant:
-
-```js
-if (context.surface === "kontext-card-badge" &&
-    (key === "flux.1 kontext" || key === "flux.1kontext")) {
-  if (context.variant === "max") return "CLImage-1.2";
-  if (context.variant === "pro") return "CLImage-1.1";
-}
-```
-
-Use an equivalent verified per-task source for an opened side detail panel. If the provider exposes **no per-image variant at all**, this card-specific code cannot be applied; leave the existing generic family badge and ask YiBai to expose the model in authenticated history data, or label the family separately by an explicitly chosen neutral family name. There is no reliable way to derive max from the card image pixels or from the current dropdown. The example `data-model` attribute above is **not confirmed** to exist in your live DOM and must not be pasted in without that check.
-
-## 5. Deploy and verify
-
-After tests pass, push your reviewed commit and update the server checkout. The alias data and renderer are served by the separate gateway container in `docker-compose.yml`:
+After editing your checkout and passing the local tests, push your reviewed change to `temp-main` and update the production source by your normal process. Preserve `.env` and persistent `data/`. Rebuild the **gateway container**, since this route policy executes there:
 
 ```bash
 docker compose --profile gateway up -d --build --no-deps --force-recreate gateway
-docker compose --profile gateway exec gateway grep -n 'flux.1 kontext max' /app/public/harson-customization/model-aliases.generated.js
+docker compose --profile gateway exec gateway node -e 'const p=require("./src/gateway/routePolicy"); console.log(p.LOCAL_REPAIR_EXCEPTIONS)'
+docker compose --profile gateway logs --tail=100 gateway
 ```
 
-Open a new iframe session or refresh once. In the frame console, `window.HarsonImageLabels.status()` should report the new generated mapping hash. Verify:
+Start a fresh iframe session after deploy. Verify in this order:
 
-1. Dropdown source `kontext-pro` displays `CLImage-1.1`; `kontext-max` displays `CLImage-1.2`, including the selected value on each click.
-2. The currently selected form title follows the dropdown **if** you applied Section 3, without a full reload.
-3. Clicking either option still sends the respective provider model key (check only the **model field name/value**, never share tokens or private prompts).
-4. Explicitly versioned gallery badges/history details map to the correct alias; mixed historical pro/max cards keep their own identities when the current dropdown changes.
-5. The left family label remains `CLImage-1.1`; other image/video modules and model names are unchanged.
+1. `POST /app/local-repair/beginRepair` no longer gets an **empty gateway 404**; the gateway emits `clothing local-repair upstream status=...`. Check this **before** spending credits on another attempt if a harmless mock/staging route is available.
+2. If upstream returns 200, inspect its **JSON success field/task status**, then confirm an actual output. HTTP 200 alone is not a finished repair.
+3. If the history toast persists, capture the exact separate history method/path as in Section 5 and resolve it on its own merits.
+4. If upload `HEAD` still fails, correlate its object key with the current uploaded files as in Section 6. Do not repeatedly trigger billable generation until the images are valid.
+5. Confirm wrong-method, wrong-module and arbitrary `/app/*` requests still receive 404; pricing, color-match and video replicator flows remain functional.
 
-**Verified from `temp-main`:** duplicate destinations in `names.txt`; existing pro/max correspondence entries; dropdown, selected-value, card and title selectors; resolver behavior with a simulated max destination change. **Not established by the screenshot:** whether each right-side historical image exposes its actual pro/max model. Section 4 is therefore intentionally conditional.
+**Established:** current `temp-main` blocks the screenshot-confirmed clothing `POST /app/local-repair/beginRepair` before the mock upstream, and the exact exception fixes that forwarding locally. **Not established:** the full history request, a successful real YiBai repair task, or the root cause of direct OSS `HEAD 404`s. The guide addresses those unknowns with a precise capture and decision process instead of claiming the Node route change fixes every red message.
