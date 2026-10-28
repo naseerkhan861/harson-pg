@@ -1,264 +1,176 @@
-# 爆款视频复刻：通过链接上传返回 500 — `temp-main` 实施指南
+# Fix video-creation sidebar labels shifting after navigation
 
-**Repository:** [`naseerkhan861/harson-pg`, branch `temp-main`](https://github.com/naseerkhan861/harson-pg/tree/temp-main)  
-**Affected flow:** 视频创作 → 爆款视频复刻 → 通过链接上传 → 确认  
-**Gateway:** `https://ai.harson-base.com`  
+**Repository:** [`naseerkhan861/harson-pg`, `temp-main`](https://github.com/naseerkhan861/harson-pg/tree/temp-main)  
+**Affected view:** `视频创作` left menu on `ai.harson-base.com`  
 **Prepared:** 28 October 2026  
-**Scope:** Instructions and code to apply in your own VS Code checkout. This document has not changed the GitHub repository or production server.
+**Application:** Edit and deploy these files from your own development checkout. This guide itself does not modify GitHub or your server.
 
-## 1. What changed since the previous 404
+## 1. What the screenshots and code show
 
-The new screenshots show:
+The four menu items are initially aligned, but after selecting `爆款视频复刻` or `CL Dragon`, some labels start farther left than others. A full reload restores the initial appearance temporarily. The screenshots suggest a **horizontal offset change on navigation**, rather than a wrong name mapping; their exact computed CSS and DOM after the click were not supplied, so the particular vendor rule responsible is not yet proven.
 
-```text
-POST https://ai.harson-base.com/app/viral-video/link/resolve
-500 Internal Server Error
-```
+The left menu belongs to the **YiBai iframe** at `ai.harson-base.com`. The parent's `public/css/aigc-workspace.css` cannot style its contents. In the current `temp-main` branch:
 
-The latest `temp-main` **already contains** the exact `POST` exception in `src/gateway/routePolicy.js` and tests for it in `tests/gateway-route-policy.test.cjs`. Do not add another exception or widen `YIBAI_GATEWAY_EXTRA_PATHS`. The browser now receives a 500 rather than the former 404. The request can be passing the gateway's path gate, but the console alone does **not** identify whether Nginx, the Harson gateway, or YiBai emitted the 500.
+- `src/gateway/server.js` proxies YiBai HTML and serves `/__harson_custom/image-tab-1/*` assets from `public/harson-customization/`.
+- `src/services/yibaiDisplayInjection.js` injects the existing navigation and alias assets into the frame's HTML.
+- `public/harson-customization/image-tab-labels.js` renders approved aliases on the original `span.label` using a shadow root, and rescans on provider class changes.
+- `public/harson-customization/image-tab-config.js` already supports module `video-generator` and selects `.MainLayout-nav .NavList-list-item > span.label`.
 
-The code provides a useful clue: for ordinary JSON/API responses, `src/gateway/server.js` forwards the **upstream status code and body** (`handleProxyResponse`, around lines 1003–1025). Its explicit proxy network error handler returns **502**, and its denied-route handler returns **404**. Therefore an upstream 500 is likely, subject to verification with the response and gateway logs. The repeated `aigc-workspace.js:747` model-category warnings and `allowfullscreen` warning are separate from this request.
+The intended fix is a **small CSS rule scoped to video-generator HTML**, loaded through the same gateway. It keeps the row's left inset and the label's own inset constant for normal and active rows. It does not rewrite the provider's menu text, route IDs, click handlers, or backend model values.
 
-Two concrete weaknesses in the current proxy are worth fixing and testing:
+## 2. Verify the actual offset once in DevTools
 
-1. `selfHandleResponse: true` makes the gateway responsible for outgoing headers. The current `cookieDomainRewrite: ""` option does not run in the library's normal outgoing response passes, while `copyResponseHeaders()` copies the upstream `Set-Cookie` verbatim. A cookie with `Domain=yibaiaigc.com` cannot become a cookie for `ai.harson-base.com` in the browser. Whether this particular resolver requires such a cookie remains to be checked.
-2. The gateway cookie is read at the session gate but the original `Cookie` request header is subsequently proxied as-is. The Harson gateway session cookie should not be sent to YiBai. Other provider cookies should continue to pass through.
-
-Neither weakness alone proves the cause of the shown 500. The changes below correct them without modifying URL input, request payload, model names, or the vendor's UI JavaScript.
-
-## 2. First establish which component returns the 500
-
-Use Chrome DevTools **Network**, select the failed `link/resolve` request, and inspect **Headers**, **Response**, and **Payload** locally. Record only the following non-secret facts:
-
-- Request method/path, response status, response `Content-Type`, whether the response is JSON or HTML, and the vendor's **error code/category** if one exists.
-- Whether a provider `Cookie` header is present (cookie **names only**) and whether earlier proxied YiBai responses attempted `Set-Cookie` with a `Domain=yibaiaigc.com` attribute. Use the browser's Issues/Application panel to check for rejected cookies.
-- Whether the **same link** works in YiBai's original, signed-in interface. Also try one clearly valid, public, supported link; the screenshot displays only a truncated URL.
-
-Do not copy a HAR file, provider token, cookies, session ticket, a private link, or the complete response body to a public issue. Do not use a browser-console `fetch` to an unrelated host. The vendor may return a 500 for an invalid, inaccessible, expired, or rate-limited Xiaohongshu item; a 500 does not prove the proxy changed the submitted URL.
-
-## 3. Exact code changes for proxy headers and status provenance
-
-### 3A. Add `src/gateway/proxyHeaders.js`
-
-This module makes the two header transformations testable without importing `server.js` (which calls `app.listen()` during import). Keep cookie values out of logs.
+In DevTools, choose the **YiBai frame** context (`ai.harson-base.com`) rather than the parent `harson-base.com` page. Run this read-only snippet before a click and again after clicking through the four items:
 
 ```js
-"use strict";
+[...document.querySelectorAll(".MainLayout-nav .NavList-list-item")]
+  .map((row, index) => {
+    const label = row.querySelector(":scope > span.label");
+    if (!label) return null;
+    const rowStyle = getComputedStyle(row);
+    const labelStyle = getComputedStyle(label);
+    return {
+      index,
+      originalText: label.textContent.trim(),
+      active: row.classList.contains("active"),
+      rowX: Math.round(row.getBoundingClientRect().left),
+      labelX: Math.round(label.getBoundingClientRect().left),
+      rowPaddingLeft: rowStyle.paddingLeft,
+      labelMarginLeft: labelStyle.marginLeft,
+      labelPaddingLeft: labelStyle.paddingLeft,
+      labelTextIndent: labelStyle.textIndent,
+      labelTransform: labelStyle.transform
+    };
+  })
+  .filter(Boolean);
+```
 
-function removeGatewayCookie(rawCookie, gatewayCookieName) {
-  return String(rawCookie || "")
-    .split(";")
-    .map(part => part.trim())
-    .filter(part => {
-      const equals = part.indexOf("=");
-      return equals > 0 &&
-        part.slice(0, equals).trim() !== gatewayCookieName;
-    })
-    .join("; ");
+Expected diagnosis: the `labelX`, `rowPaddingLeft`, or label inset values differ between some rows after a click. If the values remain identical while the *painted glyphs* still shift, inspect the label's open `shadowRoot` and the provider's `::before`/`::after` rules before changing the stylesheet below. The original text shown in `textContent` is intentional: the displayed alias comes from the shadow renderer; do not replace source text nodes.
+
+## 3. Add a video-only stylesheet
+
+Create **`public/harson-customization/video-nav-alignment.css`**:
+
+```css
+/* Loaded only into video-generator HTML through the Harson gateway. */
+.MainLayout-nav {
+  --harson-video-label-start: 40px;
 }
 
-function rewriteProviderSetCookie(value, upstreamOrigin) {
-  if (value == null) return value;
+.MainLayout-nav .NavList-list-item,
+.MainLayout-nav .NavList-list-item.active {
+  box-sizing: border-box;
+  padding-left: var(--harson-video-label-start) !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
 
-  const upstreamHost = new URL(upstreamOrigin).hostname.toLowerCase();
+.MainLayout-nav .NavList-list-item > span.label,
+.MainLayout-nav .NavList-list-item.active > span.label {
+  min-width: 0;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  text-indent: 0 !important;
+  transform: none !important;
+  text-align: left !important;
+}
+```
 
-  function rewriteOne(cookie) {
-    return String(cookie).replace(
-      /;\s*domain\s*=\s*([^;]+)/gi,
-      (attribute, rawDomain) => {
-        const domain = rawDomain.trim().replace(/^\./, "").toLowerCase();
-        const belongsToUpstream =
-          upstreamHost === domain ||
-          upstreamHost.endsWith(`.${domain}`);
+`40px` matches the approximately aligned starting position in the **initial** screenshot; if your DevTools measurements show a different desired inset, change only `--harson-video-label-start`. This CSS does not set a new font, color, row height, or background, so the provider's selected-state styling remains intact. It keeps the DOM structure and all click handlers in place.
 
-        // No Domain attribute means host-only on ai.harson-base.com.
-        // Leave unrelated domains untouched; the browser will reject them.
-        return belongsToUpstream ? "" : attribute;
-      }
-    );
+Do not put this in `public/css/aigc-workspace.css` (the parent cannot reach the iframe), nor in the shared `nav-visibility.css` (that file is injected into all modules). Do not modify `config/display-names/names.txt` or the generated alias mapping for a spacing problem.
+
+## 4. Inject the stylesheet into video-generator HTML only
+
+Open **`src/services/yibaiDisplayInjection.js`**. Near its existing `SCRIPT_MARKER` and `NAV_MARKER`, add:
+
+```js
+const VIDEO_NAV_MARKER = "harson-video-nav-alignment";
+```
+
+Inside `injectImageTabAssets(...)`, after the current `navTags` definition and before its final `return`, add:
+
+```js
+const videoNavTags =
+  moduleName === "video-generator" &&
+  !html.includes(`id="${VIDEO_NAV_MARKER}"`)
+    ? `<link id="${VIDEO_NAV_MARKER}" rel="stylesheet" ` +
+      `href="${ASSET_PREFIX}/video-nav-alignment.css">`
+    : "";
+```
+
+Change the return expression from:
+
+```js
+return html.slice(0, end) + navTags + aliasTags + html.slice(end);
+```
+
+to:
+
+```js
+return html.slice(0, end) + navTags + videoNavTags + aliasTags + html.slice(end);
+```
+
+The stylesheet is injected near the end of `<head>`, after the provider's initial stylesheet links, and only when the existing safe HTML-injection guards pass. Its link has a unique marker, so running injection twice will not duplicate it. The gateway currently calls this helper with `hideVirtualSample: true`, so the style can load for video navigation even if model aliases are disabled; it is not tied to the alias mapping.
+
+No change to the `src/gateway/server.js` route allowlist or to `YIBAI_GATEWAY_EXTRA_PATHS` is needed. The static asset route already serves files in `public/harson-customization/` under the `ASSET_PREFIX` URL.
+
+## 5. Add focused injection coverage
+
+In **`tests/image-tab-injection.test.cjs`**, add one test alongside the other injection tests:
+
+```js
+test("video sidebar alignment CSS is scoped and not duplicated", () => {
+  const video = inject(HTML, {
+    moduleName: "video-generator",
+    hideVirtualSample: true
+  });
+  const marker = 'id="harson-video-nav-alignment"';
+
+  assert.ok(video.includes(marker));
+  assert.ok(video.includes(
+    `${ASSET_PREFIX}/video-nav-alignment.css`
+  ));
+  assert.equal(video.split(marker).length - 1, 1);
+  assert.equal(inject(video, {
+    moduleName: "video-generator",
+    hideVirtualSample: true
+  }), video);
+
+  for (const otherModule of ["image-generator", "clothing", "e-commerce"]) {
+    assert.ok(!inject(HTML, {
+      moduleName: otherModule,
+      hideVirtualSample: true
+    }).includes(marker));
   }
-
-  return Array.isArray(value) ? value.map(rewriteOne) : rewriteOne(value);
-}
-
-module.exports = { removeGatewayCookie, rewriteProviderSetCookie };
-```
-
-This preserves each cookie's value, `Path`, `Secure`, `HttpOnly`, `SameSite`, and multiple independent `Set-Cookie` headers. It removes `Domain` only when the domain is the actual configured YiBai target host or one of its parent domains.
-
-### 3B. Apply it in `src/gateway/server.js`
-
-Next to the existing import from `./routePolicy`, add:
-
-```js
-const {
-  removeGatewayCookie,
-  rewriteProviderSetCookie
-} = require("./proxyHeaders");
-```
-
-In the existing `copyResponseHeaders(proxyRes, overrides)`, after constructing `headers` from `proxyRes.headers` and before returning it, add:
-
-```js
-if (headers["set-cookie"]) {
-  headers["set-cookie"] = rewriteProviderSetCookie(
-    headers["set-cookie"],
-    UPSTREAM_ORIGIN
-  );
-}
-```
-
-Keep its existing `content-length` and `transfer-encoding` removal and the `...overrides` return. This single insertion covers both the HTML-injection and non-HTML response paths. Remove `cookieDomainRewrite: ""` from the `createProxyMiddleware` options so it does not misleadingly imply an automatic rewrite is active while `selfHandleResponse: true` remains in use.
-
-In the existing `createProxyMiddleware({ ..., on: { ... } })` object, add `proxyReq` **beside** `proxyRes` and `error`:
-
-```js
-on: {
-  proxyReq: (proxyReq, req) => {
-    const providerCookies = removeGatewayCookie(
-      req.headers.cookie,
-      SESSION_COOKIE_NAME
-    );
-    if (providerCookies) {
-      proxyReq.setHeader("cookie", providerCookies);
-    } else {
-      proxyReq.removeHeader("cookie");
-    }
-  },
-  proxyRes: handleProxyResponse,
-  error: handleProxyError
-}
-```
-
-This filters only the Harson gateway's session cookie; it does not strip the provider's login cookies or parse/rewrite the POST body. There are two gateway-cookie names in `server.js` depending on `YIBAI_FRAME_PUBLIC_ORIGIN`, and `SESSION_COOKIE_NAME` handles both.
-
-At the **start** of `handleProxyResponse(proxyRes, req, res)`, before the existing `rewriteLocationHeader(proxyRes)` call, add a narrowly scoped status log:
-
-```js
-if (
-  req.method === "POST" &&
-  req.path === "/app/viral-video/link/resolve"
-) {
-  console.info(
-    `[gateway] link/resolve upstream status=${proxyRes.statusCode}`
-  );
-}
-```
-
-The existing `res.on("finish")` log already records the **final** response status. The new line records only a status from an actual YiBai response. It does not read or buffer the response body, log the submitted link, expose cookies, or alter the status. A completed request might now produce two status-only lines.
-
-### 3C. Add focused tests in `tests/gateway-proxy-headers.test.cjs`
-
-```js
-"use strict";
-
-const test = require("node:test");
-const assert = require("node:assert/strict");
-const {
-  removeGatewayCookie,
-  rewriteProviderSetCookie
-} = require("../src/gateway/proxyHeaders.js");
-
-test("removes only the gateway session cookie", () => {
-  assert.equal(
-    removeGatewayCookie(
-      "provider_sid=one; __Host-harson_aigc=private==; other=two",
-      "__Host-harson_aigc"
-    ),
-    "provider_sid=one; other=two"
-  );
-  assert.equal(
-    removeGatewayCookie("harson_aigc_gateway=private", "harson_aigc_gateway"),
-    ""
-  );
-});
-
-test("rewrites only provider cookie domains and keeps separate headers", () => {
-  assert.deepEqual(
-    rewriteProviderSetCookie(
-      [
-        "sid=abc; Domain=.yibaiaigc.com; Path=/; HttpOnly; Secure; SameSite=None",
-        "other=xyz; Domain=unrelated.example; Path=/"
-      ],
-      "https://cl-base.yibaiaigc.com"
-    ),
-    [
-      "sid=abc; Path=/; HttpOnly; Secure; SameSite=None",
-      "other=xyz; Domain=unrelated.example; Path=/"
-    ]
-  );
 });
 ```
 
-Run:
+Run from the repo root:
 
 ```bash
-node --test tests/gateway-proxy-headers.test.cjs tests/gateway-route-policy.test.cjs
 node --test tests/image-tab-injection.test.cjs
+npm run aliases:check
 ```
 
-These are focused tests for identity/security behavior and the existing three exact viral-video routes. If your test setup has a mock upstream, add one integration check: a resolver POST must reach that upstream with the same JSON body and provider cookies but **without** the Harson session cookie; a fake `Set-Cookie: Domain=.yibaiaigc.com` must reach the browser without that Domain attribute; upstream 500 must remain 500 with its original body. Avoid network calls to the real provider in automated tests.
+The second command confirms the alias data was not accidentally edited. A CSS alignment result still needs a visual browser check; the test only proves that the stylesheet is injected in the correct module and not duplicated.
 
-## 4. Deploy and classify the outcome
+## 6. Deploy and verify without repeated reloads
 
-Pull your reviewed `temp-main` changes onto the server, then rebuild the **gateway service**, which is separate from `app` in `docker-compose.yml`:
+After committing/pushing your reviewed changes and updating the server checkout, rebuild the **gateway** service, which serves the iframe HTML and static customization file:
 
 ```bash
 docker compose --profile gateway up -d --build --no-deps --force-recreate gateway
-docker compose --profile gateway exec gateway grep -n 'link/resolve upstream status' /app/src/gateway/server.js
-docker compose logs --tail=100 gateway
+docker compose --profile gateway exec gateway test -f /app/public/harson-customization/video-nav-alignment.css
 ```
 
-Confirm the running gateway contains the new code. A single browser refresh after deployment is enough to establish a fresh iframe session; there should be no extra iframe reload on each link submission. Retry with a supported public link. Read the status-only log and the failed request's **Network → Response**, then follow this table:
+Make one initial browser refresh to load the new CSS link. In DevTools → Network verify the stylesheet returns **200** from `ai.harson-base.com/__harson_custom/image-tab-1/video-nav-alignment.css`. If the old page is cached, use one hard refresh and then test in the same session:
 
-| Observation | Interpretation | Action |
-| --- | --- | --- |
-| No `[gateway] link/resolve upstream status=...` line, but browser sees 500 | The response did not reach this gateway proxy response handler, or a different gateway/Nginx instance served it | Check `docker compose ps`, deployed image, Nginx routing for `ai.harson-base.com`, and gateway error logs. Do not edit the vendor URL. |
-| Log says `upstream status=500` and browser says 500 | YiBai returned 500 to the proxy; Harson forwarded it | Compare direct-provider result and response code/category. Continue with Section 5 only if the same link succeeds directly. |
-| Log says `upstream status=200` but browser still says 500 | Harson response handling or Nginx is failing after the upstream response | Inspect gateway stack trace and the response-header path; the proxy handler should preserve the upstream status. |
-| 200 after the cookie fixes | Cookie/session flow was the likely cause | Confirm video preview and `下一步` work; verify other YiBai tabs still log in normally. |
-| 400/422 | Vendor now returned a validation error rather than a proxy error | Correct the link according to the vendor's actual message; do not mask it with a generic toast. |
-| 500 both via `ai.harson-base.com` and the direct YiBai interface using the same authorized account/link | Vendor resolver, the link, or vendor availability is the leading issue | Try a supported working link and report the vendor's request ID/error category to YiBai; Harson cannot guarantee vendor-side extraction from its gateway. |
+1. Switch among all four left items in different orders, including `CLVideo3.0`, `爆款视频复刻`, `CL Dragon`, and `MiniMax_H3`.
+2. Check that all four label starts remain aligned in normal, hover, and active states **without** refreshing between clicks.
+3. Repeat at your common desktop widths and one narrower browser width; check that no text is clipped and selected row colors still work.
+4. Check another module such as 图片创作 to confirm that the video-only CSS was not added there.
 
-## 5. Only if direct YiBai succeeds but the gateway still gets upstream 500
+If the stylesheet is loaded but the text still moves, rerun the snippet in Section 2. Inspect DevTools → Computed for the winning `padding-left`/`margin-left` declarations and the actual row structure. If the provider changed its markup so the label is no longer a direct `span.label`, update the selector to match the **observed** video menu structure; do not broaden it to arbitrary `.label` elements. If the measured host boxes stay aligned but only shadow-rendered glyphs move, the cause is inside the label's shadow presentation and needs a renderer-specific adjustment rather than another row padding override.
 
-Compare, **without disclosing secret values**, the direct-provider and proxied requests: target host, method/path, content type, payload field names and sizes, presence of provider cookies, `Origin`, and `Referer`. The current gateway sets `changeOrigin: true`, which changes the target **Host** header; it does not by itself guarantee that `Origin` and `Referer` match the provider origin. If the provider rejects only the proxied origin, the following optional, **resolver-only** normalization may be warranted:
-
-```js
-// Add inside the existing proxyReq callback, after the cookie filtering.
-if (
-  req.method === "POST" &&
-  req.path === "/app/viral-video/link/resolve" &&
-  PUBLIC_ORIGIN &&
-  req.headers.origin === PUBLIC_ORIGIN
-) {
-  const targetOrigin = new URL(UPSTREAM_ORIGIN).origin;
-  proxyReq.setHeader("origin", targetOrigin);
-
-  try {
-    const originalReferer = new URL(String(req.headers.referer || ""));
-    if (originalReferer.origin === PUBLIC_ORIGIN) {
-      proxyReq.setHeader(
-        "referer",
-        targetOrigin + originalReferer.pathname + originalReferer.search
-      );
-    }
-  } catch {
-    // An absent/invalid Referer is left alone.
-  }
-}
-```
-
-Apply this only after the direct-vs-proxy comparison points to an origin/referrer mismatch. Keep the existing `video-generator` session gate and exact allowlist; test that other paths are not rewritten. Do not broaden the rewrite to all API requests, disable TLS verification, add `/app` to the prefix list, bypass CSRF/session checks, or build a generic server-side URL fetcher for Xiaohongshu links. Such changes would create security and compatibility problems without establishing the real cause.
-
-## 6. Completion criteria
-
-- With a valid supported link, `POST /app/viral-video/link/resolve` returns a successful provider response, the video is accepted into the tool, and the user can proceed.
-- The gateway never sends `__Host-harson_aigc` / `harson_aigc_gateway` to YiBai, while YiBai login cookies still work.
-- Provider cookies with a target domain are accepted by the browser under `ai.harson-base.com` when necessary; separate `Set-Cookie` headers are preserved.
-- A provider 4xx/5xx stays visible as the original provider status; the gateway does not silently change it to 200.
-- Existing `viralVideoTaskDetail`, pricing, local upload, history, names/aliases, and other navigation paths still work.
-
-**Limit of what can be concluded now:** the screenshots establish an HTTP 500 for the resolver, and `temp-main` establishes the two proxy header flaws above. The vendor's 500 response body, request headers, gateway runtime log, and result from the same link on the original provider interface were not provided. It would be misleading to promise a single code change will fix a vendor-generated 500 without those checks.
-
-**Technical reference:** [http-proxy-middleware documentation](https://github.com/chimurai/http-proxy-middleware/blob/master/README.md) explains that `selfHandleResponse` skips ordinary outgoing passes and `changeOrigin` changes the Host header; the repository pins `http-proxy-middleware` at `3.0.7`.
+**Confidence:** the correct code insertion points, module key, and existing static asset route are established from current `temp-main`. The exact CSS property responsible for your live visual shift remains a hypothesis until the before/after computed-style comparison; `40px` is a proposed visual target from the screenshots, not a measured provider specification.
