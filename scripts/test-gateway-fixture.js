@@ -153,7 +153,8 @@ function startFixture() {
     "/aigc/upscaler",
     "/aigc/video-generator",
     "/aigc/clothing",
-    "/aigc/e-commerce"
+    "/aigc/e-commerce",
+    "/aigc/pattern-design"
   ]) {
     app.get(
       path,
@@ -1374,6 +1375,48 @@ async function main() {
         });
         check(`${module} POST ${apiPath} stays 404`, wrongModule.status === 404);
       }
+    }
+
+    const patternSession = await withSession(
+      "pattern-design", "/aigc/pattern-design?embed=2"
+    );
+    const patternColorRequests = [
+      ["POST", "/app/proxy/viralVideoTaskDetail"],
+      ["POST", "/app/color-match/pricing"],
+      ["GET", "/app/color-match/pricing"],
+      ["POST", "/app/local-repair/pricing"],
+      ["POST", "/app/color-match/cast-correction-sessions"],
+      ["GET", "/app/color-match/cast-correction-sessions"],
+      ["POST", `/app/color-match/cast-correction-sessions/${SESSION_ID}/process`],
+      ["DELETE", `/app/color-match/cast-correction-sessions/${SESSION_ID}`]
+    ];
+    for (const [method, apiPath] of patternColorRequests) {
+      const direct = await request(`${FIXTURE_ORIGIN}${apiPath}`, { method });
+      const proxied = await request(`${GATEWAY_ORIGIN}${apiPath}`, {
+        method,
+        headers: { Cookie: `harson_aigc_gateway=${patternSession.sessionId}` }
+      });
+      check(
+        `pattern-design color-match ${method} ${apiPath} reaches provider unchanged`,
+        direct.status === 200 && proxied.status === 200 && proxied.body.equals(direct.body)
+      );
+      const wrongModule = await request(`${GATEWAY_ORIGIN}${apiPath}`, {
+        method,
+        headers: { Cookie: `harson_aigc_gateway=${first.sessionId}` }
+      });
+      check(`image session ${method} ${apiPath} stays 404`, wrongModule.status === 404);
+    }
+
+    for (const [method, apiPath] of [
+      ["GET", "/app/proxy/viralVideoTaskDetail"],
+      ["PUT", "/app/color-match/cast-correction-sessions"],
+      ["POST", "/app/proxy/viralVideoRecords"]
+    ]) {
+      const denied = await request(`${GATEWAY_ORIGIN}${apiPath}`, {
+        method,
+        headers: { Cookie: `harson_aigc_gateway=${patternSession.sessionId}` }
+      });
+      check(`pattern-design ${method} ${apiPath} stays 404`, denied.status === 404);
     }
 
     const ecommerceUpstreamFailure = await request(

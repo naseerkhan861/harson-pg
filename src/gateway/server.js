@@ -48,7 +48,8 @@ const {
   isAllowedReplicatorRequest,
   isAllowedColorMatchRequest,
   isAllowedLocalRepairRequest,
-  isAllowedEcommerceRequest
+  isAllowedEcommerceRequest,
+  isAllowedPatternColorMatchRequest
 } = require("./routePolicy");
 const {
   removeGatewayCookie,
@@ -747,7 +748,9 @@ app.use(async (req, res, next) => {
     */
     isAllowedLocalRepairRequest(req) ||
     /* AI 电商: reviewed exact method/session routes and strict UUID patterns. */
-    isAllowedEcommerceRequest(req);
+    isAllowedEcommerceRequest(req) ||
+    /* AI 图案设计 reference color-match: exact routes and strict UUID patterns. */
+    isAllowedPatternColorMatchRequest(req);
 
   if (!allowed) {
     return res.status(404).end();
@@ -919,6 +922,12 @@ async function handleProxyResponse(
   if (isAllowedEcommerceRequest(req)) {
     console.info(
       `[gateway] e-commerce ${req.method} ${req.path} upstream status=${proxyRes.statusCode}`
+    );
+  }
+
+  if (isAllowedPatternColorMatchRequest(req)) {
+    console.info(
+      `[gateway] pattern-design ${req.method} ${req.path} upstream status=${proxyRes.statusCode}`
     );
   }
 

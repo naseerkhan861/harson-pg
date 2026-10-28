@@ -279,6 +279,82 @@ function isAllowedEcommerceRequest(req) {
   );
 }
 
+/*
+  AI 图案设计 → 参考图校色 keeps the outer pattern-design session.
+  The screenshot confirms POST pricing, history detail, and session calls;
+  follow-up color-match operations mirror the reviewed shared contract.
+*/
+const PATTERN_COLOR_MATCH_EXCEPTIONS = Object.freeze([
+  {
+    method: "POST",
+    path: "/app/proxy/viralVideoTaskDetail",
+    module: "pattern-design",
+    reason: "restore a reference color-match task from history"
+  },
+  {
+    method: "POST",
+    path: "/app/color-match/pricing",
+    module: "pattern-design",
+    reason: "load color-match pricing"
+  },
+  {
+    method: "GET",
+    path: "/app/color-match/pricing",
+    module: "pattern-design",
+    reason: "refresh color-match pricing"
+  },
+  {
+    method: "POST",
+    path: "/app/local-repair/pricing",
+    module: "pattern-design",
+    reason: "load shared color-match/local-repair pricing"
+  },
+  {
+    method: "POST",
+    path: "/app/color-match/cast-correction-sessions",
+    module: "pattern-design",
+    reason: "allow the screenshot-confirmed cast-correction session operation"
+  },
+  {
+    method: "GET",
+    path: "/app/color-match/cast-correction-sessions",
+    module: "pattern-design",
+    reason: "refresh cast-correction sessions"
+  }
+]);
+
+const PATTERN_COLOR_MATCH_PATTERNS = Object.freeze([
+  {
+    method: "POST",
+    pattern: new RegExp(
+      `^/app/color-match/cast-correction-sessions/${UUID_SEGMENT}/process$`,
+      "i"
+    ),
+    module: "pattern-design"
+  },
+  {
+    method: "DELETE",
+    pattern: new RegExp(
+      `^/app/color-match/cast-correction-sessions/${UUID_SEGMENT}$`,
+      "i"
+    ),
+    module: "pattern-design"
+  }
+]);
+
+function isAllowedPatternColorMatchRequest(req) {
+  const moduleName = req.harsonGatewaySession?.moduleName;
+  return PATTERN_COLOR_MATCH_EXCEPTIONS.some(entry =>
+    moduleName === entry.module &&
+    req.method === entry.method &&
+    req.path === entry.path
+  ) || PATTERN_COLOR_MATCH_PATTERNS.some(entry =>
+    moduleName === entry.module &&
+    req.method === entry.method &&
+    entry.pattern.test(req.path)
+  );
+}
+
 module.exports = {
   isAllowedReplicatorRequest,
   REPLICATOR_EXCEPTIONS,
@@ -287,5 +363,7 @@ module.exports = {
   isAllowedLocalRepairRequest,
   LOCAL_REPAIR_EXCEPTIONS,
   isAllowedEcommerceRequest,
-  ECOMMERCE_EXCEPTIONS
+  ECOMMERCE_EXCEPTIONS,
+  isAllowedPatternColorMatchRequest,
+  PATTERN_COLOR_MATCH_EXCEPTIONS
 };

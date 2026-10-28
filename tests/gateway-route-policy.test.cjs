@@ -16,7 +16,9 @@ const {
   isAllowedLocalRepairRequest,
   LOCAL_REPAIR_EXCEPTIONS,
   isAllowedEcommerceRequest,
-  ECOMMERCE_EXCEPTIONS
+  ECOMMERCE_EXCEPTIONS,
+  isAllowedPatternColorMatchRequest,
+  PATTERN_COLOR_MATCH_EXCEPTIONS
 } = require("../src/gateway/routePolicy.js");
 
 function request({ method, path, module }) {
@@ -28,6 +30,85 @@ function request({ method, path, module }) {
       : undefined
   };
 }
+
+const patternColorExpectedPairs = [
+  ["POST", "/app/proxy/viralVideoTaskDetail"],
+  ["POST", "/app/color-match/pricing"],
+  ["GET", "/app/color-match/pricing"],
+  ["POST", "/app/local-repair/pricing"],
+  ["POST", "/app/color-match/cast-correction-sessions"],
+  ["GET", "/app/color-match/cast-correction-sessions"]
+];
+
+test("pattern-design color-match exact entries match the reviewed contract", () => {
+  assert.deepEqual(
+    PATTERN_COLOR_MATCH_EXCEPTIONS.map(entry =>
+      `${entry.method} ${entry.path} ${entry.module}`
+    ).sort(),
+    patternColorExpectedPairs.map(([method, path]) =>
+      `${method} ${path} pattern-design`
+    ).sort()
+  );
+});
+
+test("pattern-design color-match method/module/path matrix remains exact", () => {
+  const allowed = new Set(patternColorExpectedPairs.map(([method, path]) => `${method} ${path}`));
+  for (const path of new Set(patternColorExpectedPairs.map(pair => pair[1]))) {
+    for (const method of ["GET", "POST", "HEAD", "OPTIONS", "PUT", "DELETE", "PATCH"]) {
+      assert.equal(isAllowedPatternColorMatchRequest(request({
+        method, path, module: "pattern-design"
+      })), allowed.has(`${method} ${path}`));
+    }
+  }
+  for (const [method, path] of patternColorExpectedPairs) {
+    for (const module of ["clothing", "e-commerce", "video-generator", "image-generator", undefined]) {
+      assert.equal(isAllowedPatternColorMatchRequest(request({ method, path, module })), false);
+    }
+    for (const badPath of [path + "/extra", path + "s"]) {
+      assert.equal(isAllowedPatternColorMatchRequest(request({
+        method, path: badPath, module: "pattern-design"
+      })), false);
+    }
+  }
+});
+
+test("pattern-design cast-correction UUID operations remain strict", () => {
+  const id = "62f614d0-23ac-4e89-afd4-c175fe60e9c7";
+  const root = "/app/color-match/cast-correction-sessions/";
+  for (const [method, path] of [
+    ["POST", root + id + "/process"],
+    ["DELETE", root + id]
+  ]) {
+    assert.equal(isAllowedPatternColorMatchRequest(request({
+      method, path, module: "pattern-design"
+    })), true);
+    for (const otherMethod of ["GET", "POST", "HEAD", "OPTIONS", "PUT", "DELETE", "PATCH"].filter(m => m !== method)) {
+      assert.equal(isAllowedPatternColorMatchRequest(request({
+        method: otherMethod, path, module: "pattern-design"
+      })), false);
+    }
+    for (const module of ["clothing", "e-commerce", "image-generator", undefined]) {
+      assert.equal(isAllowedPatternColorMatchRequest(request({ method, path, module })), false);
+    }
+    for (const badPath of [path + "/extra", path.replace(id, "not-a-uuid"), path.replace(id, id + "a")]) {
+      assert.equal(isAllowedPatternColorMatchRequest(request({
+        method, path: badPath, module: "pattern-design"
+      })), false);
+    }
+  }
+});
+
+test("pattern color-match rules do not admit unrelated app operations", () => {
+  for (const path of [
+    "/app", "/app/proxy", "/app/color-match",
+    "/app/local-repair/beginRepair", "/app/proxy/viralVideoRecords",
+    "/app/viral-video/link/resolve", "/app/viral-video/pricing"
+  ]) {
+    assert.equal(isAllowedPatternColorMatchRequest(request({
+      method: "POST", path, module: "pattern-design"
+    })), false);
+  }
+});
 
 const ecommerceExpectedPairs = [
   ["POST", "/app/proxy/viralVideoTaskDetail"],
