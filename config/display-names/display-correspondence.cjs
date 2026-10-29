@@ -19,6 +19,7 @@
 */
 
 const correspondences = {
+  "MiniMax_H3": "MiniMax-H3",
   "FLUX.1 Kontext": "FLUX.1 Kontex (pro/max)",
   "FLUX.1Kontext": "FLUX.1 Kontex (pro/max)",
   "FLUXKrea": "FLUX Krea",

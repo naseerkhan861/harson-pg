@@ -239,11 +239,21 @@
   }
 
   function videoMetadataOwner(element) {
+    let owner = null;
+    let source = null;
     for (let current = element; current && current !== document.body;
          current = current.parentElement) {
-      if (videoMetadataAlias(current)) return current;
+      if (!videoMetadataAlias(current)) continue;
+      const candidateSource = resolver.normalize(current.textContent);
+      // Prefer the complete semantic label when a nested child contains
+      // only the base prefix of MiniMax-H3-MAX. Keep the nearest wrapper
+      // when an ancestor merely repeats exactly the same source text.
+      if (!owner || candidateSource !== source) {
+        owner = current;
+        source = candidateSource;
+      }
     }
-    return null;
+    return owner;
   }
 
   function collectVideoMetadata(tree, output) {
@@ -251,7 +261,7 @@
     const walker = document.createTreeWalker(tree, NodeFilter.SHOW_TEXT);
     let textNode;
     while ((textNode = walker.nextNode())) {
-      if (!/seedance/i.test(textNode.data)) continue;
+      if (!/seedance|minimax[-_]h3/i.test(textNode.data)) continue;
       const owner = videoMetadataOwner(textNode.parentElement);
       if (owner) output.add(owner);
     }

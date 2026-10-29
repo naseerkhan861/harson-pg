@@ -128,7 +128,38 @@
         : null;
     }
 
+    /*
+      MiniMax labels on video metadata hosts: accept complete approved
+      labels, optional resolution metadata, and the provider-style
+      family(variant + metadata) form. These are bounded display formats;
+      arbitrary text and unknown model versions never match. The MAX
+      token precedes the base token, and aliases come from generated data.
+    */
+    function resolveMiniMaxVideoMetadata(sourceText) {
+      const raw = String(sourceText || "");
+      const token = "(?:minimax-h3-max|minimax-h3|minimax_h3)";
+      const label = token + "(?:\\s+(?:原生\\s*)?\\d{3,4}p)?";
+      const format = new RegExp(
+        "^\\s*" + label +
+        "(?:\\s*\\(\\s*" + label + "\\s*\\)|" +
+        "\\s*（\\s*" + label + "\\s*）)?\\s*$",
+        "iu"
+      );
+      if (!format.test(raw)) return null;
+
+      let complete = true;
+      const result = raw.replace(new RegExp(token, "giu"), source => {
+        const key = normalize(source);
+        const alias = exact[key] || exact[variants[key]];
+        if (!alias) complete = false;
+        return alias || source;
+      });
+      return complete ? result : null;
+    }
+
     function resolveVideoMetadata(sourceText) {
+      const minimax = resolveMiniMaxVideoMetadata(sourceText);
+      if (minimax !== null) return minimax;
       const raw = String(sourceText || "");
       const overlay = /^(\s*)(seedance\s+2\.(?:5|0))(\s+原生\s*\d{3,4}p)(\s*)$/iu.exec(raw);
       if (overlay) {

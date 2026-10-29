@@ -239,6 +239,45 @@ test("Kontext title follows only its own selected variant", () => {
   assert.equal(resolve("kontext-max", title("pro")), "CLImage-1.2");
 });
 
+test("MiniMax exact labels preserve base and MAX identities", () => {
+  assert.equal(resolve("MiniMax_H3"), "CLVideo-4.0");
+  assert.equal(resolve("MiniMax-H3"), "CLVideo-4.0");
+  assert.equal(resolve("MiniMax-H3-MAX"), "CLVideo-4.1");
+  assert.equal(resolve("  minimax-h3-max  "), "CLVideo-4.1");
+  assert.equal(resolve("CLVideo-4.0"), null);
+  assert.equal(resolve("CLVideo-4.1"), null);
+  assert.equal(resolve("MiniMax-H3-MAX-FAST"), null);
+});
+
+test("MiniMax metadata maps every explicit label while keeping its suffix", () => {
+  const context = { module: "video-generator", surface: "video-metadata" };
+  const cases = [
+    ["MiniMax_H3 原生 720p", "CLVideo-4.0 原生 720p"],
+    ["MiniMax-H3-MAX 1080P", "CLVideo-4.1 1080P"],
+    ["MiniMax-H3(MiniMax-H3 原生 720p)", "CLVideo-4.0(CLVideo-4.0 原生 720p)"],
+    ["MiniMax-H3-MAX(MiniMax-H3-MAX 原生 1080p)", "CLVideo-4.1(CLVideo-4.1 原生 1080p)"],
+    ["MiniMax_H3（MiniMax-H3-MAX 原生1080p）", "CLVideo-4.0（CLVideo-4.1 原生1080p）"],
+    [" MiniMax-H3 ( MiniMax-H3-MAX )\n", " CLVideo-4.0 ( CLVideo-4.1 )\n"]
+  ];
+  for (const [source, expected] of cases) {
+    assert.equal(resolve(source, context), expected, source);
+  }
+});
+
+test("MiniMax metadata rejects unknown versions and arbitrary text", () => {
+  const context = { module: "video-generator", surface: "video-metadata" };
+  for (const source of [
+    "MiniMax-H30 原生 720p", "MiniMax-H3-MAX-FAST 1080p",
+    "MiniMax_H3_MAX", "MiniMax-H3-MAX2", "MiniMax-H4",
+    "Create a video with MiniMax-H3", "MiniMax-H3 sunset",
+    "MiniMax-H3(MiniMax-H4 原生 720p)"
+  ]) assert.equal(resolve(source, context), null, source);
+  assert.equal(resolve("MiniMax_H3 原生 720p"), null);
+  assert.equal(resolve("MiniMax_H3 原生 720p", {
+    module: "image-generator", surface: "video-metadata"
+  }), null);
+});
+
 test("mapping info reports schema and hash", () => {
   const info = resolver.mappingInfo();
 

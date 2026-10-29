@@ -3,7 +3,7 @@
   Source: config/display-names/names.txt
   Policy: config/display-names/display-correspondence.cjs
   Rebuild: npm run aliases:build   Verify: npm run aliases:check
-  Schema: 1   Mapping hash: 6c6475c74fad
+  Schema: 1   Mapping hash: 73bb112c1fe8
 */
 (function (root, factory) {
   if (typeof module === "object" && module.exports) {
@@ -14,7 +14,7 @@
 })(typeof self !== "undefined" ? self : this, function () {
   return {
   "schemaVersion": 1,
-  "mappingHash": "6c6475c74fad",
+  "mappingHash": "73bb112c1fe8",
   "exact": {
     "flux krea": "CLImage",
     "flux.1 kontex (pro/max)": "CLImage-1.1",
@@ -40,9 +40,12 @@
     "seedance 2.5": "CLVideo3.0",
     "seedream": "CLVideo",
     "happy horse": "CL Dragon",
-    "暂未上架": "CLVideo-2.1"
+    "暂未上架": "CLVideo-2.1",
+    "minimax-h3": "CLVideo-4.0",
+    "minimax-h3-max": "CLVideo-4.1"
   },
   "variants": {
+    "minimax_h3": "minimax-h3",
     "flux.1 kontext": "flux.1 kontex (pro/max)",
     "flux.1kontext": "flux.1 kontex (pro/max)",
     "fluxkrea": "flux krea",

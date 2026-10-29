@@ -24,3 +24,5 @@ Seedance 2.5,CLVideo3.0
 Seedream,CLVideo
 Happy Horse,CL Dragon
 暂未上架,CLVideo-2.1
+MiniMax-H3,CLVideo-4.0
+MiniMax-H3-MAX,CLVideo-4.1
