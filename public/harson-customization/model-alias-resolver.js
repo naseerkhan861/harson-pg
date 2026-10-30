@@ -57,7 +57,7 @@
         - Longest (versioned) keys are tried before bare family keys.
         - A whitespace/end boundary must follow the key, so "Seedance 2.50"
           never matches "Seedance 2.5".
-        - A suffix that begins with a digit is treated as an unknown
+        - A suffix that begins with a digit or V + digit is an unknown
           version ("Seedance 3.0") and is refused, so unknown versions
           are never converted through the bare-family mapping.
         - One pass: aliases are never re-fed as sources.
@@ -73,11 +73,16 @@
         return qualifiedMatchers;
       }
 
-      qualifiedMatchers = Object.keys(exact)
+      const displayAliases = { ...exact };
+      for (const [spelling, canonical] of Object.entries(variants)) {
+        if (exact[canonical]) displayAliases[spelling] = exact[canonical];
+      }
+      qualifiedMatchers = Object.keys(displayAliases)
         .map(String)
         .sort((a, b) => b.length - a.length)
         .map(key => ({
           key,
+          alias: displayAliases[key],
           pattern: new RegExp(
             "^(\\s*)(" +
               key.split(/\s+/).map(escapeRegExp).join("\\s+") +
@@ -101,18 +106,37 @@
 
         const suffix = raw.slice(match[0].length);
 
-        if (/^\d/.test(suffix.trim())) {
-          // Unknown version suffix — refuse rather than rename through
+        if (/^(?:v\s*)?\d/iu.test(suffix.trim())) {
+          // Unknown numeric/V-number suffix — refuse rather than use
           // the bare-family mapping.
           return null;
         }
 
         // Leading whitespace is insignificant (exact matching trims);
         // the descriptive suffix is preserved verbatim.
-        return exact[matcher.key] + suffix;
+        return matcher.alias + suffix;
       }
 
       return null;
+    }
+
+    /*
+      Versioned MJ labels may repeat in a history/case detail title.
+      This formatter runs only in renderer-approved image model fields.
+      Preserve metadata and delimiters; map each explicit V7/V8 token
+      from its own original source, never from the active form selection.
+    */
+    function resolveMidjourneyModelLabel(sourceText) {
+      const raw = String(sourceText || "").trim();
+      const token = /(^|[\s()（）:：·|])((?:悠船\s*)?(?:midjourney\s*v\s*([78])|mj\s*v?\s*([78])))(?=$|[\s()（）:：·|])/giu;
+      let matched = false;
+      const result = raw.replace(token, (whole, before, model, fullVersion, shortVersion) => {
+        const alias = exact["midjourney v" + (fullVersion || shortVersion)];
+        if (!alias) return whole;
+        matched = true;
+        return before + alias;
+      });
+      return matched ? result : null;
     }
 
     /*
@@ -260,6 +284,11 @@
 
       if (Object.prototype.hasOwnProperty.call(variants, key)) {
         return exact[variants[key]] || null;
+      }
+
+      if (context && context.module === "image-generator" &&
+          context.surface === "midjourney-model-label") {
+        return resolveMidjourneyModelLabel(sourceText);
       }
 
       if (

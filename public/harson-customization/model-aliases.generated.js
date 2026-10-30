@@ -3,7 +3,7 @@
   Source: config/display-names/names.txt
   Policy: config/display-names/display-correspondence.cjs
   Rebuild: npm run aliases:build   Verify: npm run aliases:check
-  Schema: 1   Mapping hash: 73bb112c1fe8
+  Schema: 1   Mapping hash: d6d2433bff2c
 */
 (function (root, factory) {
   if (typeof module === "object" && module.exports) {
@@ -14,13 +14,14 @@
 })(typeof self !== "undefined" ? self : this, function () {
   return {
   "schemaVersion": 1,
-  "mappingHash": "73bb112c1fe8",
+  "mappingHash": "d6d2433bff2c",
   "exact": {
     "flux krea": "CLImage",
     "flux.1 kontex (pro/max)": "CLImage-1.1",
     "flux.1 kontext pro": "CLImage-1.1",
     "flux.1 kontext max": "CLImage-1.2",
     "midjourney v7": "CLImage-2.0",
+    "midjourney v8": "CLImage-2.1",
     "midjourney": "CLImage",
     "悠船mj v7": "CLImage-2.0",
     "即梦": "CLImage",
@@ -58,6 +59,21 @@
     "悠船 mj v7": "悠船mj v7",
     "悠船m| v7": "悠船mj v7",
     "midjourneyv7": "midjourney v7",
+    "mj v7": "midjourney v7",
+    "mj 7": "midjourney v7",
+    "mjv7": "midjourney v7",
+    "mj7": "midjourney v7",
+    "mj v 7": "midjourney v7",
+    "悠船mj v8": "midjourney v8",
+    "悠船 mj v8": "midjourney v8",
+    "悠船midjourney v8": "midjourney v8",
+    "悠船 midjourney v8": "midjourney v8",
+    "midjourneyv8": "midjourney v8",
+    "mj v8": "midjourney v8",
+    "mj 8": "midjourney v8",
+    "mjv8": "midjourney v8",
+    "mj8": "midjourney v8",
+    "mj v 8": "midjourney v8",
     "即梦4.0": "即梦 4.0",
     "即梦4.5": "即梦 4.5",
     "即梦5.0 lite": "即梦 5.0 lite",

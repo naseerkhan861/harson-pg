@@ -3,6 +3,7 @@ FLUX.1 Kontex (pro/max),CLImage-1.1
 FLUX.1 Kontext pro,CLImage-1.1
 FLUX.1 Kontext max,CLImage-1.2
 Midjourney V7,CLImage-2.0
+Midjourney V8,CLImage-2.1
 Midjourney,CLImage
 悠船MJ V7,CLImage-2.0
 即梦,CLImage

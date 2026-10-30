@@ -24,6 +24,7 @@
   const selector = config.selectors.join(",");
   const aggregateSelector = config.aggregateSelectors.join(",");
   const qualifiedSelector = (config.qualifiedSelectors || []).join(",");
+  const midjourneySelector = (config.midjourneyModelLabelSelectors || []).join(",");
   const videoModule = script.dataset.harsonModule === "video-generator";
   const videoMetadataContext = Object.freeze({
     module: "video-generator",
@@ -189,9 +190,18 @@
     return null;
   }
 
+  function midjourneyContextFor(node) {
+    if (script.dataset.harsonModule !== "image-generator" ||
+        !midjourneySelector || !node.matches(midjourneySelector) ||
+        !/(?:midjourney|mj)\s*v?\s*\d/iu.test(node.textContent)) return null;
+    return { module: "image-generator", surface: "midjourney-model-label" };
+  }
+
   function contextFor(node) {
-    // Version-tab precedence first, especially Seedream's short labels.
-    const context = versionContextFor(node) ||
+    // Recognize explicit MJ versions in model fields first; preserve the
+    // existing Seedream/version and image-family rules for other labels.
+    const context = midjourneyContextFor(node) ||
+      versionContextFor(node) ||
       versionDropdownContextFor(node) ||
       imageContextFor(node) || {};
 
@@ -205,19 +215,20 @@
     return context;
   }
 
-  function allowsAggregation(node) {
+  function allowsAggregation(node, context) {
     /*
       Split/nested labels (runbook §10.5): when the element's ENTIRE text
       is exactly one known label (e.g. <span>全能图片</span><span>2</span>),
       resolve it as one label. Only for approved label containers that hold
       no interactive descendants.
     */
-    if (!aggregateSelector || !node.matches(aggregateSelector)) {
+    const midjourney = context?.surface === "midjourney-model-label";
+    if (!midjourney && (!aggregateSelector || !node.matches(aggregateSelector))) {
       return false;
     }
 
     return !node.querySelector(
-      "button,a,input,textarea,select"
+      "button,a,input,textarea,select" + (midjourney ? "," + blocked : "")
     );
   }
 
@@ -344,7 +355,7 @@
       text-free elements still are).
     */
     let aggregate = null;
-    if (eligible && (metadataAlias || allowsAggregation(node))) {
+    if (eligible && (metadataAlias || allowsAggregation(node, context))) {
       aggregate = metadataAlias || aliasFor(node.textContent, context);
     }
 

@@ -18,7 +18,7 @@
   //     these header containers; the renderer aggregates a container's full
   //     text when it is exactly a known label.
   const config = Object.freeze({
-    version: "all-pages-10",
+    version: "all-pages-11",
     expectedOrigin: "https://ai.harson-base.com",
     // Applied inside every YiBai module frame served by the gateway.
     modules: Object.freeze([
@@ -56,6 +56,24 @@
       // Tooltips (portal-mounted):
       ".q-tooltip",
       ".q-tooltip *"
+    ]),
+    // Versioned MJ metadata only: these existing selectors own model
+    // labels, rather than prompts or whole history/case-card bodies.
+    // The renderer also checks image-generator and an original MJ version.
+    midjourneyModelLabelSelectors: Object.freeze([
+      ".MainLayout-nav .NavList-list-item > span.label",
+      ".ToolLayout-header",
+      ".DefaultLayout-header",
+      ".header_fix > span",
+      ".header_fix .IcTabs > .IcTab",
+      ".SubLayout-draw .q-tab__label",
+      ".IcbsMenuSelect-header-content",
+      ".IcbsMenuSelect-menu-item-label",
+      ".IcbsSelect-header-popup-option-label",
+      ".SubLayout-draw .IcbsSelect-header-select .q-field__native > span",
+      ".DemoCard .DemoCard-banner > span",
+      ".TextToImageCard .TextToImageCard-header-typeName > span",
+      ".q-dialog .header-container .header .vertical-center > span.title"
     ]),
     // Elements whose ENTIRE normalized text is a known label may be
     // aggregated (split/nested spans, IcTab wrappers). Guarded: no form

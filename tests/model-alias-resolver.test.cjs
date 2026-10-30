@@ -80,7 +80,7 @@ test("unknown labels stay original (no substring or prefix guessing)", () => {
   assert.equal(resolve("一键同款"), null);
   assert.equal(resolve("悠船"), null);
   assert.equal(resolve("FLUX"), null);
-  assert.equal(resolve("Midjourney V8"), null);
+  assert.equal(resolve("Midjourney V9"), null);
   assert.equal(resolve(""), null);
   assert.equal(resolve(null), null);
 });
@@ -276,6 +276,44 @@ test("MiniMax metadata rejects unknown versions and arbitrary text", () => {
   assert.equal(resolve("MiniMax_H3 原生 720p", {
     module: "image-generator", surface: "video-metadata"
   }), null);
+});
+
+test("MJ V7 and V8 exact spellings keep distinct identities", () => {
+  for (const source of ["悠船MJ V7", "Midjourney V7", "MJ V7", "MJ 7", "MJV7", "MJ7", "MJ V 7"]) {
+    assert.equal(resolve(source), "CLImage-2.0", source);
+  }
+  for (const source of ["悠船MJ V8", "悠船 MJ V8", "悠船Midjourney V8", "Midjourney V8", "MJ V8", "MJ 8", "MJV8", "MJ8", "MJ V 8"]) {
+    assert.equal(resolve(source), "CLImage-2.1", source);
+  }
+  assert.equal(resolve("  mj   v7  "), "CLImage-2.0");
+  assert.equal(resolve("CLImage-2.1"), null);
+  assert.equal(resolve("Midjourney"), "CLImage");
+});
+
+test("MJ model-field metadata maps each original version independently", () => {
+  const context = { module: "image-generator", surface: "midjourney-model-label" };
+  const cases = [
+    ["MJ V7 标准", "CLImage-2.0 标准"],
+    ["悠船MJ V8（Midjourney V8）", "CLImage-2.1（CLImage-2.1）"],
+    ["MJ V7 (MJ V8)", "CLImage-2.0 (CLImage-2.1)"],
+    ["悠船  MJ V 8 · 高清", "CLImage-2.1 · 高清"],
+    ["模型：MJ 7", "模型：CLImage-2.0"]
+  ];
+  for (const [source, expected] of cases) assert.equal(resolve(source, context), expected, source);
+  assert.equal(resolve("MJ V7 (MJ V8)"), null);
+  assert.equal(resolve("MJ V7 (MJ V8)", { module: "video-generator", surface: "midjourney-model-label" }), null);
+});
+
+test("MJ unknown versions and prompt text do not resolve through a family prefix", () => {
+  const context = { module: "image-generator", surface: "midjourney-model-label" };
+  for (const source of ["MJ V70", "MJ V80", "MJ V9", "Midjourney V8.1", "MJ V8-ULTRA", "7", "V8"]) {
+    assert.equal(resolve(source, context), null, source);
+  }
+  assert.equal(resolve("Midjourney V9", { allowQualified: true }), null);
+  assert.equal(resolve("Midjourney V8.1", { allowQualified: true }), null);
+  assert.equal(resolve("MJ V7 标准", { allowQualified: true }), "CLImage-2.0 标准");
+  assert.equal(resolve("悠船MJ V8 高清", { allowQualified: true }), "CLImage-2.1 高清");
+  assert.equal(resolve("Draw a shoe with MJ V7 and MJ V8"), null);
 });
 
 test("mapping info reports schema and hash", () => {
