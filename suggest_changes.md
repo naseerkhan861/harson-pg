@@ -1,442 +1,582 @@
-# MiniMax H3 display-name plan — 视频创作
+# 图片创作 — MJ V7 / V8 display-name implementation plan
 
-**Branch:** `temp-main`  
-**Reviewed commit:** `c48b0f040c2f564f761274ac3d91178632bf523c`  
-**Prepared:** 29 October 2026, Asia/Shanghai  
-**Target:** 视频创作 → MiniMax_H3, its 模型 dropdown, and both 历史记录 entry points and their opened records.
+**Prepared:** 30 October 2026, Asia/Shanghai  
+**Repository:** `naseerkhan861/harson-pg`  
+**Branch reviewed:** `temp-main`  
+**Source commit:** `97fd4353c05f3719d5ab010c81c6cb803b511d00`  
+**Scope:** left navigation, middle model panels and subsections, right gallery, 历史记录, 案例库, and the model labels in opened records/details.
 
-This is an implementation plan with a locally checked proposed patch. No GitHub branch was pushed and no production container was changed.
+This plan includes a proposed seven-file patch checked in a local checkout. It has not been pushed to GitHub or deployed. Live provider galleries remain an acceptance step.
 
-## 1. Required names
+## 1. Required display names
 
-| Original display text | New display text |
-| --- | --- |
-| `MiniMax_H3` | `CLVideo-4.0` |
-| `MiniMax-H3` | `CLVideo-4.0` |
-| `MiniMax-H3-MAX` | `CLVideo-4.1` |
-
-Keep the hyphens in the requested destinations. In particular, MAX must become `CLVideo-4.1`, never `CLVideo-4.0-MAX`.
-
-These are presentation mappings. Keep the provider's model IDs, dropdown option values, task types, routes, API payloads and saved history records. Existing records should acquire the new visible names when rendered; a database migration is unnecessary.
-
-Your request names 历史记录 twice. Apply the acceptance checks below to each history entry point you use, including its list/cards and the record details opened from it. The second entry point's distinct route/component could not be established from the supplied text; this plan does not invent one.
-
-## 2. What the current code actually does
-
-| Location | Finding | Consequence |
+| Version | Original display forms | Required display |
 | --- | --- | --- |
-| `config/display-names/names.txt` | No MiniMax entries. | All three requested names currently resolve to `null`. |
-| `config/display-names/display-correspondence.cjs` | No underscore-to-hyphen MiniMax spelling correspondence. | Adding only `MiniMax-H3` would leave `MiniMax_H3` unresolved. |
-| `scripts/build-model-aliases.cjs` | Generates a shared browser/CommonJS map and mapping hash. | Edit the canonical inputs and rebuild; a hand edit to generated output will be overwritten. |
-| `public/harson-customization/image-tab-config.js` | Already targets sidebar labels, custom model dropdowns, several card badges and dialog titles. | A new name-specific renderer is unnecessary for these existing label hosts. |
-| `public/harson-customization/model-alias-resolver.js` | Exact and spelling lookups are shared. Composite video metadata parsing currently handles Seedance formats only. | A name inside a repeated detail title can remain original even after an exact mapping is added. |
-| `public/harson-customization/image-tab-labels.js` | `collectVideoMetadata()` only scans text containing `seedance`. | MiniMax player/history metadata outside the normal selectors is skipped. |
-| Same renderer, `videoMetadataOwner()` | Stops at the first recognizable ancestor. | A split `MiniMax-H3` + `-MAX` label can resolve its shorter child before the complete version is considered. |
-| `src/services/yibaiDisplayInjection.js` | Injects generated data → resolver → config → renderer into the authenticated gateway HTML. | These four assets must be deployed together. |
-| `public/js/aigc-workspace.js` | The local All Tools catalog currently contains no MiniMax entry. | The requested labels come from the embedded provider UI, rather than a local MiniMax page component. |
+| V7 | `悠船MJ V7`, `Midjourney V7`, `MJ V7`, `MJ 7` | `CLImage-2.0` |
+| V8 | `悠船MJ V8`, `Midjourney V8`, `MJ V8`, `MJ 8` | `CLImage-2.1` |
 
-The repository does not contain the provider's actual MiniMax Vue page or its history components. Their labels arrive through the existing proxy. The appropriate integration point is the existing display-alias layer.
+The patch also handles short spacing forms such as `MJV7`, `MJ7`, `MJ V 7`, and the corresponding V8 forms. Case and repeated whitespace are normalized. The formatter for approved model fields additionally handles spacing between 悠船, MJ, V and the version digit.
 
-Before the proposed change, local checks confirmed that `MiniMax_H3`, `MiniMax-H3`, `MiniMax-H3-MAX`, and MiniMax metadata examples all returned `null` from the resolver.
+Each history/case record must retain its own version. Opening V8 in the current form must not turn old V7 cards into `CLImage-2.1`, and opening V7 must not turn V8 case cards into `CLImage-2.0`.
 
-## 3. Apply the changes in this order
+Apply the names at the display boundary. Preserve provider model IDs, navigation keys, option values, history JSON, saved records, generation parameters and prompts, including any `--v 7` or `--v 8` text. Existing history does not need a database migration.
 
-### Step 1 — Add two canonical mappings and one spelling correspondence
+## 2. Findings from the current branch
 
-Append to `config/display-names/names.txt`:
+| File/component | Current behavior | Required action |
+| --- | --- | --- |
+| `config/display-names/names.txt` | Already maps `Midjourney V7` and `悠船MJ V7` to `CLImage-2.0`. No V8 entry. | Add V8; preserve the existing V7 destinations. |
+| `config/display-names/display-correspondence.cjs` | Covers several long V7 spellings, but not `MJ V7` / `MJ 7` or V8. | Add explicit short-form and V8 correspondences. |
+| `public/harson-customization/model-alias-resolver.js` | Qualified-label matching only includes canonical keys, not spelling variants. | Include correspondence spellings in the qualified matcher. |
+| Same resolver | The generic `Midjourney → CLImage` fallback can consume an unknown `V` version suffix. Before the patch, qualified `Midjourney V8` returned `CLImage V8`. | Reject unknown `V` + number suffixes; map the known V8 version explicitly. |
+| Same resolver | A prefix-only rewrite can rename the first model in a title while leaving a repeated model inside parentheses original. | Add a scoped formatter that maps each explicit MJ V7/V8 token in an approved image model field. |
+| `public/harson-customization/image-tab-config.js` | Already selects model headings, dropdown labels, some history/case badges and dialog titles. Card badges are not in the existing aggregation list. | Declare the existing model-label hosts that can use MJ-specific formatting/aggregation. |
+| `public/harson-customization/image-tab-labels.js` | Uses shadow DOM to display aliases while retaining provider source text. Its MutationObserver already watches dynamic content. | Connect the MJ context and complete-label aggregation to this renderer. |
+| `tests/model-alias-resolver.test.cjs` | Explicitly expects `Midjourney V8` to be unknown. | Replace that old negative example with V9 and add positive V8/regression checks. |
+| `src/services/yibaiDisplayInjection.js` | Injects generated data → resolver → config → renderer into gateway-served HTML. | Deploy the four matching assets together. |
+
+The provider's actual MJ page, history gallery and case-library Vue components are not stored in this repository. The local integration point is the shared alias layer injected through the existing gateway.
+
+The current branch already includes the previous MiniMax mappings/renderer changes. The proposed patch keeps those changes, the existing image aliases, and the repair/color/proxy fixes.
+
+## 3. Implementation sequence
+
+### Step 1 — Add one canonical V8 row
+
+In `config/display-names/names.txt`, keep the existing V7 rows and add:
 
 ```text
-MiniMax-H3,CLVideo-4.0
-MiniMax-H3-MAX,CLVideo-4.1
+Midjourney V8,CLImage-2.1
 ```
 
-Add inside `correspondences` in `config/display-names/display-correspondence.cjs`:
+The canonical source identifies the version. The display-spelling table sends `悠船MJ V8` and other requested forms to that source; it does not duplicate destination strings throughout the code.
+
+Keep the existing unversioned `Midjourney → CLImage` mapping. An unversioned family label alone does not establish whether a saved image used V7 or V8.
+
+### Step 2 — Add the requested spelling forms
+
+In `config/display-names/display-correspondence.cjs`, add the V7/V8 entries shown in the patch. For example:
 
 ```js
-"MiniMax_H3": "MiniMax-H3",
+"MJ V7": "Midjourney V7",
+"MJ 7": "Midjourney V7",
+"悠船MJ V8": "Midjourney V8",
+"MJ V8": "Midjourney V8",
+"MJ 8": "Midjourney V8",
 ```
 
-Case differences are already handled by normalization. The underscore requires an explicit spelling entry. Only add further spellings after observing their actual display text and confirming which version they represent.
+Use the runtime files under `config/display-names/` and `public/harson-customization/`. Updating only older copies under `tab_customization/` will not update the gateway's runtime behavior.
 
-Use these runtime files. The older copies under `tab_customization/` are not the gateway's runtime assets.
+### Step 3 — Fix qualified and repeated model labels
 
-### Step 2 — Cover player badges and opened history details
+Make these resolver changes together:
 
-Extend `resolveVideoMetadata()` with the MiniMax helper in the patch below. It reads destinations from the generated map and handles complete labels, an optional resolution suffix, and a repeated `family(variant + metadata)` label.
+1. Build qualified matchers from both canonical source names and their spelling correspondences; resolve each spelling to its canonical destination.
+2. Keep longest-first matching and a model-name boundary. Reject unknown suffixes beginning with a number or `V` + number, so `Midjourney V9` cannot become `CLImage V9` through the bare family fallback.
+3. Add `resolveMidjourneyModelLabel()` for context `{ module: "image-generator", surface: "midjourney-model-label" }`. It maps each explicit V7/V8 token using the generated canonical data and preserves surrounding metadata.
 
-The proposed helper checks the entire display string before substituting any tokens and matches MAX first. It preserves punctuation, whitespace and resolution text. Existing Seedance handling stays in place.
+The dedicated context is assigned only to configured model-label hosts that contain an original MJ/Midjourney version. It does not use the currently active model to assign history versions.
 
-Examples supported by the proposed parser:
+Examples checked in the proposed resolver tests:
 
-| Original metadata | Display result |
+| Source label | Display label |
 | --- | --- |
-| `MiniMax_H3 原生 720p` | `CLVideo-4.0 原生 720p` |
-| `MiniMax-H3-MAX 1080P` | `CLVideo-4.1 1080P` |
-| `MiniMax-H3(MiniMax-H3 原生 720p)` | `CLVideo-4.0(CLVideo-4.0 原生 720p)` |
-| `MiniMax-H3-MAX(MiniMax-H3-MAX 原生 1080p)` | `CLVideo-4.1(CLVideo-4.1 原生 1080p)` |
-| `MiniMax_H3（MiniMax-H3-MAX 原生1080p）` | `CLVideo-4.0（CLVideo-4.1 原生1080p）` |
+| `MJ V7 标准` | `CLImage-2.0 标准` |
+| `悠船MJ V8（Midjourney V8）` | `CLImage-2.1（CLImage-2.1）` |
+| `MJ V7 (MJ V8)` | `CLImage-2.0 (CLImage-2.1)` |
+| `悠船  MJ V 8 · 高清` | `CLImage-2.1 · 高清` |
+| `模型：MJ 7` | `模型：CLImage-2.0` |
 
-These are regression examples, not a claim that every format was observed on the live MiniMax page. Inspect both live history entry points for additional actual formats before release. A duration, separator or other suffix outside this grammar needs its own reviewed format and test; do not add an unrestricted replacement over arbitrary history text.
+These metadata examples are constructed regression cases, not a claim that those exact strings were seen in your live galleries. The formatter uses explicit token boundaries; `MJ V70`, `MJ V80`, `Midjourney V8.1` and `MJ V8-ULTRA` are not mapped as the requested base versions. Extend punctuation/spelling support only when an actual display label requires it.
 
-The mixed final example deliberately maps each explicit token independently. A generic family label is not sufficient evidence to classify a historical task as MAX.
+Do not add global aliases for `7`, `8`, `V7` or `V8`. If a real MJ version selector displays only one of those short values, add a separate rule scoped to that verified MJ selector; its owning model component must establish the family. Numbers elsewhere can be counts, prices or dimensions.
 
-### Step 3 — Let the video metadata adapter find MiniMax labels
+### Step 4 — Connect the middle and right panels
 
-Update `collectVideoMetadata()` to recognize `seedance` or `minimax[-_]h3` text. Retain its existing `video-generator` module guard, blocked prompt/editable-content checks, and text-only host restrictions.
+The patch adds `midjourneyModelLabelSelectors` using these existing configured surfaces:
 
-Update `videoMetadataOwner()` as shown in the patch so a complete recognized ancestor can supersede a shorter recognized child. This matters for markup such as:
+| Surface | Existing selector(s) used by the patch |
+| --- | --- |
+| Left model navigation | `.MainLayout-nav .NavList-list-item > span.label` |
+| Middle model headings | `.ToolLayout-header`, `.DefaultLayout-header`, `.header_fix > span` |
+| Floating model/version tabs | `.header_fix .IcTabs > .IcTab` |
+| Existing form tab labels | `.SubLayout-draw .q-tab__label` |
+| Selected model and menu options | `.IcbsMenuSelect-header-content`, `.IcbsMenuSelect-menu-item-label` |
+| Alternate model selection labels | `.IcbsSelect-header-popup-option-label`, `.SubLayout-draw .IcbsSelect-header-select .q-field__native > span` |
+| Existing gallery badge adapters | `.DemoCard .DemoCard-banner > span`, `.TextToImageCard .TextToImageCard-header-typeName > span` |
+| Existing opened-detail title | `.q-dialog .header-container .header .vertical-center > span.title` |
+
+In the renderer, assign the MJ context before the existing generic version/family rules when the host actually contains an MJ version. This keeps other image-family overrides working and avoids an unnecessary dependence on the selected sidebar item.
+
+For these MJ hosts, resolve the complete semantic label before rendering individual text fragments. For example:
 
 ```html
-<div class="actual-model-label">
-  <span>MiniMax-H3</span><span>-MAX</span>
-</div>
+<span class="actual-model-label">
+  <span>MJ</span><span> V8</span>
+</span>
 ```
 
-The complete label should display `CLVideo-4.1`. The example class above illustrates split markup; it is not a verified provider selector.
+The visible result must be `CLImage-2.1` once. The illustrative class above is not a verified provider class. The patch retains the existing restrictions on aggregating interactive elements and additionally rejects blocked descendants for MJ aggregation.
 
-The existing MutationObserver should continue handling portal-mounted dropdowns, newly opened dialogs, pagination and reused record nodes. This change needs no new timer or automatic iframe reload.
+Keep the current MutationObserver. Its existing added-node and text-change handling should cover gallery loading, opening detail dialogs and reusing card nodes. No new polling or automatic iframe reload is required.
 
-### Step 4 — Check the real dropdown and both history entry points
+### Step 5 — Audit 历史记录 and 案例库 separately
 
-The following selectors are present in the current runtime configuration:
+Existing selectors are repository evidence, not proof that every current provider component uses them. Before calling the work complete, inspect both live subpanels inside the 图片创作 iframe:
 
-| Surface | Existing configured selector |
-| --- | --- |
-| Sidebar label | `.MainLayout-nav .NavList-list-item > span.label` |
-| Page/floating headings | `.ToolLayout-header`, `.DefaultLayout-header`, `.header_fix > span` |
-| Selected custom model value | `.IcbsMenuSelect-header-content` |
-| Open model-menu option | `.IcbsMenuSelect-menu-item-label` |
-| Alternate popup option | `.IcbsSelect-header-popup-option-label` |
-| Alternate selected value | `.SubLayout-draw .IcbsSelect-header-select .q-field__native > span` |
-| Existing gallery badge adapters | `.DemoCard .DemoCard-banner > span`, `.TextToImageCard .TextToImageCard-header-typeName > span` |
-| Existing dialog-title adapter | `.q-dialog .header-container .header .vertical-center > span.title` |
-| Tooltips | `.q-tooltip`, `.q-tooltip *` |
+1. Open 历史记录 with existing V7 and V8 results. Check list/grid badges, model filters, selected-item information and each opened detail/preview panel.
+2. Open 案例库 and repeat the checks on example cards, filtering/selection controls, detail dialogs and the data restored into the generation form when an example is selected.
+3. Check nested sections in those views for **model-owned fields**, including dropdowns, headings, tooltips, `title` and accessible model labels.
+4. Exercise pagination/infinite scroll and switch between V7/V8 and other left-panel tools. Revisit the same card after it has been reused or updated.
+5. For an original name that remains visible, inspect its actual label leaf and original source text. Add the observed model-label selector to both `selectors` and `midjourneyModelLabelSelectors` where MJ composite formatting is needed. The latter list alone does not schedule new elements for rendering.
+6. If a model tooltip uses a new provider-specific component, add its observed model-only selector. Generic `.q-tooltip` currently supports exact/qualified lookups; it is deliberately not included in the new composite MJ list because generic tooltips can also contain prompt text.
 
-The gallery selectors are existing code coverage; their presence does not prove that the MiniMax history page uses those components. Complete MiniMax labels on eligible text hosts are additionally handled by the expanded video metadata scan.
+Do not target entire cards, whole dialog bodies, every table cell or every span. A card contains user prompts, captions, action buttons and other content. Target its model-name field and preserve the card's original interactions.
 
-For every visible original name that remains after the patch:
+For native tabs/buttons/options, use a supported inner label host. The renderer's shadow-root host restrictions and native form exclusions remain relevant. If no supported display host exists, adapt that component's display formatter after identifying its actual implementation; keep the underlying option value.
 
-1. Inspect the element in the **provider iframe**, including menus/dialogs mounted under its body.
-2. Check the complete original light-DOM label and whether its container is an existing selector or an eligible video metadata host.
-3. If a provider-specific label container is missing, add that **observed label leaf** to `config.selectors`. Add it to `aggregateSelectors` if the semantic label spans multiple children. Keep the existing prohibition on aggregating interactive descendants.
-4. Add a fixture using the observed structure and complete original label. For a new metadata format, extend the bounded parser only as far as that format requires.
-5. If a native button, tab or option owns the label, target its supported inner text host. The current renderer cannot attach a shadow root to every native element, and intentionally blocks native form value nodes.
+If a historical record exposes only `Midjourney`, an existing generic alias, or a bare version number, inspect that record's verified model identity. Do not derive its version from the active form, thumbnail, card order or gallery filter. Use per-record model data if a variant-specific display override is necessary.
 
-Keep free-text prompts, captions and editable fields out of the adapters. Avoid generic selectors such as `.q-dialog span`, all table cells or all buttons.
+## 4. Build, regression checks and browser acceptance
 
-Use the record's own model label/verified model field for history. Switching the current form to MAX must not relabel previous base-model results as `CLVideo-4.1`. Likewise, switching back to base must not relabel old MAX results as `CLVideo-4.0`.
-
-If history exposes only a generic family string, request the actual model identity from the provider's existing task data before introducing a variant-specific override. Do not infer it from the current dropdown, record order or thumbnail.
-
-### Step 5 — Rebuild the data and bump the adapter version
+Generate the shared data and run the focused checks:
 
 ```bash
 npm run aliases:build
-npm run aliases:check
-```
-
-Commit the regenerated `public/harson-customization/model-aliases.generated.js` alongside its inputs. Bump `image-tab-config.js` from `all-pages-9` to `all-pages-10` for diagnostics. If your branch already uses a later version, use a fresh version rather than downgrading it.
-
-The proposed mapping built from the reviewed commit has hash **`73bb112c1fe8`**, replacing **`6c6475c74fad`**. Additional legitimate mapping changes will produce a different hash.
-
-## 4. Regression and acceptance checks
-
-### Automated checks
-
-```bash
 npm run aliases:check
 node --test tests/model-alias-resolver.test.cjs tests/model-alias-generator.test.cjs tests/image-tab-injection.test.cjs
 node --check public/harson-customization/image-tab-labels.js
 git diff --check
 ```
 
-Extend `tests/video-metadata.browser.cjs` with MiniMax cases before treating browser coverage as complete. Its current fixture primarily tests Seedance. Use the actual runtime assets and cover the rows below, especially split MAX labels and reused history nodes. Then run:
+The old negative assertion for `Midjourney V8` must be updated to an unknown version such as V9. Do not keep a test that rejects a model this change intentionally adds.
 
-```bash
-node tests/video-metadata.browser.cjs
-```
+Commit the generated map with its inputs. On the reviewed baseline, the proposed result is:
 
-That optional browser script needs Playwright and an installed Chromium executable; it already accepts the documented runtime/executable environment variables in its source.
+- Adapter version: `all-pages-11`.
+- Mapping hash: `d6d2433bff2c`, replacing `73bb112c1fe8`.
+- Seven changed files, listed in the appendix.
+
+If your branch has advanced, retain its newer legitimate mappings and choose a fresh adapter version. The complete mapping hash will change when other entries change.
 
 ### Browser acceptance matrix
 
-| Check | Expected result |
+| Area | Required result |
 | --- | --- |
-| Open 视频创作 | Sidebar `MiniMax_H3` displays `CLVideo-4.0`. |
-| Open the MiniMax workflow | Every explicit base-model heading displays `CLVideo-4.0`; the 模型 field label remains 模型. |
-| Open 模型 dropdown | Base option displays `CLVideo-4.0`; MAX option displays `CLVideo-4.1`. |
-| Select base, then MAX, then base | Selected display updates correctly; keyboard/pointer selection and provider handlers still work. |
-| History entry point A | Inspect its list/cards, model badges, filter options, hover text and opened record details. All explicit model names use the corresponding alias. |
-| History entry point B | Repeat the same checks independently, including any other detail layout it opens. |
-| Mixed old base and MAX results | Each keeps its own version, regardless of the current form's dropdown selection. |
-| Player overlay/detail title | Every explicit MiniMax token is mapped; resolution, punctuation and other supported metadata remain intact. |
-| Split label `MiniMax-H3` + `-MAX` | Complete display is `CLVideo-4.1`, with no base alias left beside `-MAX`. |
-| Pagination, scrolling, route changes | Newly created and reused nodes receive the correct alias without a manual refresh. |
-| Tooltip/title/accessible model label | Exact MiniMax model labels resolve consistently with visible text. Verify the accessibility tree as well as `title`/`aria-label`. |
-| Prompt mentioning MiniMax | Prompt text, editability and submitted prompt remain intact. |
-| Model selection data | Original provider option values/model fields remain intact. No request should submit `CLVideo-4.0` or `CLVideo-4.1` as a replacement API model ID. |
-| Other video/image workflows | Existing Seedance, Kontext and other aliases retain their previous behavior. |
+| Left V8 item | `悠船MJ V8` visibly becomes `CLImage-2.1`. |
+| Left V7 item | `MJ V7`, `MJ 7` and existing long V7 forms visibly become `CLImage-2.0`. |
+| Middle headings and subsections | Explicit V7/V8 names use the matching alias. Chinese workflow labels keep their meaning. |
+| Model dropdown/version controls | Options and selected labels display the right alias; pointer/keyboard selection still uses the original provider value. |
+| 历史记录 cards | Mixed V7/V8 records show their own versions, independent of the current form. |
+| 历史记录 details | Every explicit MJ model occurrence in the model fields is mapped, including repeated names in a title. |
+| 案例库 cards/details | The same names are correct in cards, selected examples, previews and model metadata. |
+| Select a history/case item | Images and settings still load, and the restored model is the record's original model. |
+| Split labels | Nested `MJ` + ` V7` or `MJ` + ` V8` displays one complete alias. |
+| Pagination and reuse | New and recycled gallery nodes update correctly when their original source changes from V7 to V8 or vice versa. |
+| Tooltips/accessibility | Model tooltips and `title`/`aria-label` agree with the visible model name. Inspect the actual accessibility tree. |
+| User content | Prompts, captions, copied generation parameters and editable text are preserved, including `--v` parameters. |
+| Existing integrations | MiniMax, Seedance, Kontext and other current aliases retain their established names and behavior. |
 
-Use existing historical results for display verification. Inspect model fields safely; avoid copying credentials, authorization headers or private task bodies into reports.
+Add a browser regression fixture using the actual observed history/case markup. Run production alias files in that fixture and cover initial rendering, dynamic card insertion, node reuse, split text, opened details and click/selection preservation. The older fixtures under `tab_customization/tests/` load older copied assets; they are not sufficient proof for this patch.
 
-Original model names can intentionally remain in hidden light-DOM source text because the renderer uses shadow DOM for display. Finding `MiniMax-H3` in Elements or a history API response alone is not evidence of a visible naming failure. Verify the rendered and accessible labels.
+Use existing history/case images for display checks. This naming change can be verified without submitting new generation tasks.
 
-## 5. Deploy the assets that the iframe actually receives
+## 5. Deploy the correct gateway assets
 
-After reviewing, committing and updating your server checkout, ensure the gateway deployment enables `YIBAI_IMAGE_ALIASES_ENABLED=true`. The example environment file defaults this flag to false.
+After reviewing and committing your implementation, update the server checkout through your existing deployment process. Confirm the gateway enables `YIBAI_IMAGE_ALIASES_ENABLED=true`; `.env.example` defaults it to false.
 
-The gateway serves the iframe's alias assets from its own container. Rebuild and recreate that service:
+The iframe's display scripts are served by the separate gateway container. Rebuild and recreate it:
 
 ```bash
 docker compose --profile gateway up -d --build --no-deps --force-recreate gateway
 docker compose --profile gateway ps gateway
 ```
 
-Verify that the host checkout, local gateway response and public response contain the same generated data:
+Verify the host file, local gateway response and public response match:
 
 ```bash
-curl -fsS http://127.0.0.1:3001/__harson_custom/image-tab-1/model-aliases.generated.js -o /tmp/harson-minimax-alias-local.js
-curl -fsS https://ai.harson-base.com/__harson_custom/image-tab-1/model-aliases.generated.js -o /tmp/harson-minimax-alias-public.js
-sha256sum public/harson-customization/model-aliases.generated.js /tmp/harson-minimax-alias-local.js /tmp/harson-minimax-alias-public.js
+curl -fsS http://127.0.0.1:3001/__harson_custom/image-tab-1/model-aliases.generated.js -o /tmp/harson-mj-alias-local.js
+curl -fsS https://ai.harson-base.com/__harson_custom/image-tab-1/model-aliases.generated.js -o /tmp/harson-mj-alias-public.js
+sha256sum public/harson-customization/model-aliases.generated.js /tmp/harson-mj-alias-local.js /tmp/harson-mj-alias-public.js
 ```
 
-All three checksums should match. Compare `model-alias-resolver.js`, `image-tab-config.js` and `image-tab-labels.js` the same way if a surface still shows an old label. These files form one release; a matching data hash alone does not prove the new renderer was deployed.
+All three checksums should match. Compare the resolver, config and renderer files the same way if a surface remains unchanged: matching mapping data alone does not prove the new renderer was deployed.
 
-Reopen the workspace after recreating the gateway so the existing launch flow establishes a fresh iframe session. In the **iframe console**, inspect:
+Reopen the workspace through its existing launch flow after the gateway restart to obtain a fresh iframe session. In the **图片创作 iframe console**, check:
 
 ```js
 window.HarsonImageLabels?.status()
-window.HarsonModelAliasResolver?.resolveDisplayName("MiniMax_H3")
-window.HarsonModelAliasResolver?.resolveDisplayName("MiniMax-H3-MAX")
+window.HarsonModelAliasResolver?.resolveDisplayName("悠船MJ V8")
+window.HarsonModelAliasResolver?.resolveDisplayName("MJ V7")
+window.HarsonModelAliasResolver?.resolveDisplayName("MJ 7")
 ```
 
-Expected for this exact patch: module `video-generator`, version `all-pages-10`, enabled/active true, mapping hash `73bb112c1fe8`; resolver results `CLVideo-4.0` and `CLVideo-4.1`.
+Expected for this exact patch: module `image-generator`, adapter `all-pages-11`, enabled/active true, hash `d6d2433bff2c`; results `CLImage-2.1`, `CLImage-2.0`, `CLImage-2.0`.
 
-If the scripts/status object are absent, check the gateway feature flag and HTML injection first. If public bytes differ from the gateway's bytes, check the running image and Nginx/cache target. A browser refresh cannot update stale files inside a running container.
+Original names may intentionally remain in the light DOM and provider responses. The renderer preserves them as functional source data while displaying aliases through shadow DOM. Verify what is rendered and exposed through accessibility; a text search in Elements or a JSON response alone cannot establish a visible naming failure.
 
-This naming work fits the existing display layer. Keep the current proxy/session and route-policy fixes in place; it requires no new API exception or response-body rewriting.
+If the status object is missing, check the gateway feature flag and HTML asset injection. If local bytes are current but public bytes are older, check the Nginx/cache target and running gateway instance. Rebuilding only the main app container does not update an already-running gateway container.
 
-For rollback, revert the reviewed naming-change commit, rebuild its generated mapping, and recreate the gateway with those matched assets. Preserve the separate repair/color/proxy fixes already present on `temp-main`.
+The parent workspace also loads the shared map/resolver. Its current All Tools catalog already displays `CLImage-2.0` for the existing V7 card. Adding a new V8 catalog card is a separate content change; this request does not require inventing one. If you later update parent-side alias behavior, deploy the main app's shared assets as well.
 
-## 6. What was verified here
+For rollback, revert the reviewed MJ naming commit and recreate the gateway with the matching previous alias assets. Keep the earlier proxy/repair/color and MiniMax fixes. No new gateway API allowlist entry, broad Nginx text substitution, or history-response rewrite is needed for this plan.
 
-- Fetched and inspected the actual `temp-main` commit identified above in an isolated checkout.
-- Confirmed the missing exact mappings, spelling correspondence and MiniMax metadata scan.
-- Prepared the seven-file proposed patch below, including resolver regressions.
-- `aliases:build` and `aliases:check`: passed, resulting hash `73bb112c1fe8`.
-- Resolver, generator and injection tests: **43 passed, 0 failed**.
-- Renderer JavaScript syntax check and `git diff --check`: passed.
-- **Browser rendering and authenticated history workflows were not executed.** The available Playwright package has no installed Chromium executable here, and the public provider pages could not be inspected from this environment. The browser matrix remains a release gate, especially for actual history markup, split labels and suffix formats.
+## 6. Verification completed here
 
-## 7. Source snapshot
+- Read the actual `temp-main` source at the commit identified above.
+- Reproduced the missing V8/short-V7 resolutions and the qualified `CLImage V8` fallback problem.
+- Prepared the seven-file proposed patch below.
+- Alias generation and freshness checks passed; new hash `d6d2433bff2c`.
+- **46 resolver/generator/injection tests passed; 0 failed.**
+- Renderer JavaScript syntax and diff-whitespace checks passed.
+- **Live authenticated 历史记录/案例库 panels were not opened, and browser DOM tests were not run.** The local Playwright package has no installed Chromium executable. Actual provider selectors, interactions, tooltip formats and accessibility remain browser acceptance work, rather than verified outcomes.
 
-All analysis and patch contexts refer to [temp-main at c48b0f0](https://github.com/naseerkhan861/harson-pg/tree/c48b0f040c2f564f761274ac3d91178632bf523c), including:
+## 7. Source references
 
-- [Canonical names](https://github.com/naseerkhan861/harson-pg/blob/c48b0f040c2f564f761274ac3d91178632bf523c/config/display-names/names.txt) and [spelling policy](https://github.com/naseerkhan861/harson-pg/blob/c48b0f040c2f564f761274ac3d91178632bf523c/config/display-names/display-correspondence.cjs).
-- [Shared resolver](https://github.com/naseerkhan861/harson-pg/blob/c48b0f040c2f564f761274ac3d91178632bf523c/public/harson-customization/model-alias-resolver.js), [adapter configuration](https://github.com/naseerkhan861/harson-pg/blob/c48b0f040c2f564f761274ac3d91178632bf523c/public/harson-customization/image-tab-config.js) and [renderer](https://github.com/naseerkhan861/harson-pg/blob/c48b0f040c2f564f761274ac3d91178632bf523c/public/harson-customization/image-tab-labels.js).
-- [HTML asset injection](https://github.com/naseerkhan861/harson-pg/blob/c48b0f040c2f564f761274ac3d91178632bf523c/src/services/yibaiDisplayInjection.js) and [gateway deployment instructions](https://github.com/naseerkhan861/harson-pg/blob/c48b0f040c2f564f761274ac3d91178632bf523c/docs/gateway-display-alias-deployment.md).
+Snapshot: [temp-main at 97fd435](https://github.com/naseerkhan861/harson-pg/tree/97fd4353c05f3719d5ab010c81c6cb803b511d00).
+
+- [Canonical mappings](https://github.com/naseerkhan861/harson-pg/blob/97fd4353c05f3719d5ab010c81c6cb803b511d00/config/display-names/names.txt) and [spelling policy](https://github.com/naseerkhan861/harson-pg/blob/97fd4353c05f3719d5ab010c81c6cb803b511d00/config/display-names/display-correspondence.cjs).
+- [Shared resolver](https://github.com/naseerkhan861/harson-pg/blob/97fd4353c05f3719d5ab010c81c6cb803b511d00/public/harson-customization/model-alias-resolver.js), [renderer configuration](https://github.com/naseerkhan861/harson-pg/blob/97fd4353c05f3719d5ab010c81c6cb803b511d00/public/harson-customization/image-tab-config.js) and [renderer](https://github.com/naseerkhan861/harson-pg/blob/97fd4353c05f3719d5ab010c81c6cb803b511d00/public/harson-customization/image-tab-labels.js).
+- [Resolver tests](https://github.com/naseerkhan861/harson-pg/blob/97fd4353c05f3719d5ab010c81c6cb803b511d00/tests/model-alias-resolver.test.cjs), [HTML injection](https://github.com/naseerkhan861/harson-pg/blob/97fd4353c05f3719d5ab010c81c6cb803b511d00/src/services/yibaiDisplayInjection.js) and [gateway deployment guidance](https://github.com/naseerkhan861/harson-pg/blob/97fd4353c05f3719d5ab010c81c6cb803b511d00/docs/gateway-display-alias-deployment.md).
 
 ## Appendix — Proposed seven-file patch
 
-Apply to the reviewed commit or merge the individual hunks into your newer `temp-main`. The generated-file changes below are shown for completeness; produce them using `npm run aliases:build`. Browser acceptance is still required after applying this patch.
+Apply these hunks to the reviewed baseline, or merge them carefully into your newer `temp-main`. Regenerate the generated-file hunk with `npm run aliases:build`. The live browser acceptance work described above is still required.
 
 ```diff
 diff --git a/config/display-names/display-correspondence.cjs b/config/display-names/display-correspondence.cjs
-index d0b5b0c..d905a72 100644
+index d905a72..15c6273 100644
 --- a/config/display-names/display-correspondence.cjs
 +++ b/config/display-names/display-correspondence.cjs
-@@ -19,6 +19,7 @@
- */
- 
- const correspondences = {
-+  "MiniMax_H3": "MiniMax-H3",
-   "FLUX.1 Kontext": "FLUX.1 Kontex (pro/max)",
-   "FLUX.1Kontext": "FLUX.1 Kontex (pro/max)",
-   "FLUXKrea": "FLUX Krea",
+@@ -33,6 +33,22 @@ const correspondences = {
+   "悠船M| V7": "悠船MJ V7",
+   "悠船M｜ V7": "悠船MJ V7",
+   "MidjourneyV7": "Midjourney V7",
++  // Owner-requested short/spacing forms of the versioned MJ labels.
++  "MJ V7": "Midjourney V7",
++  "MJ 7": "Midjourney V7",
++  "MJV7": "Midjourney V7",
++  "MJ7": "Midjourney V7",
++  "MJ V 7": "Midjourney V7",
++  "悠船MJ V8": "Midjourney V8",
++  "悠船 MJ V8": "Midjourney V8",
++  "悠船Midjourney V8": "Midjourney V8",
++  "悠船 Midjourney V8": "Midjourney V8",
++  "MidjourneyV8": "Midjourney V8",
++  "MJ V8": "Midjourney V8",
++  "MJ 8": "Midjourney V8",
++  "MJV8": "Midjourney V8",
++  "MJ8": "Midjourney V8",
++  "MJ V 8": "Midjourney V8",
+   "即梦4.0": "即梦 4.0",
+   "即梦4.5": "即梦 4.5",
+   "即梦5.0 Lite": "即梦 5.0 Lite",
 diff --git a/config/display-names/names.txt b/config/display-names/names.txt
-index 23c4af8..8632601 100644
+index 8632601..7d165cf 100644
 --- a/config/display-names/names.txt
 +++ b/config/display-names/names.txt
-@@ -24,3 +24,5 @@ Seedance 2.5,CLVideo3.0
- Seedream,CLVideo
- Happy Horse,CL Dragon
- 暂未上架,CLVideo-2.1
-+MiniMax-H3,CLVideo-4.0
-+MiniMax-H3-MAX,CLVideo-4.1
+@@ -3,6 +3,7 @@ FLUX.1 Kontex (pro/max),CLImage-1.1
+ FLUX.1 Kontext pro,CLImage-1.1
+ FLUX.1 Kontext max,CLImage-1.2
+ Midjourney V7,CLImage-2.0
++Midjourney V8,CLImage-2.1
+ Midjourney,CLImage
+ 悠船MJ V7,CLImage-2.0
+ 即梦,CLImage
 diff --git a/public/harson-customization/image-tab-config.js b/public/harson-customization/image-tab-config.js
-index 270d700..03f5ee1 100644
+index 03f5ee1..2174bde 100644
 --- a/public/harson-customization/image-tab-config.js
 +++ b/public/harson-customization/image-tab-config.js
 @@ -18,7 +18,7 @@
    //     these header containers; the renderer aggregates a container's full
    //     text when it is exactly a known label.
    const config = Object.freeze({
--    version: "all-pages-9",
-+    version: "all-pages-10",
+-    version: "all-pages-10",
++    version: "all-pages-11",
      expectedOrigin: "https://ai.harson-base.com",
      // Applied inside every YiBai module frame served by the gateway.
      modules: Object.freeze([
+@@ -57,6 +57,24 @@
+       ".q-tooltip",
+       ".q-tooltip *"
+     ]),
++    // Versioned MJ metadata only: these existing selectors own model
++    // labels, rather than prompts or whole history/case-card bodies.
++    // The renderer also checks image-generator and an original MJ version.
++    midjourneyModelLabelSelectors: Object.freeze([
++      ".MainLayout-nav .NavList-list-item > span.label",
++      ".ToolLayout-header",
++      ".DefaultLayout-header",
++      ".header_fix > span",
++      ".header_fix .IcTabs > .IcTab",
++      ".SubLayout-draw .q-tab__label",
++      ".IcbsMenuSelect-header-content",
++      ".IcbsMenuSelect-menu-item-label",
++      ".IcbsSelect-header-popup-option-label",
++      ".SubLayout-draw .IcbsSelect-header-select .q-field__native > span",
++      ".DemoCard .DemoCard-banner > span",
++      ".TextToImageCard .TextToImageCard-header-typeName > span",
++      ".q-dialog .header-container .header .vertical-center > span.title"
++    ]),
+     // Elements whose ENTIRE normalized text is a known label may be
+     // aggregated (split/nested spans, IcTab wrappers). Guarded: no form
+     // controls or blocked descendants allowed inside.
 diff --git a/public/harson-customization/image-tab-labels.js b/public/harson-customization/image-tab-labels.js
-index f9cc933..d75d26c 100644
+index d75d26c..81e6c83 100644
 --- a/public/harson-customization/image-tab-labels.js
 +++ b/public/harson-customization/image-tab-labels.js
-@@ -239,11 +239,21 @@
+@@ -24,6 +24,7 @@
+   const selector = config.selectors.join(",");
+   const aggregateSelector = config.aggregateSelectors.join(",");
+   const qualifiedSelector = (config.qualifiedSelectors || []).join(",");
++  const midjourneySelector = (config.midjourneyModelLabelSelectors || []).join(",");
+   const videoModule = script.dataset.harsonModule === "video-generator";
+   const videoMetadataContext = Object.freeze({
+     module: "video-generator",
+@@ -189,9 +190,18 @@
+     return null;
    }
  
-   function videoMetadataOwner(element) {
-+    let owner = null;
-+    let source = null;
-     for (let current = element; current && current !== document.body;
-          current = current.parentElement) {
--      if (videoMetadataAlias(current)) return current;
-+      if (!videoMetadataAlias(current)) continue;
-+      const candidateSource = resolver.normalize(current.textContent);
-+      // Prefer the complete semantic label when a nested child contains
-+      // only the base prefix of MiniMax-H3-MAX. Keep the nearest wrapper
-+      // when an ancestor merely repeats exactly the same source text.
-+      if (!owner || candidateSource !== source) {
-+        owner = current;
-+        source = candidateSource;
-+      }
-     }
--    return null;
-+    return owner;
++  function midjourneyContextFor(node) {
++    if (script.dataset.harsonModule !== "image-generator" ||
++        !midjourneySelector || !node.matches(midjourneySelector) ||
++        !/(?:midjourney|mj)\s*v?\s*\d/iu.test(node.textContent)) return null;
++    return { module: "image-generator", surface: "midjourney-model-label" };
++  }
++
+   function contextFor(node) {
+-    // Version-tab precedence first, especially Seedream's short labels.
+-    const context = versionContextFor(node) ||
++    // Recognize explicit MJ versions in model fields first; preserve the
++    // existing Seedream/version and image-family rules for other labels.
++    const context = midjourneyContextFor(node) ||
++      versionContextFor(node) ||
+       versionDropdownContextFor(node) ||
+       imageContextFor(node) || {};
+ 
+@@ -205,19 +215,20 @@
+     return context;
    }
  
-   function collectVideoMetadata(tree, output) {
-@@ -251,7 +261,7 @@
-     const walker = document.createTreeWalker(tree, NodeFilter.SHOW_TEXT);
-     let textNode;
-     while ((textNode = walker.nextNode())) {
--      if (!/seedance/i.test(textNode.data)) continue;
-+      if (!/seedance|minimax[-_]h3/i.test(textNode.data)) continue;
-       const owner = videoMetadataOwner(textNode.parentElement);
-       if (owner) output.add(owner);
+-  function allowsAggregation(node) {
++  function allowsAggregation(node, context) {
+     /*
+       Split/nested labels (runbook §10.5): when the element's ENTIRE text
+       is exactly one known label (e.g. <span>全能图片</span><span>2</span>),
+       resolve it as one label. Only for approved label containers that hold
+       no interactive descendants.
+     */
+-    if (!aggregateSelector || !node.matches(aggregateSelector)) {
++    const midjourney = context?.surface === "midjourney-model-label";
++    if (!midjourney && (!aggregateSelector || !node.matches(aggregateSelector))) {
+       return false;
      }
+ 
+     return !node.querySelector(
+-      "button,a,input,textarea,select"
++      "button,a,input,textarea,select" + (midjourney ? "," + blocked : "")
+     );
+   }
+ 
+@@ -344,7 +355,7 @@
+       text-free elements still are).
+     */
+     let aggregate = null;
+-    if (eligible && (metadataAlias || allowsAggregation(node))) {
++    if (eligible && (metadataAlias || allowsAggregation(node, context))) {
+       aggregate = metadataAlias || aliasFor(node.textContent, context);
+     }
+ 
 diff --git a/public/harson-customization/model-alias-resolver.js b/public/harson-customization/model-alias-resolver.js
-index 1524913..76e406f 100644
+index 76e406f..b84ba57 100644
 --- a/public/harson-customization/model-alias-resolver.js
 +++ b/public/harson-customization/model-alias-resolver.js
-@@ -128,7 +128,38 @@
-         : null;
+@@ -57,7 +57,7 @@
+         - Longest (versioned) keys are tried before bare family keys.
+         - A whitespace/end boundary must follow the key, so "Seedance 2.50"
+           never matches "Seedance 2.5".
+-        - A suffix that begins with a digit is treated as an unknown
++        - A suffix that begins with a digit or V + digit is an unknown
+           version ("Seedance 3.0") and is refused, so unknown versions
+           are never converted through the bare-family mapping.
+         - One pass: aliases are never re-fed as sources.
+@@ -73,11 +73,16 @@
+         return qualifiedMatchers;
+       }
+ 
+-      qualifiedMatchers = Object.keys(exact)
++      const displayAliases = { ...exact };
++      for (const [spelling, canonical] of Object.entries(variants)) {
++        if (exact[canonical]) displayAliases[spelling] = exact[canonical];
++      }
++      qualifiedMatchers = Object.keys(displayAliases)
+         .map(String)
+         .sort((a, b) => b.length - a.length)
+         .map(key => ({
+           key,
++          alias: displayAliases[key],
+           pattern: new RegExp(
+             "^(\\s*)(" +
+               key.split(/\s+/).map(escapeRegExp).join("\\s+") +
+@@ -101,20 +106,39 @@
+ 
+         const suffix = raw.slice(match[0].length);
+ 
+-        if (/^\d/.test(suffix.trim())) {
+-          // Unknown version suffix — refuse rather than rename through
++        if (/^(?:v\s*)?\d/iu.test(suffix.trim())) {
++          // Unknown numeric/V-number suffix — refuse rather than use
+           // the bare-family mapping.
+           return null;
+         }
+ 
+         // Leading whitespace is insignificant (exact matching trims);
+         // the descriptive suffix is preserved verbatim.
+-        return exact[matcher.key] + suffix;
++        return matcher.alias + suffix;
+       }
+ 
+       return null;
      }
  
 +    /*
-+      MiniMax labels on video metadata hosts: accept complete approved
-+      labels, optional resolution metadata, and the provider-style
-+      family(variant + metadata) form. These are bounded display formats;
-+      arbitrary text and unknown model versions never match. The MAX
-+      token precedes the base token, and aliases come from generated data.
++      Versioned MJ labels may repeat in a history/case detail title.
++      This formatter runs only in renderer-approved image model fields.
++      Preserve metadata and delimiters; map each explicit V7/V8 token
++      from its own original source, never from the active form selection.
 +    */
-+    function resolveMiniMaxVideoMetadata(sourceText) {
-+      const raw = String(sourceText || "");
-+      const token = "(?:minimax-h3-max|minimax-h3|minimax_h3)";
-+      const label = token + "(?:\\s+(?:原生\\s*)?\\d{3,4}p)?";
-+      const format = new RegExp(
-+        "^\\s*" + label +
-+        "(?:\\s*\\(\\s*" + label + "\\s*\\)|" +
-+        "\\s*（\\s*" + label + "\\s*）)?\\s*$",
-+        "iu"
-+      );
-+      if (!format.test(raw)) return null;
-+
-+      let complete = true;
-+      const result = raw.replace(new RegExp(token, "giu"), source => {
-+        const key = normalize(source);
-+        const alias = exact[key] || exact[variants[key]];
-+        if (!alias) complete = false;
-+        return alias || source;
++    function resolveMidjourneyModelLabel(sourceText) {
++      const raw = String(sourceText || "").trim();
++      const token = /(^|[\s()（）:：·|])((?:悠船\s*)?(?:midjourney\s*v\s*([78])|mj\s*v?\s*([78])))(?=$|[\s()（）:：·|])/giu;
++      let matched = false;
++      const result = raw.replace(token, (whole, before, model, fullVersion, shortVersion) => {
++        const alias = exact["midjourney v" + (fullVersion || shortVersion)];
++        if (!alias) return whole;
++        matched = true;
++        return before + alias;
 +      });
-+      return complete ? result : null;
++      return matched ? result : null;
 +    }
 +
-     function resolveVideoMetadata(sourceText) {
-+      const minimax = resolveMiniMaxVideoMetadata(sourceText);
-+      if (minimax !== null) return minimax;
-       const raw = String(sourceText || "");
-       const overlay = /^(\s*)(seedance\s+2\.(?:5|0))(\s+原生\s*\d{3,4}p)(\s*)$/iu.exec(raw);
-       if (overlay) {
+     /*
+       The video player and its detail drawer use two provider-owned display
+       formats. Match the entire format, preserving punctuation, spacing and
+@@ -262,6 +286,11 @@
+         return exact[variants[key]] || null;
+       }
+ 
++      if (context && context.module === "image-generator" &&
++          context.surface === "midjourney-model-label") {
++        return resolveMidjourneyModelLabel(sourceText);
++      }
++
+       if (
+         context &&
+         context.surface === "model-version-tab" &&
 diff --git a/public/harson-customization/model-aliases.generated.js b/public/harson-customization/model-aliases.generated.js
-index c0450db..061db30 100644
+index 061db30..6ec34e7 100644
 --- a/public/harson-customization/model-aliases.generated.js
 +++ b/public/harson-customization/model-aliases.generated.js
 @@ -3,7 +3,7 @@
    Source: config/display-names/names.txt
    Policy: config/display-names/display-correspondence.cjs
    Rebuild: npm run aliases:build   Verify: npm run aliases:check
--  Schema: 1   Mapping hash: 6c6475c74fad
-+  Schema: 1   Mapping hash: 73bb112c1fe8
+-  Schema: 1   Mapping hash: 73bb112c1fe8
++  Schema: 1   Mapping hash: d6d2433bff2c
  */
  (function (root, factory) {
    if (typeof module === "object" && module.exports) {
-@@ -14,7 +14,7 @@
+@@ -14,13 +14,14 @@
  })(typeof self !== "undefined" ? self : this, function () {
    return {
    "schemaVersion": 1,
--  "mappingHash": "6c6475c74fad",
-+  "mappingHash": "73bb112c1fe8",
+-  "mappingHash": "73bb112c1fe8",
++  "mappingHash": "d6d2433bff2c",
    "exact": {
      "flux krea": "CLImage",
      "flux.1 kontex (pro/max)": "CLImage-1.1",
-@@ -40,9 +40,12 @@
-     "seedance 2.5": "CLVideo3.0",
-     "seedream": "CLVideo",
-     "happy horse": "CL Dragon",
--    "暂未上架": "CLVideo-2.1"
-+    "暂未上架": "CLVideo-2.1",
-+    "minimax-h3": "CLVideo-4.0",
-+    "minimax-h3-max": "CLVideo-4.1"
-   },
-   "variants": {
-+    "minimax_h3": "minimax-h3",
-     "flux.1 kontext": "flux.1 kontex (pro/max)",
-     "flux.1kontext": "flux.1 kontex (pro/max)",
-     "fluxkrea": "flux krea",
+     "flux.1 kontext pro": "CLImage-1.1",
+     "flux.1 kontext max": "CLImage-1.2",
+     "midjourney v7": "CLImage-2.0",
++    "midjourney v8": "CLImage-2.1",
+     "midjourney": "CLImage",
+     "悠船mj v7": "CLImage-2.0",
+     "即梦": "CLImage",
+@@ -58,6 +59,21 @@
+     "悠船 mj v7": "悠船mj v7",
+     "悠船m| v7": "悠船mj v7",
+     "midjourneyv7": "midjourney v7",
++    "mj v7": "midjourney v7",
++    "mj 7": "midjourney v7",
++    "mjv7": "midjourney v7",
++    "mj7": "midjourney v7",
++    "mj v 7": "midjourney v7",
++    "悠船mj v8": "midjourney v8",
++    "悠船 mj v8": "midjourney v8",
++    "悠船midjourney v8": "midjourney v8",
++    "悠船 midjourney v8": "midjourney v8",
++    "midjourneyv8": "midjourney v8",
++    "mj v8": "midjourney v8",
++    "mj 8": "midjourney v8",
++    "mjv8": "midjourney v8",
++    "mj8": "midjourney v8",
++    "mj v 8": "midjourney v8",
+     "即梦4.0": "即梦 4.0",
+     "即梦4.5": "即梦 4.5",
+     "即梦5.0 lite": "即梦 5.0 lite",
 diff --git a/tests/model-alias-resolver.test.cjs b/tests/model-alias-resolver.test.cjs
-index c9b7b58..e6d5a00 100644
+index e6d5a00..951ab22 100644
 --- a/tests/model-alias-resolver.test.cjs
 +++ b/tests/model-alias-resolver.test.cjs
-@@ -239,6 +239,45 @@ test("Kontext title follows only its own selected variant", () => {
-   assert.equal(resolve("kontext-max", title("pro")), "CLImage-1.2");
+@@ -80,7 +80,7 @@ test("unknown labels stay original (no substring or prefix guessing)", () => {
+   assert.equal(resolve("一键同款"), null);
+   assert.equal(resolve("悠船"), null);
+   assert.equal(resolve("FLUX"), null);
+-  assert.equal(resolve("Midjourney V8"), null);
++  assert.equal(resolve("Midjourney V9"), null);
+   assert.equal(resolve(""), null);
+   assert.equal(resolve(null), null);
+ });
+@@ -278,6 +278,44 @@ test("MiniMax metadata rejects unknown versions and arbitrary text", () => {
+   }), null);
  });
  
-+test("MiniMax exact labels preserve base and MAX identities", () => {
-+  assert.equal(resolve("MiniMax_H3"), "CLVideo-4.0");
-+  assert.equal(resolve("MiniMax-H3"), "CLVideo-4.0");
-+  assert.equal(resolve("MiniMax-H3-MAX"), "CLVideo-4.1");
-+  assert.equal(resolve("  minimax-h3-max  "), "CLVideo-4.1");
-+  assert.equal(resolve("CLVideo-4.0"), null);
-+  assert.equal(resolve("CLVideo-4.1"), null);
-+  assert.equal(resolve("MiniMax-H3-MAX-FAST"), null);
-+});
-+
-+test("MiniMax metadata maps every explicit label while keeping its suffix", () => {
-+  const context = { module: "video-generator", surface: "video-metadata" };
-+  const cases = [
-+    ["MiniMax_H3 原生 720p", "CLVideo-4.0 原生 720p"],
-+    ["MiniMax-H3-MAX 1080P", "CLVideo-4.1 1080P"],
-+    ["MiniMax-H3(MiniMax-H3 原生 720p)", "CLVideo-4.0(CLVideo-4.0 原生 720p)"],
-+    ["MiniMax-H3-MAX(MiniMax-H3-MAX 原生 1080p)", "CLVideo-4.1(CLVideo-4.1 原生 1080p)"],
-+    ["MiniMax_H3（MiniMax-H3-MAX 原生1080p）", "CLVideo-4.0（CLVideo-4.1 原生1080p）"],
-+    [" MiniMax-H3 ( MiniMax-H3-MAX )\n", " CLVideo-4.0 ( CLVideo-4.1 )\n"]
-+  ];
-+  for (const [source, expected] of cases) {
-+    assert.equal(resolve(source, context), expected, source);
++test("MJ V7 and V8 exact spellings keep distinct identities", () => {
++  for (const source of ["悠船MJ V7", "Midjourney V7", "MJ V7", "MJ 7", "MJV7", "MJ7", "MJ V 7"]) {
++    assert.equal(resolve(source), "CLImage-2.0", source);
 +  }
++  for (const source of ["悠船MJ V8", "悠船 MJ V8", "悠船Midjourney V8", "Midjourney V8", "MJ V8", "MJ 8", "MJV8", "MJ8", "MJ V 8"]) {
++    assert.equal(resolve(source), "CLImage-2.1", source);
++  }
++  assert.equal(resolve("  mj   v7  "), "CLImage-2.0");
++  assert.equal(resolve("CLImage-2.1"), null);
++  assert.equal(resolve("Midjourney"), "CLImage");
 +});
 +
-+test("MiniMax metadata rejects unknown versions and arbitrary text", () => {
-+  const context = { module: "video-generator", surface: "video-metadata" };
-+  for (const source of [
-+    "MiniMax-H30 原生 720p", "MiniMax-H3-MAX-FAST 1080p",
-+    "MiniMax_H3_MAX", "MiniMax-H3-MAX2", "MiniMax-H4",
-+    "Create a video with MiniMax-H3", "MiniMax-H3 sunset",
-+    "MiniMax-H3(MiniMax-H4 原生 720p)"
-+  ]) assert.equal(resolve(source, context), null, source);
-+  assert.equal(resolve("MiniMax_H3 原生 720p"), null);
-+  assert.equal(resolve("MiniMax_H3 原生 720p", {
-+    module: "image-generator", surface: "video-metadata"
-+  }), null);
++test("MJ model-field metadata maps each original version independently", () => {
++  const context = { module: "image-generator", surface: "midjourney-model-label" };
++  const cases = [
++    ["MJ V7 标准", "CLImage-2.0 标准"],
++    ["悠船MJ V8（Midjourney V8）", "CLImage-2.1（CLImage-2.1）"],
++    ["MJ V7 (MJ V8)", "CLImage-2.0 (CLImage-2.1)"],
++    ["悠船  MJ V 8 · 高清", "CLImage-2.1 · 高清"],
++    ["模型：MJ 7", "模型：CLImage-2.0"]
++  ];
++  for (const [source, expected] of cases) assert.equal(resolve(source, context), expected, source);
++  assert.equal(resolve("MJ V7 (MJ V8)"), null);
++  assert.equal(resolve("MJ V7 (MJ V8)", { module: "video-generator", surface: "midjourney-model-label" }), null);
++});
++
++test("MJ unknown versions and prompt text do not resolve through a family prefix", () => {
++  const context = { module: "image-generator", surface: "midjourney-model-label" };
++  for (const source of ["MJ V70", "MJ V80", "MJ V9", "Midjourney V8.1", "MJ V8-ULTRA", "7", "V8"]) {
++    assert.equal(resolve(source, context), null, source);
++  }
++  assert.equal(resolve("Midjourney V9", { allowQualified: true }), null);
++  assert.equal(resolve("Midjourney V8.1", { allowQualified: true }), null);
++  assert.equal(resolve("MJ V7 标准", { allowQualified: true }), "CLImage-2.0 标准");
++  assert.equal(resolve("悠船MJ V8 高清", { allowQualified: true }), "CLImage-2.1 高清");
++  assert.equal(resolve("Draw a shoe with MJ V7 and MJ V8"), null);
 +});
 +
  test("mapping info reports schema and hash", () => {
