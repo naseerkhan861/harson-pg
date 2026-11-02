@@ -4,22 +4,22 @@ export const platformModel = {
     { label: "仪表盘", href: "/dashboard" },
     { label: "账号管理", href: "/account-management" },
     { label: "核心平台", href: "#platforms" },
-    { label: "CL-AIGC（BETA）", href: "#cl-aigc" },
-    { label: "CL-3DLab", href: "#cl-3dlab" },
-    { label: "CL-iRobot", href: "#cl-irobot" },
-    { label: "CL-iStore", href: "#cl-istore" },
+    { label: "claigi", href: "#cl-aigc" },
+    { label: "3DLab", href: "#cl-3dlab" },
+    { label: "iRobot", href: "#cl-irobot" },
+    { label: "iStore", href: "#cl-istore" },
     { label: "生态合作", href: "#ecosystem" }
   ],
 
   platforms: [
     {
       id: "cl-aigc",
-      title: "CL-AIGC（BETA）",
+      title: "claigi",
       link: "/aigc-workspace",
       subtitle: "时尚生成式 AI · 品牌视觉引擎",
       description: "面向鞋服品牌、电商团队与营销部门，支持快速生成模特图、商品图和广告素材，降低视觉内容制作成本。",
       badge: "内容生成",
-      actionLabel: "进入 AIGC 平台",
+      actionLabel: "进入 claigi",
       icon: "fas fa-tshirt",
       badgeIcon: "fas fa-magic",
       features: [
@@ -48,7 +48,7 @@ export const platformModel = {
 
     {
       id: "cl-3dlab",
-      title: "CL-3DLab",
+      title: "3DLab",
       subtitle: "三维设计与增材制造",
       description: "面向产品设计、研发打样与个性化制造场景，融合三维建模、模型处理与3D打印技术，实现从数字设计到实体产品的快速转化，提升产品开发效率与创新能力。",
       badge: "数字制造",
@@ -81,7 +81,7 @@ export const platformModel = {
 
     {
       id: "cl-irobot",
-      title: "CL-iRobot",
+      title: "iRobot",
       subtitle: "自主移动与协作机器人",
       description: "面向工厂、仓库和门店现场作业，支持机器人调度、物料搬运和重复性任务自动化执行。",
       badge: "自动化执行",
@@ -115,7 +115,7 @@ export const platformModel = {
 
     {
       id: "cl-istore",
-      title: "CL-iStore",
+      title: "iStore",
       subtitle: "数智化零售与体验",
       description: "面向连锁门店、品牌零售和线上线下一体化运营，支持门店分析、会员运营与全渠道转化提升。",
       badge: "智慧零售",

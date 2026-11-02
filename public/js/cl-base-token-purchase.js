@@ -968,7 +968,7 @@ function createOrderCell(
     record.orderId &&
     record.orderSn
       ? `ID：${record.orderId}`
-      : "CL-AIGC 充值订单";
+      : "claigi 充值订单";
 
   wrapper.append(
     primary,

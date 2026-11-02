@@ -165,11 +165,11 @@
     );
 
     const replacements = [
-      ["4. 调整 AIGC 子账号 Token 配额", "5. 调整 AIGC 子账号 Token 配额"],
+      ["4. 调整 AIGI 子账号 Token 配额", "5. 调整 AIGI 子账号 Token 配额"],
       ["5. 绑定企业主账号负责人", "6. 绑定企业主账号负责人"],
       [
-        "6. 建立 Harson-Base ↔ AIGC 子账号映射",
-        "7. 建立 Harson-Base ↔ AIGC 子账号映射"
+        "6. 建立 Harson-Base ↔ AIGI 子账号映射",
+        "7. 建立 Harson-Base ↔ AIGI 子账号映射"
       ]
     ];
 
@@ -192,7 +192,7 @@
     );
 
     const options = [
-      '<option value="">选择需要绑定的 AIGC 子账号</option>'
+      '<option value="">选择需要绑定的 AIGI 子账号</option>'
     ];
 
     subs
@@ -216,7 +216,7 @@
     if (!bindings.length) {
       return `
         <div class="sub-provider-empty">
-          暂无外部子账号绑定。请先选择一个已创建的 AIGC 子账号完成绑定。
+          暂无外部子账号绑定。请先选择一个已创建的 AIGI 子账号完成绑定。
         </div>
       `;
     }
@@ -265,7 +265,7 @@
         <thead>
           <tr>
             <th>企业</th>
-            <th>AIGC 子账号</th>
+            <th>AIGI 子账号</th>
             <th>外部子账号</th>
             <th>外部成员名称</th>
             <th>成员 ID</th>
@@ -354,7 +354,7 @@
           if (
             action === "unbind" &&
             !window.confirm(
-              "确认解除该外部子账号绑定吗？内部 AIGC 子账号及 Harson-Base 用户映射会继续保留。"
+              "确认解除该外部子账号绑定吗？内部 AIGI 子账号及 Harson-Base 用户映射会继续保留。"
             )
           ) {
             return;
@@ -432,8 +432,8 @@
         <h2>4. 绑定外部子账号</h2>
 
         <p>
-          将已创建的内部 AIGC 子账号绑定到对应的外部子账号。
-          绑定成功后，映射到该 AIGC 子账号的 Harson-Base 用户将使用该外部子账号的独立 Session；
+          将已创建的内部 AIGI 子账号绑定到对应的外部子账号。
+          绑定成功后，映射到该 AIGI 子账号的 Harson-Base 用户将使用该外部子账号的独立 Session；
           仪表盘也会优先按照绑定保存的成员 ID 统计任务和 Token 消耗。
         </p>
 
@@ -479,7 +479,7 @@
 
         <p class="sub-provider-binding-note">
           密码只在后端加密保存，不会回显到页面，也不会写入普通账号 CSV。
-          重新提交同一个 AIGC 子账号可更新其外部绑定。
+          重新提交同一个 AIGI 子账号可更新其外部绑定。
         </p>
 
         <div class="table-wrap">

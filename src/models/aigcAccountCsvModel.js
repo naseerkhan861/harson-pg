@@ -225,7 +225,7 @@ function syncMasterTotalCredits({
 
   if (!normalizedMasterAccountId) {
     throw new Error(
-      "AIGC 企业主账号 ID 不能为空"
+      "AIGI 企业主账号 ID 不能为空"
     );
   }
 
@@ -251,7 +251,7 @@ function syncMasterTotalCredits({
 
   if (!master) {
     throw new Error(
-      "未找到可用的 AIGC 企业主账号"
+      "未找到可用的 AIGI 企业主账号"
     );
   }
 
@@ -334,7 +334,7 @@ function resetMasterTotalCreditsAfterProviderUnbind(
 
   if (!normalizedMasterAccountId) {
     throw new Error(
-      "AIGC 企业主账号 ID 不能为空"
+      "AIGI 企业主账号 ID 不能为空"
     );
   }
 
@@ -352,7 +352,7 @@ function resetMasterTotalCreditsAfterProviderUnbind(
 
   if (!master) {
     throw new Error(
-      "未找到可用的 AIGC 企业主账号"
+      "未找到可用的 AIGI 企业主账号"
     );
   }
 
@@ -462,7 +462,7 @@ async function createMaster({ enterpriseName, platformName, platformLogin, platf
   const masters = readMasters();
 
   if (masters.some(item => item.platformLogin.toLowerCase() === String(platformLogin).toLowerCase())) {
-    throw new Error("该 AIGC 主账号登录邮箱已存在");
+    throw new Error("该 AIGI 主账号登录邮箱已存在");
   }
 
   const record = {
@@ -495,7 +495,7 @@ async function createSubAccount({
   const master = masters.find(item => item.id === masterAccountId && item.status === "active");
 
   if (!master) {
-    throw new Error("未找到可用的 AIGC 企业主账号");
+    throw new Error("未找到可用的 AIGI 企业主账号");
   }
 
   const numericTokenLimit = toNumber(tokenLimit, 0);
@@ -518,7 +518,7 @@ async function createSubAccount({
   });
 
   if (subs.some(item => item.platformLogin.toLowerCase() === String(platformLogin).toLowerCase())) {
-    throw new Error("该 AIGC 子账号登录邮箱已存在");
+    throw new Error("该 AIGI 子账号登录邮箱已存在");
   }
 
   const record = {
@@ -545,14 +545,14 @@ function updateSubAccountTokenSettings({ subAccountId, tokenLimit, warningThresh
   const sub = subs.find(item => item.id === subAccountId);
 
   if (!sub) {
-    throw new Error("未找到对应的 AIGC 子账号");
+    throw new Error("未找到对应的 AIGI 子账号");
   }
 
   const masters = readMasters();
   const master = masters.find(item => item.id === sub.masterAccountId);
 
   if (!master) {
-    throw new Error("未找到对应的 AIGC 主账号");
+    throw new Error("未找到对应的 AIGI 主账号");
   }
 
   const works = readWorks();
@@ -596,13 +596,13 @@ function createMapping({ clBaseUserId, clBaseEmail, aigcSubAccountId }) {
   const sub = subs.find(item => item.id === aigcSubAccountId && item.status === "active");
 
   if (!sub) {
-    throw new Error("未找到可用的 AIGC 子账号");
+    throw new Error("未找到可用的 AIGI 子账号");
   }
 
   const mappings = readMappings();
 
   if (mappings.some(item => item.clBaseUserId === clBaseUserId && item.mappingStatus === "active")) {
-    throw new Error("该 Harson-Base 账号已经绑定了一个 AIGC 子账号");
+    throw new Error("该 Harson-Base 账号已经绑定了一个 AIGI 子账号");
   }
 
 
@@ -735,7 +735,7 @@ function purchaseTokens({ masterAccountId, packageName, tokens, amount }) {
   const master = masters.find(item => item.id === masterAccountId && item.status === "active");
 
   if (!master) {
-    throw new Error("未找到可用的 AIGC 企业主账号");
+    throw new Error("未找到可用的 AIGI 企业主账号");
   }
 
   const numericTokens = toNumber(tokens, 0);
@@ -802,7 +802,7 @@ function addMyWork({ clBaseUserId, title, workType, promptSummary, creditCost })
   const mapping = getMyMapping(clBaseUserId);
 
   if (!mapping || !mapping.aigcSubAccount) {
-    throw new Error("当前 Harson-Base 账号尚未绑定可用的 AIGC 子账号");
+    throw new Error("当前 Harson-Base 账号尚未绑定可用的 AIGI 子账号");
   }
 
   const tokenCost = toNumber(creditCost, 0);
@@ -820,7 +820,7 @@ function addMyWork({ clBaseUserId, title, workType, promptSummary, creditCost })
     const remainingTokens = Math.max(tokenLimit - currentUsedTokens, 0);
 
     throw new Error(
-      `本次创作需要 ${tokenCost} tokens，但当前 AIGC 子账号仅剩 ${remainingTokens} tokens，已超出 token 配额，无法生成，请联系管理员增加配额`
+      `本次创作需要 ${tokenCost} tokens，但当前 AIGI 子账号仅剩 ${remainingTokens} tokens，已超出 token 配额，无法生成，请联系管理员增加配额`
     );
   }
 

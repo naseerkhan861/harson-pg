@@ -39,7 +39,7 @@ export class HomeView {
   platformTemplate(platform) {
     const appMeta = {
       "cl-aigc": {
-        title: "CL-AIGC",
+        title: "claigi",
         tagline: "创意生成",
         link: "/aigc-workspace"
       },
@@ -51,13 +51,13 @@ export class HomeView {
       },
 
       "cl-irobot": {
-        title: "CL-iRobot",
+        title: "iRobot",
         tagline: "自动化执行",
         link: "#cl-irobot"
       },
 
       "cl-istore": {
-        title: "CL-iStore",
+        title: "iStore",
         tagline: "零售体验",
         link: "#cl-istore"
       },

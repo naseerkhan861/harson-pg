@@ -70,7 +70,7 @@ function install() {
   function withSubLock(subAccountId, task) {
     const normalizedSubAccountId = requireText(
       subAccountId,
-      "AIGC子账号ID"
+      "AIGI子账号ID"
     );
 
     const previous =
@@ -234,7 +234,7 @@ function install() {
       }
     }
 
-    throw new Error("当前 Harson-Base 账号尚未绑定 AIGC 账号");
+    throw new Error("当前 Harson-Base 账号尚未绑定 AIGI 账号");
   }
 
   function resolveSubContext(roleContext) {
@@ -243,18 +243,18 @@ function install() {
     const mapping = roleContext.subMapping?.mapping;
 
     if (!subAccount || subAccount.status !== "active") {
-      throw new Error("当前映射的 AIGC 子账号不存在或已停用");
+      throw new Error("当前映射的 AIGI 子账号不存在或已停用");
     }
 
     if (!masterAccount || masterAccount.status !== "active") {
-      throw new Error("AIGC 子账号所属主账号不存在或已停用");
+      throw new Error("AIGI 子账号所属主账号不存在或已停用");
     }
 
     if (
       String(subAccount.masterAccountId) !== String(masterAccount.id) ||
       String(mapping?.masterAccountId) !== String(masterAccount.id)
     ) {
-      throw new Error("AIGC 子账号、主账号和用户映射关系不一致");
+      throw new Error("AIGI 子账号、主账号和用户映射关系不一致");
     }
 
     const providerConfig =
@@ -263,7 +263,7 @@ function install() {
       );
 
     if (!providerConfig) {
-      throw new Error("当前 AIGC 子账号尚未绑定外部子账号");
+      throw new Error("当前 AIGI 子账号尚未绑定外部子账号");
     }
 
     return {
@@ -325,13 +325,13 @@ function install() {
 
     if (!isSuccessfulResponse(loginResult)) {
       throw new Error(
-        responseMessage(loginResult, "AIGC 子账号登录失败")
+        responseMessage(loginResult, "AIGI 子账号登录失败")
       );
     }
 
     const token = requireText(
       loginResult.result?.token,
-      "AIGC子账号Token"
+      "AIGI子账号Token"
     );
 
     subTokenCacheModel.upsertTokenCache({
@@ -360,7 +360,7 @@ function install() {
         );
       } catch (error) {
         console.warn(
-          "AIGC 子账号 Token 缓存读取失败，将重新登录：",
+          "AIGI 子账号 Token 缓存读取失败，将重新登录：",
           error.message
         );
         subTokenCacheModel.removeTokenCache(context.subAccount.id);
@@ -387,7 +387,7 @@ function install() {
 
           if (!validatedToken) {
             throw new Error(
-              "AIGC 子账号 Token 验证成功，但没有返回可用 Token"
+              "AIGI 子账号 Token 验证成功，但没有返回可用 Token"
             );
           }
 
@@ -480,7 +480,7 @@ function install() {
         );
       } catch (error) {
         console.warn(
-          "AIGC 子账号 Token 缓存读取失败，将重新建立登录状态：",
+          "AIGI 子账号 Token 缓存读取失败，将重新建立登录状态：",
           error.message
         );
 
@@ -492,7 +492,7 @@ function install() {
       }
 
       /*
-       * 普通用户进入“我的 AIGC 账号”页面时，
+       * 普通用户进入“我的 AIGI 账号”页面时，
        * 即使尚未打开 Workspace，也应能直接看到
        * 当前子账号的真实 Token 余额。
        *
@@ -572,7 +572,7 @@ function install() {
       return {
         success: true,
         action: "no_session",
-        message: "当前用户没有 AIGC 活跃登录记录"
+        message: "当前用户没有 AIGI 活跃登录记录"
       };
     }
 
@@ -602,7 +602,7 @@ function install() {
           action: "token_retained",
           remainingActiveUsers: remainingActiveUsers.length,
           message:
-            "仍有其他 Harson-Base 用户使用该 AIGC 子账号，已保留共享 Token"
+            "仍有其他 Harson-Base 用户使用该 AIGI 子账号，已保留共享 Token"
         };
       }
 
@@ -617,7 +617,7 @@ function install() {
         return {
           success: true,
           action: "local_cache_removed",
-          message: "AIGC 子账号本地登录缓存已清理"
+          message: "AIGI 子账号本地登录缓存已清理"
         };
       }
 
@@ -625,7 +625,7 @@ function install() {
         return {
           success: true,
           action: "no_token",
-          message: "当前 AIGC 子账号没有需要注销的 Token"
+          message: "当前 AIGI 子账号没有需要注销的 Token"
         };
       }
 
@@ -639,7 +639,7 @@ function install() {
           action: "provider_logout_failed",
           message: responseMessage(
             logoutResult,
-            "AIGC 子账号注销失败"
+            "AIGI 子账号注销失败"
           )
         };
       }
@@ -650,7 +650,7 @@ function install() {
         success: true,
         action: "provider_logged_out",
         remainingActiveUsers: 0,
-        message: "AIGC 子账号登录状态已注销"
+        message: "AIGI 子账号登录状态已注销"
       };
     });
   }

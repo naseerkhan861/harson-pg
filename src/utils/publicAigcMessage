@@ -6,14 +6,18 @@
  * 不处理 frameUrl、providerAccount、tokenBalance 等业务字段，
  * 避免修改 iframe 地址或正常接口数据。
  */
+
 const PUBLIC_TEXT_KEYS = new Set([
   "message",
   "error",
   "warning",
   "detail",
   "description",
-  "statusMessage"
+  "statusMessage",
+  "title",
+  "objectName"
 ]);
+
 
 /*
  * 匹配：
@@ -32,9 +36,11 @@ const BRAND_PATTERN =
 const DOMAIN_PATTERN =
   /(?:https?:\/\/)?(?:[\w-]+\.)*yibaiaigc\.com/gi;
 
+
+
 function sanitizePublicText(
   value,
-  fallback = "CL-AIGC 服务暂不可用"
+  fallback = "claigi 服务暂不可用"
 ) {
   const originalText =
     String(value ?? "").trim();
@@ -45,13 +51,27 @@ function sanitizePublicText(
   return safeText
     .replace(
       DOMAIN_PATTERN,
-      "CL-AIGC 服务"
+      "claigi 服务"
     )
     .replace(
       BRAND_PATTERN,
-      "CL-AIGC"
+      "claigi"
+    )
+    .replace(
+      /CL-AIG[CI]\s*[\(（]\s*BETA\s*[\)）]/gi,
+      "claigi"
+    )
+    .replace(
+      /CL-AIG[CI]/gi,
+      "claigi"
+    )
+    .replace(
+      /aigc/gi,
+      "AIGI"
     );
 }
+
+
 
 function sanitizePublicPayload(
   value,

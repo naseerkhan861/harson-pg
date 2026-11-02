@@ -422,7 +422,7 @@ function getErrorStatus(
       "超时"
     ) ||
     message.includes(
-      "CL-AIGC 登录失败"
+      "CL-AIGI 登录失败"
     ) ||
     message.includes(
       "cl-aigc 登录失败"

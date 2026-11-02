@@ -1956,3 +1956,21 @@ body::before {
   background:
     rgba(200, 255, 0, 0.48);
 }
+
+
+/* 核心应用卡片：统一状态标签和操作按钮的位置 */
+.apps-grid > .app-card {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 内容区域自动填充剩余空间 */
+.apps-grid > .app-card > .app-header {
+  flex: 1 1 auto;
+}
+
+/* 状态标签保持原有宽度 */
+.apps-grid > .app-card > .app-status {
+  align-self: flex-start;
+}
+

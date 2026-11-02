@@ -2,7 +2,7 @@
   "use strict";
 
   /*
-    CL-AIGC Home capability switches
+    CL-AIGI Home capability switches
 
     文字：继续 Mock，避免开发阶段持续产生 DeepSeek 费用
     图片：真实调用 Seedream /api/ai/image
@@ -588,7 +588,7 @@
         });
       } catch (error) {
         console.error(
-          "[CL-AIGC Preview Error]",
+          "[CL-AIGI Preview Error]",
           error
         );
 
@@ -717,14 +717,14 @@
 
   function getPublicAssistantLabel(taskType) {
     if (taskType === "image") {
-      return "CL-AIGC · 图片生成";
+      return "CL-AIGI · 图片生成";
     }
 
     if (taskType === "video") {
-      return "CL-AIGC · 视频生成";
+      return "CL-AIGI · 视频生成";
     }
 
-    return "CL-AIGC · 文字对话";
+    return "CL-AIGI · 文字对话";
   }
 
   function escapeHtml(text) {
@@ -1637,7 +1637,7 @@
       const parsed = JSON.parse(raw);
       return Array.isArray(parsed) ? parsed : [];
     } catch (error) {
-      console.error("[CL-AIGC Conversation Read Error]", error);
+      console.error("[CL-AIGI Conversation Read Error]", error);
       return [];
     }
   }
@@ -1649,7 +1649,7 @@
         JSON.stringify(conversations)
       );
     } catch (error) {
-      console.error("[CL-AIGC Conversation Save Error]", error);
+      console.error("[CL-AIGI Conversation Save Error]", error);
     }
   }
 
@@ -1789,7 +1789,7 @@
     meta.textContent =
       message.role === "user"
         ? "你"
-        : message.model || fallbackModel || "CL-AIGC";
+        : message.model || fallbackModel || "CL-AIGI";
 
     const bubble = document.createElement("div");
     bubble.className = "cl-chat-message__bubble";
@@ -1830,7 +1830,7 @@
 
       image.alt =
         message.media.alt ||
-        "CL-AIGC 生成的鞋履视觉";
+        "CL-AIGI 生成的鞋履视觉";
 
       image.loading =
         "lazy";
@@ -1956,7 +1956,7 @@
             originalHtml;
         } catch (error) {
           console.error(
-            "[CL-AIGC Video Download Error]",
+            "[CL-AIGI Video Download Error]",
             error
           );
 
@@ -2047,7 +2047,7 @@
     const empty = document.createElement("div");
     empty.className = "cl-chat-empty";
     empty.textContent =
-      "输入你的创作需求后，CL-AIGC 将在这里与你持续对话。";
+      "输入你的创作需求后，CL-AIGI 将在这里与你持续对话。";
 
     resultPanel.appendChild(empty);
   }
@@ -2499,7 +2499,7 @@
                 "/images/cl-aigc/shoe-product.png",
 
               alt:
-                "CL-AIGC 鞋履商品视觉 Mock",
+                "CL-AIGI 鞋履商品视觉 Mock",
 
               status:
                 "mock",
@@ -2594,7 +2594,7 @@
 
       /*
         后端会返回 Seedream 的内部 provider / model，
-        但前端用户可见名称统一保持 CL-AIGC。
+        但前端用户可见名称统一保持 CL-AIGI。
       */
       return {
         success: true,
@@ -2619,7 +2619,7 @@
 
             alt:
               data.result.media?.alt ||
-              "CL-AIGC 生成的鞋履视觉"
+              "CL-AIGI 生成的鞋履视觉"
           }
         }
       };
@@ -2921,13 +2921,13 @@
       taskType === "image"
         ? (
             imageFileForRequest
-              ? "CL-AIGC 正在根据参考图片进行修改，请稍候…"
-              : "CL-AIGC 正在生成你的鞋履视觉，请稍候…"
+              ? "CL-AIGI 正在根据参考图片进行修改，请稍候…"
+              : "CL-AIGI 正在生成你的鞋履视觉，请稍候…"
           )
         : (
             taskType === "video"
-              ? "CL-AIGC 正在准备视频生成任务…"
-              : "CL-AIGC 正在理解并分析你的创作需求…"
+              ? "CL-AIGI 正在准备视频生成任务…"
+              : "CL-AIGI 正在理解并分析你的创作需求…"
           );
 
     renderConversation(
@@ -3031,7 +3031,7 @@
           "继续描述你希望如何修改这张图片，例如：鞋底再厚一点，增加金属银细节...";
       }
     } catch (error) {
-      console.error("[CL-AIGC Chat Error]", error);
+      console.error("[CL-AIGI Chat Error]", error);
 
       conversation = appendMessage({
         conversationId: conversation.id,

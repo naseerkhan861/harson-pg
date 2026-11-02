@@ -156,27 +156,27 @@ async function logout(req, res) {
       ) {
         aigcLogoutWarning =
           aigcLogoutResult.message ||
-          "AIGC 共享登录态注销失败";
+          "AIGI 共享登录态注销失败";
 
         console.warn(
-          "Harson-Base 用户已退出，但 AIGC 共享登录态处理失败：",
+          "Harson-Base 用户已退出，但 AIGI 共享登录态处理失败：",
           aigcLogoutWarning
         );
       }
     }
   } catch (error) {
     /*
-     * 外部 AIGC 服务异常时，
+     * 外部 AIGI 服务异常时，
      * 仍然必须清除本地登录 Cookie。
      *
      * 不输出 token、密码或请求体。
      */
     aigcLogoutWarning =
       error.message ||
-      "AIGC 共享登录态处理失败";
+      "AIGI 共享登录态处理失败";
 
     console.warn(
-      "Harson-Base 注销时处理 AIGC 登录态失败：",
+      "Harson-Base 注销时处理 AIGI 登录态失败：",
       aigcLogoutWarning
     );
   } finally {
