@@ -1,0 +1,26 @@
+/* CL-iRobot 二级功能菜单：基于 cl-istore.css 复用布局 */
+/* 只作用于 body.cl-irobot-page，绝不改变现有 iStore 三张卡片 */
+
+body.cl-irobot-page .istore-menu-item:nth-child(1) {
+  background-image:
+    linear-gradient(rgba(8, 9, 10, 0.35), rgba(8, 9, 10, 0.69)),
+    url("/images/irobot/导购.webp");
+}
+
+body.cl-irobot-page .istore-menu-item:nth-child(2) {
+  background-image:
+    linear-gradient(rgba(8, 9, 10, 0.35), rgba(8, 9, 10, 0.69)),
+    url("/images/irobot/库存盘点.webp");
+}
+
+body.cl-irobot-page .istore-menu-item:nth-child(3) {
+  background-image:
+    linear-gradient(rgba(8, 9, 10, 0.35), rgba(8, 9, 10, 0.69)),
+    url("/images/irobot/视觉分析.webp");
+}
+
+/* iRobot 三个模块显示可点击的小手光标 */
+.istore-menu-item {
+  cursor: pointer;
+}
+

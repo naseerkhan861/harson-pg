@@ -86,7 +86,7 @@ function getProviderContext(
   const normalizedMasterAccountId =
     requireText(
       masterAccountId,
-      "AIGC企业主账号ID"
+      "AIGI企业主账号ID"
     );
 
   const providerConfig =
@@ -97,7 +97,7 @@ function getProviderContext(
 
   if (!providerConfig) {
     throw new Error(
-      "当前企业主账号尚未绑定 CL-AIGC 外部账号"
+      "当前企业主账号尚未绑定 CL-AIGI 外部账号"
     );
   }
 
@@ -107,14 +107,14 @@ function getProviderContext(
       "active"
   ) {
     throw new Error(
-      "当前企业主账号的 CL-AIGC 外部账号绑定已停用"
+      "当前企业主账号的 CL-AIGI 外部账号绑定已停用"
     );
   }
 
   const providerAccount =
     requireText(
       providerConfig.providerAccount,
-      "CL-AIGC 外部账号"
+      "CL-AIGI 外部账号"
     );
 
   return {
@@ -202,7 +202,7 @@ async function loginAndCacheUserDataToken(
     throw new Error(
       getResponseMessage(
         loginResult,
-        "CL-AIGC 用户端账号登录失败"
+        "CL-AIGI 用户端账号登录失败"
       )
     );
   }
@@ -215,7 +215,7 @@ async function loginAndCacheUserDataToken(
 
   if (!userToken) {
     throw new Error(
-      "CL-AIGC 用户端登录成功，但响应中没有 Token"
+      "CL-AIGI 用户端登录成功，但响应中没有 Token"
     );
   }
 
@@ -321,7 +321,7 @@ async function getValidUserDataToken(
         );
   } catch (error) {
     console.warn(
-      "CL-AIGC 用户端 Token 缓存读取失败，将删除损坏缓存：",
+      "CL-AIGI 用户端 Token 缓存读取失败，将删除损坏缓存：",
       error.message
     );
 
@@ -469,7 +469,7 @@ function toNonNegativeNumber(
 
 
 /**
- * 将 CL-AIGC 充值订单转换为
+ * 将 CL-AIGI 充值订单转换为
  * Harson-Base 前端可安全使用的结构。
  */
 function normalizeRechargeRecord(
@@ -615,7 +615,7 @@ async function getRechargeRecords(
   if (!tokenContext.success) {
     throw new Error(
       tokenContext.message ||
-      "无法建立 CL-AIGC 用户数据登录状态"
+      "无法建立 CL-AIGI 用户数据登录状态"
     );
   }
 
@@ -649,7 +649,7 @@ async function getRechargeRecords(
     throw new Error(
       getResponseMessage(
         rechargeResponse,
-        "读取 CL-AIGC Token 充值记录失败"
+        "读取 CL-AIGI Token 充值记录失败"
       )
     );
   }
@@ -787,7 +787,7 @@ function normalizeTask(
     objectName:
       String(
         task?.objectName ||
-        "AIGC 创作任务"
+        "AIGI 创作任务"
       ).trim(),
 
     imageUrl:
@@ -919,7 +919,7 @@ async function getCompanyTaskSnapshot(
   if (!tokenContext.success) {
     throw new Error(
       tokenContext.message ||
-      "无法建立 CL-AIGC 用户数据登录状态"
+      "无法建立 CL-AIGI 用户数据登录状态"
     );
   }
 
@@ -1078,7 +1078,7 @@ function addIdentityCandidate(
   );
 
   /*
-   * AIGC 登录名可能是邮箱，
+   * AIGI 登录名可能是邮箱，
    * 而 memberName 可能只返回
    * 邮箱 @ 前面的用户名。
    */
@@ -1152,7 +1152,7 @@ function normalizeChildMember(
 
 /**
  * 根据 Harson-Base 已保存的
- * AIGC 登录信息匹配 YiBai 子账号。
+ * AIGI 登录信息匹配 YiBai 子账号。
  *
  * 匹配不到或匹配到多个时直接报错，
  * 不能回退为返回整个企业任务。
@@ -1170,7 +1170,7 @@ function resolveChildMember(
     candidates.size === 0
   ) {
     throw new Error(
-      "缺少用于匹配 CL-AIGC 子账号的登录信息"
+      "缺少用于匹配 CL-AIGI 子账号的登录信息"
     );
   }
 
@@ -1211,13 +1211,13 @@ function resolveChildMember(
 
   if (matches.length === 0) {
     throw new Error(
-      "未找到与当前 Harson-Base 账号匹配的 CL-AIGC 子账号"
+      "未找到与当前 Harson-Base 账号匹配的 CL-AIGI 子账号"
     );
   }
 
   if (matches.length > 1) {
     throw new Error(
-      "当前账号匹配到多个 CL-AIGC 子账号，请检查账号名称和登录名"
+      "当前账号匹配到多个 CL-AIGI 子账号，请检查账号名称和登录名"
     );
   }
 
@@ -1250,7 +1250,7 @@ async function getMemberTaskSnapshot(
   if (!tokenContext.success) {
     throw new Error(
       tokenContext.message ||
-      "无法建立 CL-AIGC 用户数据登录状态"
+      "无法建立 CL-AIGI 用户数据登录状态"
     );
   }
 
@@ -1280,7 +1280,7 @@ async function getMemberTaskSnapshot(
     throw new Error(
       getResponseMessage(
         memberResponse,
-        "读取 CL-AIGC 子账号列表失败"
+        "读取 CL-AIGI 子账号列表失败"
       )
     );
   }
@@ -1331,7 +1331,7 @@ async function syncCompanyTaskSnapshot(
   const normalizedMasterAccountId =
     requireText(
       masterAccountId,
-      "AIGC企业主账号ID"
+      "AIGI企业主账号ID"
     );
 
   const effectivePageSize =
@@ -1621,7 +1621,7 @@ async function syncCompanyTaskSnapshot(
       effectivePageSize
     ) {
       console.warn(
-        "[CL-AIGC 创作记录同步] 单日任务达到接口上限",
+        "[CL-AIGI 创作记录同步] 单日任务达到接口上限",
         {
           dateEnd:
             currentDate,
@@ -1762,7 +1762,7 @@ function clearUserDataToken(
     .removeTokenCache(
       requireText(
         masterAccountId,
-        "AIGC企业主账号ID"
+        "AIGI企业主账号ID"
       )
     );
 }

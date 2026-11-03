@@ -714,7 +714,7 @@ async function initEnterpriseDashboardAnalytics() {
 
     setText(
       "enterpriseAnalyticsTitle",
-      `${data.enterpriseName} · CL-AIGC Token 分析`
+      `${data.enterpriseName} · claigi Token 分析`
     );
 
     setTokenValue(
@@ -997,7 +997,7 @@ async function initEnterpriseDashboardAnalytics() {
   function accountStatusLabel(status) {
     const labels = {
       resolved:
-        "已匹配 CL-AIGC 成员",
+        "已匹配 claigi 成员",
       member_unresolved:
         "暂无可识别任务",
       member_ambiguous:
@@ -1152,8 +1152,9 @@ async function initEnterpriseDashboardAnalytics() {
       );
 
     image.src = imageUrl;
-    image.alt = `${title}大图`;
-    caption.textContent = title;
+    image.alt = "创作任务大图";
+    caption.textContent = "";
+    caption.hidden = true;
 
     preview.hidden = false;
 
@@ -1243,7 +1244,7 @@ async function initEnterpriseDashboardAnalytics() {
           task.imageUrl;
 
         thumbnail.alt =
-          `${task.title || "AIGC 创作任务"}封面`;
+          `${"AIGI 创作任务"}封面`;
 
         thumbnail.loading =
           "lazy";
@@ -1281,7 +1282,7 @@ async function initEnterpriseDashboardAnalytics() {
 
         previewButton.setAttribute(
           "aria-label",
-          `放大查看${task.title || "创作任务"}封面`
+          `放大查看${"创作任务"}封面`
         );
 
         previewButton.append(
@@ -1293,8 +1294,8 @@ async function initEnterpriseDashboardAnalytics() {
           () => {
             openTaskImagePreview(
               task.imageUrl,
-              task.title ||
-                "AIGC 创作任务"
+              
+              "AIGI 创作任务"
             );
           }
         );
@@ -1309,7 +1310,7 @@ async function initEnterpriseDashboardAnalytics() {
 
       title.textContent =
         task.title ||
-        "AIGC 创作任务";
+        "AIGI 创作任务";
 
       const taskId =
         document.createElement("span");
@@ -1317,7 +1318,7 @@ async function initEnterpriseDashboardAnalytics() {
       taskId.textContent =
         task.id
           ? `任务 ${task.id}`
-          : "CL-AIGC 任务";
+          : "claigi 任务";
 
       titleText.append(
         taskId
@@ -2021,7 +2022,7 @@ function configureDashboardAigcEntry(
         "/aigc-workspace";
 
       card.title =
-        "点击进入 CL-AIGC Workspace";
+        "点击进入 claigi Workspace";
     }
 
     if (topbarLink) {

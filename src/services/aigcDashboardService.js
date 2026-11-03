@@ -209,7 +209,7 @@ function toDashboardTask(task) {
 
     title:
       task.objectName ||
-      "AIGC 创作任务",
+      "AIGI 创作任务",
 
     type:
       task.object || "",
@@ -611,7 +611,7 @@ function buildDashboardAnalytics({
       requestedIds.size
   ) {
     throw new Error(
-      "未找到可用的 AIGC 企业主账号"
+      "未找到可用的 AIGI 企业主账号"
     );
   }
 

@@ -1,0 +1,136 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>客流分析与巡店管理 | Harson Base</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "PingFang SC",
+        "Microsoft YaHei",
+        sans-serif;
+      background: #111214;
+    }
+
+    /* 顶部导航 */
+    .workspace-header {
+      height: 40px;
+      padding: 0 30px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      background: #111214;
+      border-bottom: 1px solid
+        rgba(255,255,255,0.08);
+    }
+
+    /* 返回 iStore */
+    .back-button {
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid
+        rgba(255,255,255,0.15);
+      border-radius: 50%;
+      color: #fff;
+      text-decoration: none;
+      font-size: 20px;
+      transition: 0.2s;
+    }
+
+    .back-button:hover {
+      background: #c8ff00;
+      border-color: #c8ff00;
+      color: #111214;
+    }
+
+    /* 工作空间标题 */
+    .workspace-title {
+      margin: 0;
+      color: #fff;
+      font-size: 19px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    /* iframe 区域 */
+    .workspace-content {
+      width: 100%;
+      height: calc(100vh - 70px);
+      height: calc(100dvh - 70px);
+      background: #fff;
+    }
+
+    .vendor-frame {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #fff;
+    }
+
+    @media (max-width: 600px) {
+      .workspace-header {
+        padding: 0 16px;
+      }
+
+      .workspace-title {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="workspace-header">
+
+    <a
+      href="/cl-istore.html"
+      class="back-button"
+      aria-label="返回 iStore"
+      title="返回 iStore"
+    >
+      ←
+    </a>
+
+    <h1 class="workspace-title">
+      客流分析与巡店管理
+    </h1>
+
+  </header>
+
+  <main class="workspace-content">
+
+    <iframe
+      id="storeAnalyticsFrame"
+      class="vendor-frame"
+      src="https://yd.yunding360.com/login"
+      title="客流分析与巡店管理工作空间"
+      allow="clipboard-read; clipboard-write"
+      loading="eager"
+    ></iframe>
+
+  </main>
+
+</body>
+</html>

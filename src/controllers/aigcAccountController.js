@@ -363,7 +363,7 @@ async function syncMyWorkspaceUserData(
     return res.status(403).json({
       success: false,
       message:
-        "当前 Harson-Base 账号尚未绑定 AIGC 子账号"
+        "当前 Harson-Base 账号尚未绑定 AIGI 子账号"
     });
   }
 
@@ -460,7 +460,7 @@ async function createMasterOwnerMapping(
       return res.status(400).json({
         success: false,
         message:
-          "未找到可用的 AIGC 企业主账号"
+          "未找到可用的 AIGI 企业主账号"
       });
     }
 
@@ -496,7 +496,7 @@ async function createMasterOwnerMapping(
       return res.status(400).json({
         success: false,
         message:
-          "该 Harson-Base 用户已经绑定了 AIGC 子账号，请先解除子账号映射"
+          "该 Harson-Base 用户已经绑定了 AIGI 子账号，请先解除子账号映射"
       });
     }
 
@@ -566,7 +566,7 @@ function purchaseTokens(req, res) {
     if (!masterAccountId) {
       return res.status(400).json({
         success: false,
-        message: "请选择 AIGC 企业主账号"
+        message: "请选择 AIGI 企业主账号"
       });
     }
 
@@ -586,7 +586,7 @@ function purchaseTokens(req, res) {
 
     return res.status(201).json({
       success: true,
-      message: "token 套餐购买成功，AIGC 主账号总点数已更新",
+      message: "token 套餐购买成功，AIGI 主账号总点数已更新",
       data: result
     });
   } catch (error) {
@@ -601,7 +601,7 @@ async function createMaster(req, res) {
     if (!enterpriseName || !platformName || !platformLogin || !platformPassword) {
       return res.status(400).json({
         success: false,
-        message: "企业名称、AIGC 平台名称、登录邮箱和密码不能为空"
+        message: "企业名称、AIGI 平台名称、登录邮箱和密码不能为空"
       });
     }
 
@@ -615,7 +615,7 @@ async function createMaster(req, res) {
 
     return res.status(201).json({
       success: true,
-      message: "AIGC 企业主账号创建成功",
+      message: "AIGI 企业主账号创建成功",
       data: master
     });
   } catch (error) {
@@ -652,7 +652,7 @@ async function createSubAccount(req, res) {
 
     return res.status(201).json({
       success: true,
-      message: "AIGC 子账号创建成功",
+      message: "AIGI 子账号创建成功",
       data: subAccount
     });
   } catch (error) {
@@ -667,7 +667,7 @@ function updateSubAccountTokenSettings(req, res) {
     if (!subAccountId) {
       return res.status(400).json({
         success: false,
-        message: "请选择需要调整的 AIGC 子账号"
+        message: "请选择需要调整的 AIGI 子账号"
       });
     }
 
@@ -686,7 +686,7 @@ function updateSubAccountTokenSettings(req, res) {
 
     return res.json({
       success: true,
-      message: "AIGC 子账号 token 配额设置已更新",
+      message: "AIGI 子账号 token 配额设置已更新",
       data: subAccount
     });
   } catch (error) {
@@ -701,7 +701,7 @@ async function createMapping(req, res) {
     if (!clBaseUserId || !aigcSubAccountId) {
       return res.status(400).json({
         success: false,
-        message: "请选择 Harson-Base 用户和 AIGC 子账号"
+        message: "请选择 Harson-Base 用户和 AIGI 子账号"
       });
     }
 
@@ -723,7 +723,7 @@ async function createMapping(req, res) {
 
     return res.status(201).json({
       success: true,
-      message: "Harson-Base 与 AIGC 子账号一对一映射创建成功",
+      message: "Harson-Base 与 AIGI 子账号一对一映射创建成功",
       data: mapping
     });
   } catch (error) {
@@ -748,7 +748,7 @@ async function unbindMapping(req, res) {
           );
     } catch (error) {
       console.warn(
-        "解除账号映射后的 AIGC 会话清理失败：",
+        "解除账号映射后的 AIGI 会话清理失败：",
         error.message
       );
     }
@@ -756,15 +756,15 @@ async function unbindMapping(req, res) {
     const sessionWarning =
       sessionCleanup &&
       sessionCleanup.success === false
-        ? "，但 YiBai 外部注销未完成，请稍后检查共享 Session"
+        ? "，但 外部服务注销未完成，请稍后检查共享 Session"
         : sessionCleanup
           ? ""
-          : "，但 AIGC 会话清理未完成，请稍后检查共享 Session";
+          : "，但 AIGI 会话清理未完成，请稍后检查共享 Session";
 
     return res.json({
       success: true,
       message:
-        `Harson-Base 与 AIGC 子账号映射已解除${sessionWarning}`,
+        `Harson-Base 与 AIGI 子账号映射已解除${sessionWarning}`,
       data: mapping
     });
   } catch (error) {
@@ -778,7 +778,7 @@ async function unbindMapping(req, res) {
 /**
  * 管理员查看：
  *
- * 内部 AIGC 企业主账号
+ * 内部 AIGI 企业主账号
  * → YiBai 外部账号
  *
  * 的全部绑定记录。
@@ -840,7 +840,7 @@ async function bindMasterProvider(
       return res.status(400).json({
         success: false,
         message:
-          "请选择内部 AIGC 企业主账号"
+          "请选择内部 AIGI 企业主账号"
       });
     }
 
@@ -936,7 +936,7 @@ async function unbindMasterProvider(
         success: false,
 
         message:
-          "AIGC 企业主账号 ID 不能为空"
+          "AIGI 企业主账号 ID 不能为空"
       });
     }
 
@@ -981,7 +981,7 @@ async function syncMasterProvider(
       return res.status(400).json({
         success: false,
         message:
-          "AIGC 企业主账号 ID 不能为空"
+          "AIGI 企业主账号 ID 不能为空"
       });
     }
 
@@ -1034,7 +1034,7 @@ async function syncMasterUserData(
       success: false,
 
       message:
-        "AIGC 企业主账号 ID 不能为空"
+        "AIGI 企业主账号 ID 不能为空"
     });
   }
 
@@ -1263,7 +1263,7 @@ if (!masterAccountId) {
     success: false,
 
     message:
-      "当前 Harson-Base 账号尚未绑定可用的 AIGC 企业账号"
+      "当前 Harson-Base 账号尚未绑定可用的 AIGI 企业账号"
   });
 }
 
@@ -1364,7 +1364,7 @@ if (!masterAccountId) {
       success: false,
 
       message:
-        `CL-AIGC Token 明细读取失败：${rechargeError.message}。Workspace 登录状态已恢复`
+        `CL-AIGI Token 明细读取失败：${rechargeError.message}。Workspace 登录状态已恢复`
     });
   }
 
@@ -1530,7 +1530,7 @@ function toWorkspaceWork(
 
     title:
       task.objectName ||
-      "AIGC 创作任务",
+      "AIGI 创作任务",
 
     workType:
       task.object ||
@@ -1761,11 +1761,11 @@ function addMyWork(req, res) {
     let message = "创作记录保存成功";
 
     if (result.tokenUsage.warningStatus === "warning") {
-      message = `创作记录保存成功，提醒：当前 AIGC 子账号 token 使用率已达到 ${result.tokenUsage.usageRate}%`;
+      message = `创作记录保存成功，提醒：当前 AIGI 子账号 token 使用率已达到 ${result.tokenUsage.usageRate}%`;
     }
 
     if (result.tokenUsage.warningStatus === "exceeded") {
-      message = "创作记录保存成功，提醒：当前 AIGC 子账号已达到 token 上限";
+      message = "创作记录保存成功，提醒：当前 AIGI 子账号已达到 token 上限";
     }
 
     return res.status(201).json({
