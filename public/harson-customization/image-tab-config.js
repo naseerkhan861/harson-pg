@@ -18,7 +18,7 @@
   //     these header containers; the renderer aggregates a container's full
   //     text when it is exactly a known label.
   const config = Object.freeze({
-    version: "all-pages-11",
+    version: "all-pages-12-image-v21",
     expectedOrigin: "https://ai.harson-base.com",
     // Applied inside every YiBai module frame served by the gateway.
     modules: Object.freeze([
@@ -57,9 +57,9 @@
       ".q-tooltip",
       ".q-tooltip *"
     ]),
-    // Versioned MJ metadata only: these existing selectors own model
-    // labels, rather than prompts or whole history/case-card bodies.
-    // The renderer also checks image-generator and an original MJ version.
+    // Approved image model fields shared by the MJ metadata formatter
+    // and the exact 全能图片2.1 rule. Keep the existing property name
+    // for compatibility with previously deployed renderer assets.
     midjourneyModelLabelSelectors: Object.freeze([
       ".MainLayout-nav .NavList-list-item > span.label",
       ".ToolLayout-header",

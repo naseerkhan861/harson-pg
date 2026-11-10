@@ -24,7 +24,7 @@
   const selector = config.selectors.join(",");
   const aggregateSelector = config.aggregateSelectors.join(",");
   const qualifiedSelector = (config.qualifiedSelectors || []).join(",");
-  const midjourneySelector = (config.midjourneyModelLabelSelectors || []).join(",");
+  const imageModelSelector = (config.midjourneyModelLabelSelectors || []).join(",");
   const videoModule = script.dataset.harsonModule === "video-generator";
   const videoMetadataContext = Object.freeze({
     module: "video-generator",
@@ -192,15 +192,25 @@
 
   function midjourneyContextFor(node) {
     if (script.dataset.harsonModule !== "image-generator" ||
-        !midjourneySelector || !node.matches(midjourneySelector) ||
+        !imageModelSelector || !node.matches(imageModelSelector) ||
         !/(?:midjourney|mj)\s*v?\s*\d/iu.test(node.textContent)) return null;
     return { module: "image-generator", surface: "midjourney-model-label" };
+  }
+
+  function explicitImageModelContextFor(node) {
+    if (script.dataset.harsonModule !== "image-generator" ||
+        !imageModelSelector || !node.matches(imageModelSelector) ||
+        node.matches(config.sidebarSelector)) return null;
+    const context = { module: "image-generator", surface: "image-model-label" };
+    // Use the original field text, never the current dropdown selection.
+    return resolver.resolveScopedImageLabel?.(node.textContent, context) ? context : null;
   }
 
   function contextFor(node) {
     // Recognize explicit MJ versions in model fields first; preserve the
     // existing Seedream/version and image-family rules for other labels.
-    const context = midjourneyContextFor(node) ||
+    const context = explicitImageModelContextFor(node) ||
+      midjourneyContextFor(node) ||
       versionContextFor(node) ||
       versionDropdownContextFor(node) ||
       imageContextFor(node) || {};
@@ -222,13 +232,14 @@
       resolve it as one label. Only for approved label containers that hold
       no interactive descendants.
     */
-    const midjourney = context?.surface === "midjourney-model-label";
-    if (!midjourney && (!aggregateSelector || !node.matches(aggregateSelector))) {
+    const scopedWholeLabel = context?.surface === "midjourney-model-label" ||
+      Boolean(resolver.resolveScopedImageLabel?.(node.textContent, context));
+    if (!scopedWholeLabel && (!aggregateSelector || !node.matches(aggregateSelector))) {
       return false;
     }
 
     return !node.querySelector(
-      "button,a,input,textarea,select" + (midjourney ? "," + blocked : "")
+      "button,a,input,textarea,select" + (scopedWholeLabel ? "," + blocked : "")
     );
   }
 

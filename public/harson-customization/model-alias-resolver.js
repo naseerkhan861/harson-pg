@@ -204,6 +204,21 @@
         : null;
     }
 
+    // Exact, display-only rules for the requested image UI surfaces.
+    // The renderer also uses this helper to handle split label text.
+    function resolveScopedImageLabel(sourceText, context) {
+      if (context?.module !== "image-generator") return null;
+      const key = normalize(sourceText);
+      if (context.surface === "image-sidebar" && key === "gpt-image") {
+        return "CLImage-4.0";
+      }
+      if (context.surface === "image-model-label" &&
+          (key === "全能图片2.1" || key === "全能图片 2.1")) {
+        return "CLImage-5.3";
+      }
+      return null;
+    }
+
     /*
       Image-generator scoped overrides (proposed_changes.md §4, 15 Oct).
 
@@ -220,6 +235,9 @@
       if (!context || context.module !== "image-generator") {
         return null;
       }
+
+      const requestedLabel = resolveScopedImageLabel(key, context);
+      if (requestedLabel !== null) return requestedLabel;
 
       if (context.surface === "image-sidebar") {
         if (key === "全能图片") return "CLImage-5.1";
@@ -337,6 +355,7 @@
 
     return {
       resolveDisplayName,
+      resolveScopedImageLabel,
       normalize,
       mappingInfo
     };

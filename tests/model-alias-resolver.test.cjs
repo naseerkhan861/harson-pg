@@ -175,6 +175,32 @@ test("版本 dropdown: image-2版 renames only in clothing/e-commerce context", 
   assert.equal(resolve("  IMAGE-2版 ", version("clothing")), "CLImage4.0");
 });
 
+test("GPT-image family label changes only in the image sidebar", () => {
+  const sidebar = { module: "image-generator", surface: "image-sidebar" };
+  assert.equal(resolve(" GPT-image ", sidebar), "CLImage-4.0");
+  assert.equal(resolve("GPT-image"), null);
+  assert.equal(resolve("GPT-image", { ...sidebar, surface: "image-model-label" }), null);
+  assert.equal(resolve("GPT-image", { ...sidebar, module: "clothing" }), null);
+  assert.equal(resolve("GPT-image-2", sidebar), "CLImage-4.0");
+  assert.equal(resolve("GPT-image-2.5", sidebar), "CLImage-4.1");
+});
+
+test("全能图片2.1 changes only as an explicit image model label", () => {
+  const label = { module: "image-generator", surface: "image-model-label" };
+  for (const source of ["全能图片2.1", "全能图片 2.1", " 全能图片２．１ "]) {
+    assert.equal(resolve(source, label), "CLImage-5.3");
+    assert.equal(resolver.resolveScopedImageLabel(source, label), "CLImage-5.3");
+  }
+  assert.equal(resolve("全能图片2.1"), null);
+  assert.equal(resolve("全能图片2.1", { ...label, surface: "image-sidebar" }), null);
+  assert.equal(resolve("全能图片2.1", { ...label, module: "e-commerce" }), null);
+  assert.equal(resolve("全能图片2.10", { ...label, allowQualified: true }), null);
+  assert.equal(resolve("使用全能图片2.1生成图片", label), null);
+  assert.equal(resolve("全能图片2", label), "CLImage-5.2");
+  assert.equal(resolve("全能图片", { ...label, surface: "image-sidebar" }), "CLImage-5.1");
+  assert.equal(resolve("CLImage-5.3", label), null);
+});
+
 test("image-generator sidebar/headings: scoped overrides win only in context", () => {
   const imageSidebar = { module: "image-generator", surface: "image-sidebar" };
   const seedreamTitle = {

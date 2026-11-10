@@ -665,7 +665,7 @@ async function main() {
         configAsset.body
           .toString()
           .includes(
-            "all-pages-11"
+            "all-pages-12-image-v21"
           )
     );
 
