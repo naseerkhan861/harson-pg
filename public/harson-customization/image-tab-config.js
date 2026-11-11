@@ -18,7 +18,7 @@
   //     these header containers; the renderer aggregates a container's full
   //     text when it is exactly a known label.
   const config = Object.freeze({
-    version: "all-pages-13-viral-video-face",
+    version: "all-pages-14-viral-video-qselect",
     expectedOrigin: "https://ai.harson-base.com",
     // Applied inside every YiBai module frame served by the gateway.
     modules: Object.freeze([
@@ -37,10 +37,8 @@
     viralVideoGenerationModel: Object.freeze({
       pathname: "/frame/app/app-viral-video-replicator",
       labelSelectors: Object.freeze([
-        ".IcbsMenuSelect-header-content",
-        ".IcbsMenuSelect-menu-item-label",
-        ".IcbsSelect-header-select .q-field__native > span",
-        ".IcbsSelect-header-popup-option-label"
+        ".ViralVideoPage-model-row .ViralVideoPage-model-select .q-field__native > span.ellipsis",
+        '.ViralVideoPage-model-menu[role="listbox"] .ViralVideoPage-model-option[role="option"] .q-item__label'
       ])
     }),
     // Only model-label surfaces. Never select the whole page, prompts or
