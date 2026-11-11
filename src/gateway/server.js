@@ -901,6 +901,15 @@ async function handleProxyResponse(
     );
   }
 
+  if (
+    req.method === "POST" &&
+    req.path === "/app/viral-video/beginViralVideoGeneration"
+  ) {
+    console.info(
+      `[gateway] beginViralVideoGeneration upstream status=${proxyRes.statusCode}`
+    );
+  }
+
   /*
     Status provenance for the clothing color-match subtool's admitted
     requests (suggest_changes.md §4): records only the upstream status.
