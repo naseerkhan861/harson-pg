@@ -370,7 +370,8 @@
     const eligible = active && (node.matches(defaultSelector) || metadataAlias || viralContext) &&
       !node.closest(blocked);
     const context = eligible
-      ? (metadataAlias ? videoMetadataContext : viralContext || contextFor(node))
+      ? (viralContext ||
+         (metadataAlias ? videoMetadataContext : contextFor(node)))
       : null;
     const children = Array.from(node.childNodes);
     const labels = children.map(child => eligible && child.nodeType === Node.TEXT_NODE
@@ -386,8 +387,14 @@
       text-free elements still are).
     */
     let aggregate = null;
-    if (eligible && (metadataAlias || allowsAggregation(node, context))) {
-      aggregate = metadataAlias || aliasFor(node.textContent, context);
+    if (eligible &&
+        (viralContext || metadataAlias ||
+         allowsAggregation(node, context))) {
+      // The scoped dropdown rule has priority over the general video
+      // label path, which would otherwise resolve the global mapping.
+      aggregate = viralContext
+        ? aliasFor(node.textContent, viralVideoContext)
+        : metadataAlias || aliasFor(node.textContent, context);
     }
 
     let record = records.get(node);
