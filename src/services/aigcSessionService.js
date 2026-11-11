@@ -250,7 +250,7 @@ function withMasterAccountLock(
   const normalizedMasterAccountId =
     requireText(
       masterAccountId,
-      "AIGC企业主账号ID"
+      "AIGI企业主账号ID"
     );
 
   const previousTask =
@@ -286,7 +286,7 @@ function withMasterAccountLock(
  * 解析当前用户的完整账号关系：
  *
  * 普通用户：
- * Harson-Base 用户 → AIGC 子账号 → 企业主账号
+ * Harson-Base 用户 → AIGI 子账号 → 企业主账号
  *
  * 企业负责人：
  * Harson-Base 用户 → 主账号负责人绑定 → 企业主账号
@@ -368,7 +368,7 @@ function resolveUserAccount(
     subAccount.status !== "active"
   ) {
     throw new Error(
-      "当前映射的内部 AIGC 子账号不存在或已停用"
+      "当前映射的内部 AIGI 子账号不存在或已停用"
     );
   }
 
@@ -380,7 +380,7 @@ function resolveUserAccount(
     masterAccount.status !== "active"
   ) {
     throw new Error(
-      "当前 AIGC 子账号所属的企业主账号不存在或已停用"
+      "当前 AIGI 子账号所属的企业主账号不存在或已停用"
     );
   }
 
@@ -406,7 +406,7 @@ function resolveUserAccount(
     )
   ) {
     throw new Error(
-      "AIGC 子账号、企业主账号和用户映射关系不一致"
+      "AIGI 子账号、企业主账号和用户映射关系不一致"
     );
   }
 
@@ -418,7 +418,7 @@ function resolveUserAccount(
 
   if (!providerConfig) {
     throw new Error(
-      "当前 AIGC 企业主账号尚未绑定 CL-AIGC 外部账号"
+      "当前 AIGI 企业主账号尚未绑定 CL-AIGI 外部账号"
     );
   }
 
@@ -427,7 +427,7 @@ function resolveUserAccount(
     providerConfig.status !== "active"
   ) {
     throw new Error(
-      "当前企业主账号的 CL-AIGC 外部账号绑定已停用"
+      "当前企业主账号的 CL-AIGI 外部账号绑定已停用"
     );
   }
 
@@ -543,7 +543,7 @@ async function loginAndCacheToken(
     throw new Error(
       getResponseMessage(
         loginResult,
-        "CL-AIGC 登录失败"
+        "CL-AIGI 登录失败"
       )
     );
   }
@@ -556,7 +556,7 @@ async function loginAndCacheToken(
 
   if (!token) {
     throw new Error(
-      "CL-AIGC 登录成功，但响应中没有 token"
+      "CL-AIGI 登录成功，但响应中没有 token"
     );
   }
 
@@ -721,7 +721,7 @@ async function getValidTokenForUser(
 
           if (!validatedToken) {
             throw new Error(
-              "CL-AIGC token 验证成功，但响应中没有可用 token"
+              "CL-AIGI token 验证成功，但响应中没有可用 token"
             );
           }
 
@@ -895,7 +895,7 @@ async function getCachedTokenBalanceForUser(
             "provider_account_changed",
           tokenBalance: null,
           message:
-            "CL-AIGC 外部账号已变更"
+            "CL-AIGI 外部账号已变更"
         };
       }
 
@@ -981,7 +981,7 @@ async function logoutUserAigcSession(
       success: true,
       action: "no_session",
       message:
-        "当前用户没有 AIGC 活跃登录记录"
+        "当前用户没有 AIGI 活跃登录记录"
     };
   }
 
@@ -989,7 +989,7 @@ async function logoutUserAigcSession(
     requireText(
       existingSession
         .masterAccountId,
-      "AIGC企业主账号ID"
+      "AIGI企业主账号ID"
     );
 
   return withMasterAccountLock(
@@ -1016,7 +1016,7 @@ async function logoutUserAigcSession(
           remainingActiveUsers:
             remainingActiveSessions.length,
           message:
-            "仍有其他 Harson-Base 用户使用该共享 AIGC 登录态，已保留 token"
+            "仍有其他 Harson-Base 用户使用该共享 AIGI 登录态，已保留 token"
         };
       }
 
@@ -1050,7 +1050,7 @@ async function logoutUserAigcSession(
             "local_cache_removed",
           masterAccountId,
           message:
-            "共享用户已全部注销，本地损坏的 AIGC token 缓存已清理"
+            "共享用户已全部注销，本地损坏的 AIGI token 缓存已清理"
         };
       }
 
@@ -1065,7 +1065,7 @@ async function logoutUserAigcSession(
           action: "no_token",
           masterAccountId,
           message:
-            "共享用户已全部注销，本地没有需要注销的 AIGC token"
+            "共享用户已全部注销，本地没有需要注销的 AIGI token"
         };
       }
 
@@ -1087,7 +1087,7 @@ async function logoutUserAigcSession(
           message:
             getResponseMessage(
               logoutResult,
-              "CL-AIGC 注销失败"
+              "CL-AIGI 注销失败"
             )
         };
       }
@@ -1108,7 +1108,7 @@ async function logoutUserAigcSession(
         masterAccountId,
         remainingActiveUsers: 0,
         message:
-          "共享用户已全部注销，CL-AIGC token 已失效并从本地缓存移除"
+          "共享用户已全部注销，CL-AIGI token 已失效并从本地缓存移除"
       };
     }
   );

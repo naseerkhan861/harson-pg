@@ -143,7 +143,7 @@ export class AccountManagementView {
       <section class="account-hero-card account-loading-card">
         <div>
           <span class="hero-badge">
-            AIGC 账号管理
+            AIGI 账号管理
           </span>
 
           <h1>
@@ -172,7 +172,7 @@ export class AccountManagementView {
       <section class="account-hero-card">
         <div>
           <span class="hero-badge">
-            AIGC企业客户中心
+            AIGI企业客户中心
           </span>
 
           <h1>
@@ -208,7 +208,7 @@ export class AccountManagementView {
         )}
 
         ${this.metricCard(
-          "AIGC 子账号",
+          "AIGI 子账号",
           data.subs.length
         )}
 
@@ -231,7 +231,7 @@ export class AccountManagementView {
 
       <section class="account-panel">
         <h2>
-          1. 创建 AIGC 企业主账号
+          1. 创建 AIGI 企业主账号
         </h2>
 
         <p>
@@ -257,7 +257,7 @@ export class AccountManagementView {
 
           <input
             name="platformName"
-            placeholder="平台名称，例如 AIGC平台"
+            placeholder="平台名称，例如 AIGI平台"
             required
           />
 
@@ -364,7 +364,7 @@ export class AccountManagementView {
 
       <section class="account-panel">
         <h2>
-          3. 创建 AIGC 子账号
+          3. 创建 AIGI 子账号
         </h2>
 
         <p>
@@ -399,14 +399,14 @@ export class AccountManagementView {
           <input
             name="platformLogin"
             type="email"
-            placeholder="AIGC 子账号登录邮箱"
+            placeholder="AIGI 子账号登录邮箱"
             required
           />
 
           <input
             name="platformPassword"
             type="password"
-            placeholder="AIGC 子账号独立密码"
+            placeholder="AIGI 子账号独立密码"
             required
           />
 
@@ -434,7 +434,7 @@ export class AccountManagementView {
 
       <section class="account-panel">
         <h2>
-          4. 调整 AIGC 子账号 Token 配额
+          4. 调整 AIGI 子账号 Token 配额
         </h2>
 
         <p>
@@ -458,7 +458,7 @@ export class AccountManagementView {
             required
           >
             ${this.subOptions(
-              "选择需要调整的 AIGC 子账号"
+              "选择需要调整的 AIGI 子账号"
             )}
           </select>
 
@@ -527,12 +527,12 @@ export class AccountManagementView {
 
       <section class="account-panel">
         <h2>
-          6. 建立 Harson-Base ↔ AIGC 子账号映射
+          6. 建立 Harson-Base ↔ AIGI 子账号映射
         </h2>
 
         <p>
           每个 Harson-Base 用户只能绑定一个
-          AIGC 子账号；同一个 AIGC 子账号可以
+          AIGI 子账号；同一个 AIGI 子账号可以
           绑定多个 Harson-Base 用户。已建立的
           映射可在页面下方总览中解除
         </p>
@@ -558,7 +558,7 @@ export class AccountManagementView {
             required
           >
             ${this.subOptions(
-              "选择 AIGC 子账号"
+              "选择 AIGI 子账号"
             )}
           </select>
 
@@ -636,7 +636,7 @@ export class AccountManagementView {
             ${this.escapeHtml(
               data?.enterpriseName ||
               "当前企业"
-            )} · 这里只展示本企业的 AIGC 子账号。
+            )} · 这里只展示本企业的 AIGI 子账号。
           </p>
         </div>
 
@@ -722,7 +722,7 @@ export class AccountManagementView {
                   ${this.rows(
                     [
                       "子账号名称",
-                      "AIGC 登录名",
+                      "AIGI 登录名",
                       "分配额度",
                       "已使用",
                       "剩余",
@@ -774,7 +774,7 @@ export class AccountManagementView {
             `
             : `
               <div class="account-empty-state">
-                当前企业暂未创建 AIGC 子账号。
+                当前企业暂未创建 AIGI 子账号。
               </div>
             `
         }
@@ -800,11 +800,11 @@ export class AccountManagementView {
           </span>
 
           <h1>
-            我的 AIGC 账号
+            我的 AIGI 账号
           </h1>
 
           <p>
-            查看当前 Harson-Base 账号的 AIGC 服务绑定状态。
+            查看当前 Harson-Base 账号的 AIGI 服务绑定状态。
           </p>
         </div>
 
@@ -826,7 +826,7 @@ export class AccountManagementView {
         </span>
 
         <h2>
-          尚未开通 AIGC 服务
+          尚未开通 AIGI 服务
         </h2>
 
         <div class="account-unbound-details">
@@ -838,7 +838,7 @@ export class AccountManagementView {
           </strong>
 
           <span>
-            AIGC 子账号
+            AIGI 子账号
           </span>
           <strong>
             尚未分配
@@ -846,9 +846,9 @@ export class AccountManagementView {
         </div>
 
         <p class="account-purchase-copy">
-          当前 Harson-Base 账号尚未绑定 AIGC 子账号，
-          因此暂时无法进入 CL-AIGC、查看 Token 点数或创作记录。
-          请自行购买 AIGC 相关服务，或联系管理员进行购买。
+          当前 Harson-Base 账号尚未绑定 AIGI 子账号，
+          因此暂时无法进入 claigi、查看 Token 点数或创作记录。
+          请自行购买 AIGI 相关服务，或联系管理员进行购买。
         </p>
 
         <div class="account-unbound-actions">
@@ -942,7 +942,7 @@ export class AccountManagementView {
           </span>
 
           <h1>
-            我的 AIGC 账号
+            我的 AIGI 账号
           </h1>
 
           <p>
@@ -956,7 +956,7 @@ export class AccountManagementView {
             href="/aigc-workspace"
             class="btn-primary"
           >
-            进入 CL-AIGC
+            进入 claigi
           </a>
 
           <button
@@ -995,7 +995,7 @@ export class AccountManagementView {
 
         <div class="account-identity-grid">
           <div>
-            <span>AIGC 子账号</span>
+            <span>AIGI 子账号</span>
             <strong>
               ${this.escapeHtml(
                 subAccount.subAccountName ||
@@ -1005,7 +1005,7 @@ export class AccountManagementView {
           </div>
 
           <div>
-            <span>AIGC 登录名</span>
+            <span>AIGI 登录名</span>
             <strong>
               ${this.escapeHtml(
                 subAccount.platformLogin ||
@@ -1075,7 +1075,7 @@ export class AccountManagementView {
             </h2>
 
             <p>
-              仅显示当前绑定 AIGC 子账号对应的真实记录。
+              仅显示当前绑定 AIGI 子账号对应的真实记录。
             </p>
           </div>
 
@@ -1218,7 +1218,7 @@ export class AccountManagementView {
 
           <p>
             你需要登录 Harson-Base 账号后
-            才能访问 AIGC 账号管理或个人
+            才能访问 AIGI 账号管理或个人
             创作空间
           </p>
         </div>
@@ -1676,7 +1676,7 @@ export class AccountManagementView {
 
             const confirmed =
               window.confirm(
-                "解除后，该 Harson-Base 用户将无法继续通过此映射访问 AIGC 子账号，但企业主账号、AIGC 子账号和历史创作记录不会被删除。确定解除映射吗？"
+                "解除后，该 Harson-Base 用户将无法继续通过此映射访问 AIGI 子账号，但企业主账号、AIGI 子账号和历史创作记录不会被删除。确定解除映射吗？"
               );
 
             if (!confirmed) {
@@ -1978,7 +1978,7 @@ export class AccountManagementView {
   }
 
   subOptions(
-    label = "选择 AIGC 子账号"
+    label = "选择 AIGI 子账号"
   ) {
     const subs =
       this.state.dashboard?.subs || [];
@@ -2005,7 +2005,7 @@ export class AccountManagementView {
         return `
           <option value="${item.id}">
             ${subAccountName}
-            （AIGC 登录：${platformLogin}，
+            （AIGI 登录：${platformLogin}，
             Token 配额：${tokenLimit}，
             剩余预警：${warningThreshold}%）
           </option>
@@ -2335,14 +2335,14 @@ export class AccountManagementView {
       </table>
 
       <h3>
-        AIGC 子账号 Token 使用情况
+        AIGI 子账号 Token 使用情况
       </h3>
 
       <table>
         ${this.rows(
           [
             "子账号名称",
-            "AIGC 登录邮箱",
+            "AIGI 登录邮箱",
             "Token 配额",
             "已使用",
             "剩余",
@@ -2405,13 +2405,13 @@ export class AccountManagementView {
       }
 
       <h3>
-        Harson-Base 与 AIGC 绑定情况
+        Harson-Base 与 AIGI 绑定情况
       </h3>
 
       <p class="muted">
         每一行表示一个 Harson-Base
-        用户当前使用的 AIGC 子账号。
-        同一个 AIGC 子账号可以分配给多个
+        用户当前使用的 AIGI 子账号。
+        同一个 AIGI 子账号可以分配给多个
         Harson-Base 用户。
       </p>
 
@@ -2423,8 +2423,8 @@ export class AccountManagementView {
                 [
                   "Harson-Base 用户",
                   "Harson-Base 登录邮箱",
-                  "绑定的 AIGC 子账号",
-                  "AIGC 登录邮箱",
+                  "绑定的 AIGI 子账号",
+                  "AIGI 登录邮箱",
                   "所属企业 / 平台",
                   "Token 配额",
                   "剩余 Token",
@@ -2438,7 +2438,7 @@ export class AccountManagementView {
           : `
             <p class="muted">
               暂无账号绑定记录。请先选择
-              Harson-Base 用户和 AIGC
+              Harson-Base 用户和 AIGI
               子账号建立绑定。
             </p>
           `
@@ -2472,7 +2472,7 @@ export class AccountManagementView {
       return `
         <div class="auth-message error">
           当前账号尚未建立完整的
-          Harson-Base 与 AIGC 子账号映射
+          Harson-Base 与 AIGI 子账号映射
         </div>
       `;
     }
@@ -2480,7 +2480,7 @@ export class AccountManagementView {
     if (status === "identity_missing") {
       return `
         <div class="auth-message error">
-          当前映射缺少 AIGC 登录名或
+          当前映射缺少 AIGI 登录名或
           子账号名称，无法匹配真实任务
         </div>
       `;
@@ -2550,7 +2550,7 @@ export class AccountManagementView {
 
   openWorkImagePreview(
     imageUrl,
-    title = "AIGC 创作任务"
+    title = "AIGI 创作任务"
   ) {
     const normalizedUrl =
       String(imageUrl || "").trim();
@@ -2687,10 +2687,10 @@ export class AccountManagementView {
     image.src = normalizedUrl;
 
     image.alt =
-      `${title || "AIGC 创作任务"}大图`;
+      `${title || "AIGI 创作任务"}大图`;
 
     caption.textContent =
-      title || "AIGC 创作任务";
+      title || "AIGI 创作任务";
 
     preview.hidden = false;
 
@@ -2727,7 +2727,7 @@ export class AccountManagementView {
                     data-image-url="${this.escapeHtml(
                       item.imageUrl
                     )}"
-                    data-image-title="AIGC 创作任务"
+                    data-image-title="AIGI 创作任务"
                     aria-label="放大查看创作封面"
                     title="点击放大查看"
                   >
@@ -2736,7 +2736,7 @@ export class AccountManagementView {
                       src="${this.escapeHtml(
                         item.imageUrl
                       )}"
-                      alt="AIGC 创作任务封面"
+                      alt="AIGI 创作任务封面"
                       width="72"
                       height="72"
                       loading="lazy"
@@ -2842,7 +2842,7 @@ export class AccountManagementView {
     ) {
       return `
         <div class="auth-message error">
-          当前 AIGC 子账号已达到 token
+          当前 AIGI 子账号已达到 token
           上限，请联系管理员增加配额
         </div>
       `;
@@ -2860,7 +2860,7 @@ export class AccountManagementView {
 
       return `
         <div class="auth-message error">
-          当前 AIGC 子账号剩余 token 为
+          当前 AIGI 子账号剩余 token 为
           ${remainingRate}%，请注意剩余额度
         </div>
       `;
@@ -2868,7 +2868,7 @@ export class AccountManagementView {
 
     return `
       <div class="auth-message success">
-        当前 AIGC 子账号 token 使用状态正常
+        当前 AIGI 子账号 token 使用状态正常
       </div>
     `;
   }

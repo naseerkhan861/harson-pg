@@ -394,12 +394,20 @@ app.get("/dashboard-mecha", (req, res) => {
 });
 
 app.get("/aigc", (req, res) => {
-  res.redirect("/aigc-workspace");
+  return res.redirect("/aigi-workspace");
 });
 
 
 app.get(
   "/aigc-workspace",
+  (req, res) => {
+    return res.redirect("/aigi-workspace");
+  }
+);
+
+
+app.get(
+  "/aigi-workspace",
   (req, res) => {
     return sendAuthenticatedPage(
       req,

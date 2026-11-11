@@ -1812,7 +1812,7 @@ async function requestSession({
     ) {
       throw new Error(
         data.message ||
-        "CL-AIGC session 获取失败"
+        "claigi session 获取失败"
       );
     }
 
@@ -1848,7 +1848,7 @@ async function requestSession({
     showError(
       error instanceof Error
         ? error.message
-        : "CL-AIGC 加载失败"
+        : "claigi 加载失败"
     );
   }
 }
