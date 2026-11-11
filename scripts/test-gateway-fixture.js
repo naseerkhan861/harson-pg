@@ -665,7 +665,7 @@ async function main() {
         configAsset.body
           .toString()
           .includes(
-            "all-pages-14-viral-video-qselect"
+            "all-pages-15-viral-video-labels"
           )
     );
 

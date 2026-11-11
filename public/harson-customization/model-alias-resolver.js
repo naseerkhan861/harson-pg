@@ -220,11 +220,16 @@
     }
 
     function resolveViralVideoGenerationModelLabel(sourceText, context) {
-      return context?.module === "video-generator" &&
-        context.surface === "viral-video-generation-model" &&
-        normalize(sourceText) === "seedance 2.0 face"
-        ? "CLVideo-2.1"
-        : null;
+      if (context?.module !== "video-generator" ||
+          context.surface !== "viral-video-generation-model") {
+        return null;
+      }
+      const key = normalize(sourceText);
+      if (key === "seedance 2.0 face") return "CLVideo-2.1";
+      // Replicator dropdown prefers the hyphenated form; the global
+      // seedance 2.5 -> CLVideo3.0 mapping stays active everywhere else.
+      if (key === "seedance 2.5") return "CLVideo-3.0";
+      return null;
     }
 
     /*

@@ -226,7 +226,8 @@
   function contextFor(node) {
     // Recognize explicit MJ versions in model fields first; preserve the
     // existing Seedream/version and image-family rules for other labels.
-    const context = explicitImageModelContextFor(node) ||
+    const context = viralVideoContextFor(node) ||
+      explicitImageModelContextFor(node) ||
       midjourneyContextFor(node) ||
       versionContextFor(node) ||
       versionDropdownContextFor(node) ||

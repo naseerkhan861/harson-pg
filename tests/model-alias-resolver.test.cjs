@@ -201,6 +201,21 @@ test("全能图片2.1 changes only as an explicit image model label", () => {
   assert.equal(resolve("CLImage-5.3", label), null);
 });
 
+test("replicator 生成模型 prefers hyphenated CLVideo-3.0 for Seedance 2.5", () => {
+  const scope = { module: "video-generator", surface: "viral-video-generation-model" };
+  assert.equal(resolve("Seedance 2.5", scope), "CLVideo-3.0");
+  assert.equal(resolve("Seedance 2.0 Face", scope), "CLVideo-2.1");
+
+  // The global hyphen-less mapping stays active everywhere else.
+  assert.equal(resolve("Seedance 2.5"), "CLVideo3.0");
+  assert.equal(resolve("Seedance 2.5", { module: "video-generator" }), "CLVideo3.0");
+  assert.equal(resolve("Seedance 2.5", { ...scope, surface: "video-metadata" }), "CLVideo3.0");
+
+  // Siblings in the same dropdown keep their own identities.
+  assert.equal(resolve("MiniMax-H3", scope), "CLVideo-4.0");
+  assert.equal(resolve("MiniMax-H3-MAX", scope), "CLVideo-4.1");
+});
+
 test("image-generator sidebar/headings: scoped overrides win only in context", () => {
   const imageSidebar = { module: "image-generator", surface: "image-sidebar" };
   const seedreamTitle = {
