@@ -1,289 +1,91 @@
-# 视频创作 → 爆款视频复刻: rename the Face model
+# Fix the 404 after 确认裁切
 
-**Target:** `temp-main` at [`0619e8d`](https://github.com/naseerkhan861/harson-pg/commit/0619e8d36158b2cc3c03bb549b35c0dafbf7c527), reviewed November 11, 2026. The patch below is for the files in the repository root.
+**Workflow:** 视频创作 → 爆款视频复刻 → ② 裁切视频 → 确认裁切  
+**Compared:** `temp-main` [28aa5c9](https://github.com/naseerkhan861/harson-pg/commit/28aa5c974c9c8bf0ae30bbde0380f9d24cf6d43d) and `feature/dashboard-ui` [182bc65](https://github.com/naseerkhan861/harson-pg/commit/182bc65d98a94ba26795c5185f752ce98bcd54d1).
 
-## Expected result
+## Finding
 
-The screenshot shows the same provider label twice: in the open **生成模型** menu and in the closed control when that model is selected. Both are part of this rename.
+The failed request in the screenshot is on `ai.harson-base.com` and ends in `/viral-video/trim`. That is the API call made when confirming the trim, after the upload and preview already worked. The displayed 30-second selection is within the page's stated 4–30 second range.
 
-| Place | Current | Expected |
+The likely cause is a missing gateway route rule. The screenshot truncates the beginning of the path and does not show the method. The patch below is for **`POST /app/viral-video/trim`**; confirm that exact pair before applying it.
+
+- [`temp-main` route policy](https://github.com/naseerkhan861/harson-pg/blob/28aa5c974c9c8bf0ae30bbde0380f9d24cf6d43d/src/gateway/routePolicy.js) admits the replicator's history detail, pricing and link resolution calls for `video-generator`. It has no trim entry.
+- The [gateway](https://github.com/naseerkhan861/harson-pg/blob/28aa5c974c9c8bf0ae30bbde0380f9d24cf6d43d/src/gateway/server.js) checks the authenticated session, CSRF rule, configured/provider menu prefixes and exact exceptions before proxying. With none of the allowed paths matching, it returns an empty HTTP 404 without calling YiBai.
+- The dropdown display aliases run inside the iframe. This request is governed by the gateway route policy.
+
+## Why the dashboard branch can work
+
+Both commits have a gateway. They share the same [iframe URL selection logic](https://github.com/naseerkhan861/harson-pg/blob/182bc65d98a94ba26795c5185f752ce98bcd54d1/src/controllers/aigcSessionController.js): a configured `YIBAI_FRAME_PUBLIC_ORIGIN` uses a Harson launch ticket and gateway; leaving it unset uses YiBai directly. The dashboard branch uses a prefix check in its [gateway](https://github.com/naseerkhan861/harson-pg/blob/182bc65d98a94ba26795c5185f752ce98bcd54d1/src/gateway/server.js), while `temp-main` adds exact exceptions. Neither branch forwards the tested trim request under the same restricted configuration.
+
+Compare the **successful trim request’s host** in the working branch's Network panel. A YiBai host indicates the direct path. If both trim requests go through Harson, compare the actual running gateway builds and their configured/provider menu prefixes. A top-level `localhost` address only identifies the workspace shell.
+
+### Local reproduction
+
+I ran each branch's actual gateway against the same loopback mock provider with a test gateway session. The fixture deliberately does not implement video processing; it verifies whether the gateway forwards the request.
+
+| `POST /app/viral-video/trim` | HTTP result | Reached mock provider? |
 | --- | --- | --- |
-| **生成模型** → menu option | `Seedance 2.0 Face` | `CLVideo-2.1` |
-| **生成模型** → selected value | `Seedance 2.0 Face` | `CLVideo-2.1` |
-| Other options, in their current order | `CLVideo3.0`, `CLVideo-4.0`, `CLVideo-4.1` | Same |
-| Field caption and tool title | **生成模型**, **爆款视频复刻** | Same |
+| Direct to the mock | 200 | Yes |
+| Unmodified `feature/dashboard-ui` gateway | 404, empty body | No |
+| Unmodified `temp-main` gateway | 404, empty body | No |
+| `temp-main` with the proposed rule | 200 | Yes, original request body forwarded |
 
-Keep the existing Face option's provider value, capability settings, pricing and request payload. The change is scoped to **视频创作**. If the same replicator is opened from another main tab, its label follows that tab's existing policy.
+I reached the live trim screen from an existing task. DevTools was unavailable in that browser, so I did not capture a live trim submission. The mock result establishes the gateway behavior for the proposed method and path.
 
-### Where the change belongs
+## 1. Confirm the request
 
-- `public/aigc-workspace.html` identifies **视频创作** as `video-generator`. The model dropdown is rendered by the nested YiBai tool. The shell's tool catalog in `public/js/aigc-workspace.js` does not own this dropdown.
-- `src/services/yibaiDisplayInjection.js` already injects the display resolver, configuration and renderer into gateway HTML, with the active module on `data-harson-module`. `image-tab-labels.js` already handles dynamically mounted options and reuses the provider's original light DOM and click targets.
-- `config/display-names/names.txt` maps plain `Seedance 2.0` to `CLVideo2.0`. There is no exact `Seedance 2.0 Face` alias on this commit. `暂未上架` already has its own `CLVideo-2.1` display mapping; the two sources are separate and the shared display string is not a model ID.
-- Use a scoped rule in the existing renderer. The rule requires the video module, the replicator document, a verified dropdown label element, and the complete Face label. API routing, provider model configuration, generated alias data, and the older video metadata rules are outside this change.
+On your failing build, open DevTools → **Network**, filter for `trim` and select the failed request from **确认裁切**. If necessary, reproduce it once with a test video. Check **Request Method**, **Request URL** (host and full path) and **Status Code** under **Headers**. The proposed rule applies when the request is `POST https://ai.harson-base.com/app/viral-video/trim`. Ignore query parameters when comparing paths.
 
-## 1. Confirm the two label elements in DevTools
+On the gateway host you can also check the existing status log:
 
-The screenshot establishes the text and control. It does not expose the frame path, selector classes, or model ID. The repository documents `/frame/app/*` and the `app-viral-video-replicator` app in `.env.example`, so the patch starts with `/frame/app/app-viral-video-replicator`. Confirm the actual document pathname before deploying.
+```bash
+docker compose --profile gateway logs --since 5m gateway | grep -F '/viral-video/trim'
+```
 
-1. Open **视频创作 → 爆款视频复刻**. Select the existing Face model without generating a video. In **Elements**, inspect its text inside the closed **生成模型** control. Run the snippet below with that element selected as `$0`.
-2. Open the menu and repeat on the Face **option text**. Inspect the label span or div inside the clickable row, especially if the menu is mounted at the end of the document.
+Look for `[gateway] POST /app/viral-video/trim -> 404`. This identifies the method and path seen by the gateway; the finish status alone does not identify whether YiBai was called.
+
+## 2. Apply the exact rule
+
+If the method and path match, apply `Harson_Viral_Video_Trim_404.patch` from your `temp-main` checkout:
+
+```bash
+git apply --check /path/to/Harson_Viral_Video_Trim_404.patch
+git apply /path/to/Harson_Viral_Video_Trim_404.patch
+git diff --check
+node --test tests/gateway-route-policy.test.cjs
+```
+
+The production change adds this entry to `REPLICATOR_EXCEPTIONS` in `src/gateway/routePolicy.js`:
 
 ```js
-(() => {
-  const selected = $0;
-  const leaf = selected?.getRootNode?.().host ||
-    (selected?.nodeType === 1 ? selected : selected?.parentElement);
-  if (!leaf) return "Inspect the label in Elements first.";
-  const candidates = [
-    ".IcbsMenuSelect-header-content",
-    ".IcbsMenuSelect-menu-item-label",
-    ".IcbsSelect-header-select .q-field__native > span",
-    ".IcbsSelect-header-popup-option-label"
-  ];
-  const owner = leaf.closest(candidates.join(",")) || leaf;
-  const doc = owner.ownerDocument;
-  const chain = [];
-  for (let node = owner; node && node !== doc.body && chain.length < 5;
-       node = node.parentElement) {
-    chain.push({
-      tag: node.tagName,
-      classes: [...node.classList],
-      role: node.getAttribute("role")
-    });
-  }
-  return {
-    origin: doc.location.origin,
-    pathname: doc.location.pathname,
-    module: doc.getElementById("harson-image-tab-labels")?.dataset.harsonModule,
-    rendererVersion: doc.defaultView.HarsonImageLabels?.status().version,
-    originalLabel: owner.textContent.trim(),
-    matchingSelectors: candidates.filter(s => owner.matches(s)),
-    chain
-  };
-})()
-```
-
-Expected evidence: the same document for both labels, `https://ai.harson-base.com`, module `video-generator`, and `originalLabel: "Seedance 2.0 Face"`. A trailing slash in the pathname is handled. The snippet only reads the path and label elements; it does not print URL parameters or change the page.
-
-After applying the patch, keep the verified selected label selector and option selector in `viralVideoGenerationModel.labelSelectors`. If one element has no candidate match, use its stable provider class under the **生成模型** control or under its popup's own wrapper. If a class matches several controls in the frame, narrow it using the actual field or popup ancestor. A portal menu may sit outside the form, so give its label a separate selector. Change `pathname` to the exact observed replicator pathname if it differs. If this deployment uses a shared SPA pathname, first identify an exact app route or dedicated replicator marker and guard on that; a shared pathname alone is too broad.
-
-The renderer needs a label element that can host its display text. If DevTools shows a native `<select>/<option>` or text directly on a button with no label element, the patch below is not the adapter for that markup. Use the owning component's display `label` field if you have its source, preserving its original `value`. Avoid replacing a whole button, listbox, or form.
-
-## 2. Apply the patch to the display adapter
-
-Save the following diff as `harson-viral-face.patch` outside the tracked source tree. From the repository root run:
-
-```bash
-git apply --check /path/to/harson-viral-face.patch
-git apply /path/to/harson-viral-face.patch
-git diff --check
-```
-
-If your branch has later edits, use these hunks as the implementation guide and keep those edits. Only the three display assets below need to change.
-
-```diff
-diff --git a/public/harson-customization/image-tab-config.js b/public/harson-customization/image-tab-config.js
-index 972f883..553d0d0 100644
---- a/public/harson-customization/image-tab-config.js
-+++ b/public/harson-customization/image-tab-config.js
-@@ -18,7 +18,7 @@
-   //     these header containers; the renderer aggregates a container's full
-   //     text when it is exactly a known label.
-   const config = Object.freeze({
--    version: "all-pages-12-image-v21",
-+    version: "all-pages-13-viral-video-face",
-     expectedOrigin: "https://ai.harson-base.com",
-     // Applied inside every YiBai module frame served by the gateway.
-     modules: Object.freeze([
-@@ -32,6 +32,17 @@
-     ]),
-     // Diagnostic only — no longer an activation gate (runbook §8.2).
-     sidebarSelector: ".MainLayout-nav .NavList-list-item > span.label",
-+    // This field lives in a nested provider frame. Keep its leaf selectors
-+    // separate so adding a provider-specific leaf cannot widen other modules.
-+    viralVideoGenerationModel: Object.freeze({
-+      pathname: "/frame/app/app-viral-video-replicator",
-+      labelSelectors: Object.freeze([
-+        ".IcbsMenuSelect-header-content",
-+        ".IcbsMenuSelect-menu-item-label",
-+        ".IcbsSelect-header-select .q-field__native > span",
-+        ".IcbsSelect-header-popup-option-label"
-+      ])
-+    }),
-     // Only model-label surfaces. Never select the whole page, prompts or
-     // forms. Matching remains exact against approved model labels.
-     selectors: Object.freeze([
-diff --git a/public/harson-customization/image-tab-labels.js b/public/harson-customization/image-tab-labels.js
-index 293f646..c7a6bd6 100644
---- a/public/harson-customization/image-tab-labels.js
-+++ b/public/harson-customization/image-tab-labels.js
-@@ -21,11 +21,21 @@
-   } catch (_) { /* Fall back to provider labels. */ }
-   if (!supported) return;
- 
--  const selector = config.selectors.join(",");
-+  const defaultSelector = config.selectors.join(",");
-+  const videoModule = script.dataset.harsonModule === "video-generator";
-+  const viralVideoConfig = config.viralVideoGenerationModel;
-+  const viralVideoSelector = videoModule && viralVideoConfig &&
-+    location.pathname.replace(/\/$/, "") === viralVideoConfig.pathname
-+    ? viralVideoConfig.labelSelectors.join(",")
-+    : "";
-+  const selector = [defaultSelector, viralVideoSelector].filter(Boolean).join(",");
-   const aggregateSelector = config.aggregateSelectors.join(",");
-   const qualifiedSelector = (config.qualifiedSelectors || []).join(",");
-   const imageModelSelector = (config.midjourneyModelLabelSelectors || []).join(",");
--  const videoModule = script.dataset.harsonModule === "video-generator";
-+  const viralVideoContext = Object.freeze({
-+    module: "video-generator",
-+    surface: "viral-video-generation-model"
-+  });
-   const videoMetadataContext = Object.freeze({
-     module: "video-generator",
-     surface: "video-metadata"
-@@ -206,6 +216,13 @@
-     return resolver.resolveScopedImageLabel?.(node.textContent, context) ? context : null;
-   }
- 
-+  function viralVideoContextFor(node) {
-+    if (!viralVideoSelector || !node.matches(viralVideoSelector)) return null;
-+    return resolver.resolveViralVideoGenerationModelLabel?.(
-+      node.textContent, viralVideoContext
-+    ) ? viralVideoContext : null;
-+  }
-+
-   function contextFor(node) {
-     // Recognize explicit MJ versions in model fields first; preserve the
-     // existing Seedream/version and image-family rules for other labels.
-@@ -232,7 +249,8 @@
-       resolve it as one label. Only for approved label containers that hold
-       no interactive descendants.
-     */
--    const scopedWholeLabel = context?.surface === "midjourney-model-label" ||
-+    const scopedWholeLabel = context === viralVideoContext ||
-+      context?.surface === "midjourney-model-label" ||
-       Boolean(resolver.resolveScopedImageLabel?.(node.textContent, context));
-     if (!scopedWholeLabel && (!aggregateSelector || !node.matches(aggregateSelector))) {
-       return false;
-@@ -347,10 +365,11 @@
-   function render(node) {
-     if (!node.isConnected) { hosts.delete(node); return; }
-     const metadataAlias = active ? videoMetadataAlias(node) : null;
--    const eligible = active && (node.matches(selector) || Boolean(metadataAlias)) &&
-+    const viralContext = active ? viralVideoContextFor(node) : null;
-+    const eligible = active && (node.matches(defaultSelector) || metadataAlias || viralContext) &&
-       !node.closest(blocked);
-     const context = eligible
--      ? (metadataAlias ? videoMetadataContext : contextFor(node))
-+      ? (metadataAlias ? videoMetadataContext : viralContext || contextFor(node))
-       : null;
-     const children = Array.from(node.childNodes);
-     const labels = children.map(child => eligible && child.nodeType === Node.TEXT_NODE
-diff --git a/public/harson-customization/model-alias-resolver.js b/public/harson-customization/model-alias-resolver.js
-index 5150145..cb383cd 100644
---- a/public/harson-customization/model-alias-resolver.js
-+++ b/public/harson-customization/model-alias-resolver.js
-@@ -219,6 +219,14 @@
-       return null;
-     }
- 
-+    function resolveViralVideoGenerationModelLabel(sourceText, context) {
-+      return context?.module === "video-generator" &&
-+        context.surface === "viral-video-generation-model" &&
-+        normalize(sourceText) === "seedance 2.0 face"
-+        ? "CLVideo-2.1"
-+        : null;
-+    }
-+
-     /*
-       Image-generator scoped overrides (proposed_changes.md §4, 15 Oct).
- 
-@@ -296,6 +304,9 @@
-         return scoped;
-       }
- 
-+      const viralVideoLabel = resolveViralVideoGenerationModelLabel(key, context);
-+      if (viralVideoLabel !== null) return viralVideoLabel;
-+
-       if (Object.prototype.hasOwnProperty.call(exact, key)) {
-         return exact[key];
-       }
-@@ -356,6 +367,7 @@
-     return {
-       resolveDisplayName,
-       resolveScopedImageLabel,
-+      resolveViralVideoGenerationModelLabel,
-       normalize,
-       mappingInfo
-     };
-```
-
-The configuration registers the two types of dropdown label independently of the default selector list. The renderer only uses those extra selectors in the configured nested frame; it asks the resolver to match the **entire original label**. This lets the same rule handle split text, for example `<span>Seedance 2.0</span><span> Face</span>`. The existing observer handles opening the menu, selecting another model, and reopening it. No new observer or API rewrite is needed.
-
-## 3. Check the change locally
-
-Run from the repository root:
-
-```bash
-npm run aliases:check
-node --test tests/model-alias-resolver.test.cjs tests/model-alias-generator.test.cjs tests/image-tab-injection.test.cjs tests/gateway-route-policy.test.cjs tests/gateway-proxy-headers.test.cjs
-git diff --check
-```
-
-Quick check of the new exact rule and its scope:
-
-```bash
-node <<'NODE'
-const assert = require("node:assert/strict");
-const { resolveDisplayName: resolve } =
-  require("./public/harson-customization/model-alias-resolver.js");
-const scope = {
+{
+  method: "POST",
+  path: "/app/viral-video/trim",
   module: "video-generator",
-  surface: "viral-video-generation-model"
-};
-assert.equal(resolve("Seedance 2.0 Face", scope), "CLVideo-2.1");
-assert.equal(resolve("Seedance 2.0 Face"), null);
-assert.equal(resolve("Seedance 2.0 Face", { ...scope, module: "e-commerce" }), null);
-assert.equal(resolve("Seedance 2.0 Face", { ...scope, surface: "video-metadata" }), null);
-assert.equal(resolve("Seedance 2.0 Face Pro", scope), null);
-assert.equal(resolve("Seedance 2.0", scope), "CLVideo2.0");
-assert.equal(resolve("Seedance 2.5", scope), "CLVideo3.0");
-assert.equal(resolve("MiniMax-H3", scope), "CLVideo-4.0");
-assert.equal(resolve("MiniMax-H3-MAX", scope), "CLVideo-4.1");
-console.log("Face model label checks passed");
-NODE
+  reason: "confirm the selected video trim for the viral video replicator"
+}
 ```
 
-**Checks performed for this plan:** The patch passed all 73 tests in the five suites above, 12 direct resolver and mapping assertions, JavaScript syntax checks, and `git diff --check`. The generated mapping hash stayed `d6d2433bff2c`. Browser validation remains: the local Chromium process could not start, and the live provider DOM was not inspected. Complete Step 1 and the browser checks below using your gateway.
+The patch also updates the rule count and checks the method, exact path and module. Keep `YIBAI_GATEWAY_EXTRA_PATHS` unchanged. The narrow rule preserves the gateway session and CSRF checks. If your capture shows a different method or path, review that exact request before changing the rule.
 
-## 4. Deploy the gateway assets and verify in the browser
+## 3. Deploy and verify
 
-After syncing your patched source to the server, confirm the gateway environment has `YIBAI_IMAGE_ALIASES_ENABLED=true`. For the repository's Compose deployment, run in its server source directory:
+Sync the patched checkout to the server, then rebuild the service that handles `ai.harson-base.com`:
 
 ```bash
 docker compose --profile gateway up -d --build --no-deps --force-recreate gateway
 docker compose --profile gateway ps gateway
+docker compose --profile gateway exec -T gateway \
+  node -e 'const {isAllowedReplicatorRequest: allow} = require("/app/src/gateway/routePolicy.js"); const ok = allow({method:"POST", path:"/app/viral-video/trim", harsonGatewaySession:{moduleName:"video-generator"}}); console.log(ok ? "trim route installed" : "trim route missing"); if (!ok) process.exitCode = 1;'
 ```
 
-The gateway serves these files from `/__harson_custom/image-tab-1/`. Rebuilding only `app` can leave old display assets in the running gateway. Compare the live files to the source files; `cmp` prints nothing for a match:
+Open a fresh workspace session and repeat the same valid trim. Confirm that the trim request succeeds and the workflow advances to **生成故事板**.
 
-```bash
-asset_base=https://ai.harson-base.com/__harson_custom/image-tab-1
-for asset in image-tab-config.js model-alias-resolver.js image-tab-labels.js; do
-  curl -fsS "$asset_base/$asset" |
-    cmp "public/harson-customization/$asset" - || break
-done
-```
-
-Reload the workspace. In the Console context of the **nested replicator** frame, `window.HarsonImageLabels.status()` should report `module: "video-generator"` and `version: "all-pages-13-viral-video-face"`. Then verify:
-
-| Action | Pass condition |
+| Result after deployment | Next check |
 | --- | --- |
-| Open **生成模型** | The Face option displays `CLVideo-2.1`; the three adjacent options retain their current labels and order. |
-| Select another option, then select `CLVideo-2.1` again | The closed control updates each time; mouse and keyboard selection still work. |
-| Inspect the selected label and Face option | Their original light DOM text is still `Seedance 2.0 Face`, while the displayed label is `CLVideo-2.1`. Existing accessible label text updates if it was on the matched label element. |
-| Reopen the tool; check the other main tab that hosts the replicator | The rename persists in **视频创作** only. The sidebar, history cards and storyboard are outside the new rule. |
-| If you have a staging request fixture | Select the Face model and compare its existing provider model value before and after. It must stay identical. The new display name should never become the request value. |
+| Container reports `trim route missing` | Verify which server checkout was used to build `gateway`. |
+| Browser gets 404 and gateway has no matching log entry | Check the request host and the reverse proxy target for that host. |
+| The rule is installed and gateway still logs 404 | Determine whether YiBai returned the 404. In `handleProxyResponse()`, an optional log guarded by the exact method, path and `video-generator` session can record `proxyRes.statusCode`. If it logs 404, check the upstream origin, provider route version and uploaded video/task validity with YiBai. |
+| Browser gets 302 or 403 | Check the gateway session or the request origin. These are separate from the missing route rule. |
 
-The open/select/reopen checks do not require a paid generation. If only one label changes, recheck that element's selector and frame. If neither changes, check the renderer version and module first, then the verified pathname and selectors. If rollback is needed, revert the rename commit and recreate the gateway with the same Compose command.
+**Validation:** 75 repository tests, all 111 existing gateway fixture checks, and the targeted trim probes passed locally. The probes also verified that a wrong method, path suffix, unrelated module, missing session, and cross-site POST are rejected before the upstream. The patch has not been deployed.
