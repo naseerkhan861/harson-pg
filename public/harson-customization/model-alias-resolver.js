@@ -219,6 +219,14 @@
       return null;
     }
 
+    function resolveViralVideoGenerationModelLabel(sourceText, context) {
+      return context?.module === "video-generator" &&
+        context.surface === "viral-video-generation-model" &&
+        normalize(sourceText) === "seedance 2.0 face"
+        ? "CLVideo-2.1"
+        : null;
+    }
+
     /*
       Image-generator scoped overrides (proposed_changes.md §4, 15 Oct).
 
@@ -296,6 +304,9 @@
         return scoped;
       }
 
+      const viralVideoLabel = resolveViralVideoGenerationModelLabel(key, context);
+      if (viralVideoLabel !== null) return viralVideoLabel;
+
       if (Object.prototype.hasOwnProperty.call(exact, key)) {
         return exact[key];
       }
@@ -356,6 +367,7 @@
     return {
       resolveDisplayName,
       resolveScopedImageLabel,
+      resolveViralVideoGenerationModelLabel,
       normalize,
       mappingInfo
     };

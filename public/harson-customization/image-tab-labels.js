@@ -21,11 +21,21 @@
   } catch (_) { /* Fall back to provider labels. */ }
   if (!supported) return;
 
-  const selector = config.selectors.join(",");
+  const defaultSelector = config.selectors.join(",");
+  const videoModule = script.dataset.harsonModule === "video-generator";
+  const viralVideoConfig = config.viralVideoGenerationModel;
+  const viralVideoSelector = videoModule && viralVideoConfig &&
+    location.pathname.replace(/\/$/, "") === viralVideoConfig.pathname
+    ? viralVideoConfig.labelSelectors.join(",")
+    : "";
+  const selector = [defaultSelector, viralVideoSelector].filter(Boolean).join(",");
   const aggregateSelector = config.aggregateSelectors.join(",");
   const qualifiedSelector = (config.qualifiedSelectors || []).join(",");
   const imageModelSelector = (config.midjourneyModelLabelSelectors || []).join(",");
-  const videoModule = script.dataset.harsonModule === "video-generator";
+  const viralVideoContext = Object.freeze({
+    module: "video-generator",
+    surface: "viral-video-generation-model"
+  });
   const videoMetadataContext = Object.freeze({
     module: "video-generator",
     surface: "video-metadata"
@@ -206,6 +216,13 @@
     return resolver.resolveScopedImageLabel?.(node.textContent, context) ? context : null;
   }
 
+  function viralVideoContextFor(node) {
+    if (!viralVideoSelector || !node.matches(viralVideoSelector)) return null;
+    return resolver.resolveViralVideoGenerationModelLabel?.(
+      node.textContent, viralVideoContext
+    ) ? viralVideoContext : null;
+  }
+
   function contextFor(node) {
     // Recognize explicit MJ versions in model fields first; preserve the
     // existing Seedream/version and image-family rules for other labels.
@@ -232,7 +249,8 @@
       resolve it as one label. Only for approved label containers that hold
       no interactive descendants.
     */
-    const scopedWholeLabel = context?.surface === "midjourney-model-label" ||
+    const scopedWholeLabel = context === viralVideoContext ||
+      context?.surface === "midjourney-model-label" ||
       Boolean(resolver.resolveScopedImageLabel?.(node.textContent, context));
     if (!scopedWholeLabel && (!aggregateSelector || !node.matches(aggregateSelector))) {
       return false;
@@ -347,10 +365,11 @@
   function render(node) {
     if (!node.isConnected) { hosts.delete(node); return; }
     const metadataAlias = active ? videoMetadataAlias(node) : null;
-    const eligible = active && (node.matches(selector) || Boolean(metadataAlias)) &&
+    const viralContext = active ? viralVideoContextFor(node) : null;
+    const eligible = active && (node.matches(defaultSelector) || metadataAlias || viralContext) &&
       !node.closest(blocked);
     const context = eligible
-      ? (metadataAlias ? videoMetadataContext : contextFor(node))
+      ? (metadataAlias ? videoMetadataContext : viralContext || contextFor(node))
       : null;
     const children = Array.from(node.childNodes);
     const labels = children.map(child => eligible && child.nodeType === Node.TEXT_NODE

@@ -18,7 +18,7 @@
   //     these header containers; the renderer aggregates a container's full
   //     text when it is exactly a known label.
   const config = Object.freeze({
-    version: "all-pages-12-image-v21",
+    version: "all-pages-13-viral-video-face",
     expectedOrigin: "https://ai.harson-base.com",
     // Applied inside every YiBai module frame served by the gateway.
     modules: Object.freeze([
@@ -32,6 +32,17 @@
     ]),
     // Diagnostic only — no longer an activation gate (runbook §8.2).
     sidebarSelector: ".MainLayout-nav .NavList-list-item > span.label",
+    // This field lives in a nested provider frame. Keep its leaf selectors
+    // separate so adding a provider-specific leaf cannot widen other modules.
+    viralVideoGenerationModel: Object.freeze({
+      pathname: "/frame/app/app-viral-video-replicator",
+      labelSelectors: Object.freeze([
+        ".IcbsMenuSelect-header-content",
+        ".IcbsMenuSelect-menu-item-label",
+        ".IcbsSelect-header-select .q-field__native > span",
+        ".IcbsSelect-header-popup-option-label"
+      ])
+    }),
     // Only model-label surfaces. Never select the whole page, prompts or
     // forms. Matching remains exact against approved model labels.
     selectors: Object.freeze([
