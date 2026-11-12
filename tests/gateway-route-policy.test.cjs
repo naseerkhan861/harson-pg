@@ -230,7 +230,19 @@ test("e-commerce cast-correction session UUID operations are strict", () => {
   }
 });
 
-test("admits the five verified replicator endpoints for video-generator", () => {
+test("admits the seven verified replicator endpoints for video-generator", () => {
+  // Recorded in the live finish log (2026-11-12/13): landing history.
+  assert.equal(
+    isAllowedReplicatorRequest(
+      request({
+        method: "POST",
+        path: "/app/proxy/viralVideoRecords",
+        module: "video-generator"
+      })
+    ),
+    true
+  );
+
   assert.equal(
     isAllowedReplicatorRequest(
       request({
@@ -274,6 +286,28 @@ test("admits the five verified replicator endpoints for video-generator", () => 
       })
     ),
     true
+  );
+
+  // Recorded in the live finish log (2026-11-12): storyboard step.
+  assert.equal(
+    isAllowedReplicatorRequest(
+      request({
+        method: "POST",
+        path: "/app/viral-video/beginViralVideoStoryboard",
+        module: "video-generator"
+      })
+    ),
+    true
+  );
+  assert.equal(
+    isAllowedReplicatorRequest(
+      request({
+        method: "POST",
+        path: "/app/viral-video/beginViralVideoStoryboard/extra",
+        module: "video-generator"
+      })
+    ),
+    false
   );
 
   // Screenshot-confirmed full URL after 生成视频 (2026-11-11).
@@ -580,7 +614,7 @@ test("cast-correction per-session UUID patterns are strict", () => {
 });
 
 test("exception table stays exact and video-generator only", () => {
-  assert.equal(REPLICATOR_EXCEPTIONS.length, 5);
+  assert.equal(REPLICATOR_EXCEPTIONS.length, 7);
 
   for (const entry of REPLICATOR_EXCEPTIONS) {
     assert.equal(entry.method, "POST");

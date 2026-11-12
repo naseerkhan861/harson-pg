@@ -237,6 +237,11 @@ function startFixture() {
     res.json({ code: 200, data: { task: "fixture-repair" } });
   });
 
+  /* Viral video storyboard submission (route-policy exception) */
+  app.post("/app/viral-video/beginViralVideoStoryboard", (_req, res) => {
+    res.json({ code: 200, data: { storyboard: ["scene one", "scene two"] } });
+  });
+
   /* Local repair history (route-policy exception) */
   app.post("/app/proxy/viralVideoRecords", (_req, res) => {
     res.json({ code: 200, data: { records: [] } });
@@ -1254,8 +1259,8 @@ async function main() {
       }
     );
     check(
-      "video session on history endpoint stays 404",
-      historyWrongModule.status === 404
+      "video session is also admitted on the shared history endpoint",
+      historyWrongModule.status === 200
     );
 
     const clothingDetailRes = await request(
@@ -1373,7 +1378,13 @@ async function main() {
           method: "POST",
           headers: { Cookie: `harson_aigc_gateway=${sessionId}` }
         });
-        check(`${module} POST ${apiPath} stays 404`, wrongModule.status === 404);
+        // The shared history endpoint is now legitimately admitted for
+        // video-generator sessions too; beginRepair remains e-commerce-only.
+        const expected =
+          module === "video" && apiPath === "/app/proxy/viralVideoRecords"
+            ? 200
+            : 404;
+        check(`${module} POST ${apiPath} returns ${expected}`, wrongModule.status === expected);
       }
     }
 
@@ -1442,7 +1453,12 @@ async function main() {
           method: "POST",
           headers: { Cookie: `harson_aigc_gateway=${sessionId}` }
         });
-        check(`${module} POST ${apiPath} stays 404`, wrongModule.status === 404);
+        // Shared history endpoint: admitted for video-generator as well.
+        const expected =
+          module === "video" && apiPath === "/app/proxy/viralVideoRecords"
+            ? 200
+            : 404;
+        check(`${module} POST ${apiPath} returns ${expected}`, wrongModule.status === expected);
       }
     }
 
@@ -1492,6 +1508,56 @@ async function main() {
           uploadData.cookie === "provider_sid=fixture-ecommerce"
       );
     }
+
+    /* 7g. video-generator history list + storyboard submission */
+    const videoRecords = await request(
+      `${GATEWAY_ORIGIN}/app/proxy/viralVideoRecords`,
+      {
+        method: "POST",
+        headers: {
+          Cookie: `harson_aigc_gateway=${videoSession.sessionId}`
+        }
+      }
+    );
+
+    check(
+      "video-generator POST viralVideoRecords reaches provider",
+      videoRecords.status === 200 &&
+        Array.isArray(
+          JSON.parse(videoRecords.body.toString()).data.records
+        )
+    );
+
+    const storyboardRes = await request(
+      `${GATEWAY_ORIGIN}/app/viral-video/beginViralVideoStoryboard`,
+      {
+        method: "POST",
+        headers: {
+          Cookie: `harson_aigc_gateway=${videoSession.sessionId}`
+        }
+      }
+    );
+
+    check(
+      "video-generator POST beginViralVideoStoryboard reaches provider",
+      storyboardRes.status === 200 &&
+        JSON.parse(storyboardRes.body.toString()).data
+          .storyboard.length === 2
+    );
+
+    const storyboardWrongModule = await request(
+      `${GATEWAY_ORIGIN}/app/viral-video/beginViralVideoStoryboard`,
+      {
+        method: "POST",
+        headers: {
+          Cookie: `harson_aigc_gateway=${clothingSession.sessionId}`
+        }
+      }
+    );
+    check(
+      "clothing session on storyboard route stays 404",
+      storyboardWrongModule.status === 404
+    );
 
     /* 8. JSON passthrough (extra path) + no-store */
     const jsonRes =

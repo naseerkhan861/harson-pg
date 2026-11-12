@@ -910,6 +910,24 @@ async function handleProxyResponse(
     );
   }
 
+  if (
+    req.method === "POST" &&
+    req.path === "/app/viral-video/beginViralVideoStoryboard"
+  ) {
+    console.info(
+      `[gateway] beginViralVideoStoryboard upstream status=${proxyRes.statusCode}`
+    );
+  }
+
+  if (
+    req.method === "POST" &&
+    req.path === "/app/proxy/viralVideoRecords"
+  ) {
+    console.info(
+      `[gateway] viralVideoRecords upstream status=${proxyRes.statusCode}`
+    );
+  }
+
   /*
     Status provenance for the clothing color-match subtool's admitted
     requests (suggest_changes.md §4): records only the upstream status.

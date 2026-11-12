@@ -18,6 +18,12 @@
 const REPLICATOR_EXCEPTIONS = Object.freeze([
   {
     method: "POST",
+    path: "/app/proxy/viralVideoRecords",
+    module: "video-generator",
+    reason: "list the viral video replicator's landing page history"
+  },
+  {
+    method: "POST",
     path: "/app/proxy/viralVideoTaskDetail",
     module: "video-generator",
     reason: "history task detail for the viral video replicator sub-tool"
@@ -39,6 +45,12 @@ const REPLICATOR_EXCEPTIONS = Object.freeze([
     path: "/app/viral-video/trim",
     module: "video-generator",
     reason: "confirm the selected video trim for the viral video replicator"
+  },
+  {
+    method: "POST",
+    path: "/app/viral-video/beginViralVideoStoryboard",
+    module: "video-generator",
+    reason: "start storyboard generation from the confirmed video trim"
   },
   {
     method: "POST",
