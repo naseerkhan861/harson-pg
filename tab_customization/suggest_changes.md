@@ -1,91 +1,134 @@
-# Fix the 404 after 确认裁切
+# Restore video history, storyboard generation, and final video generation
 
-**Workflow:** 视频创作 → 爆款视频复刻 → ② 裁切视频 → 确认裁切  
-**Compared:** `temp-main` [28aa5c9](https://github.com/naseerkhan861/harson-pg/commit/28aa5c974c9c8bf0ae30bbde0380f9d24cf6d43d) and `feature/dashboard-ui` [182bc65](https://github.com/naseerkhan861/harson-pg/commit/182bc65d98a94ba26795c5185f752ce98bcd54d1).
+**Workflow:** 视频创作 → 爆款视频复刻 · **Branch:** `temp-main` · **Reviewed:** 2026-11-13 (China time)
 
-## Finding
+## What failed
 
-The failed request in the screenshot is on `ai.harson-base.com` and ends in `/viral-video/trim`. That is the API call made when confirming the trim, after the upload and preview already worked. The displayed 30-second selection is within the page's stated 4–30 second range.
-
-The likely cause is a missing gateway route rule. The screenshot truncates the beginning of the path and does not show the method. The patch below is for **`POST /app/viral-video/trim`**; confirm that exact pair before applying it.
-
-- [`temp-main` route policy](https://github.com/naseerkhan861/harson-pg/blob/28aa5c974c9c8bf0ae30bbde0380f9d24cf6d43d/src/gateway/routePolicy.js) admits the replicator's history detail, pricing and link resolution calls for `video-generator`. It has no trim entry.
-- The [gateway](https://github.com/naseerkhan861/harson-pg/blob/28aa5c974c9c8bf0ae30bbde0380f9d24cf6d43d/src/gateway/server.js) checks the authenticated session, CSRF rule, configured/provider menu prefixes and exact exceptions before proxying. With none of the allowed paths matching, it returns an empty HTTP 404 without calling YiBai.
-- The dropdown display aliases run inside the iframe. This request is governed by the gateway route policy.
-
-## Why the dashboard branch can work
-
-Both commits have a gateway. They share the same [iframe URL selection logic](https://github.com/naseerkhan861/harson-pg/blob/182bc65d98a94ba26795c5185f752ce98bcd54d1/src/controllers/aigcSessionController.js): a configured `YIBAI_FRAME_PUBLIC_ORIGIN` uses a Harson launch ticket and gateway; leaving it unset uses YiBai directly. The dashboard branch uses a prefix check in its [gateway](https://github.com/naseerkhan861/harson-pg/blob/182bc65d98a94ba26795c5185f752ce98bcd54d1/src/gateway/server.js), while `temp-main` adds exact exceptions. Neither branch forwards the tested trim request under the same restricted configuration.
-
-Compare the **successful trim request’s host** in the working branch's Network panel. A YiBai host indicates the direct path. If both trim requests go through Harson, compare the actual running gateway builds and their configured/provider menu prefixes. A top-level `localhost` address only identifies the workspace shell.
-
-### Local reproduction
-
-I ran each branch's actual gateway against the same loopback mock provider with a test gateway session. The fixture deliberately does not implement video processing; it verifies whether the gateway forwards the request.
-
-| `POST /app/viral-video/trim` | HTTP result | Reached mock provider? |
+| Where | Request | Finding |
 | --- | --- | --- |
-| Direct to the mock | 200 | Yes |
-| Unmodified `feature/dashboard-ui` gateway | 404, empty body | No |
-| Unmodified `temp-main` gateway | 404, empty body | No |
-| `temp-main` with the proposed rule | 200 | Yes, original request body forwarded |
+| Open **爆款视频复刻 → 历史记录** | `POST /app/proxy/viralVideoRecords` | The new Chrome screenshot shows two 404s at this exact URL on `ai.harson-base.com`, followed by `[frame-history] query records failed` and `load frame history failed`. The shared provider history API uses POST in existing rules. Confirm the method in the landing page's Network trace. |
+| Select a history row | `POST /app/proxy/viralVideoTaskDetail` | The detail route is already allowed for `video-generator`. The list request fails first, so there are no rows to select. |
+| **② 裁切视频 → 确认裁切** | `POST /app/viral-video/trim` | The screenshot shows **裁切结果** and a 30-second preview. The trim request has already succeeded. |
+| **② 裁切结果 → 生成故事板 ⚡ 30** | `beginViralVideoStoryboard` on `ai.harson-base.com` | Safari shows HTTP 404 with `Content-Length: 0` and `X-Powered-By: Express`. The UI moves to **③ 生成故事板**, but the storyboard stays empty. The screenshot cuts off the full URL and method. |
+| **③ 生成故事板 → 生成视频 ⚡ 260** | `POST /app/viral-video/beginViralVideoGeneration` | The earlier console shows this exact request. The rule is **already committed** on current `temp-main`. Check that the running gateway contains it and whether a new 404 comes from YiBai. |
 
-I reached the live trim screen from an existing task. DevTools was unavailable in that browser, so I did not capture a live trim submission. The mock result establishes the gateway behavior for the proposed method and path.
+In [`temp-main` at `b92554c`](https://github.com/naseerkhan861/harson-pg/commit/b92554c346fca9b29ca672f4773c639aba975795), `src/gateway/routePolicy.js` has rules for the detail, pricing, link resolution, trim and final video requests in a `video-generator` session. It admits the shared history POST for clothing, e-commerce and pattern design, but not for `video-generator`. It has no storyboard rule. If no prefix or exception matches, the Harson gateway returns an empty 404 before contacting YiBai. Both missing routes reproduced that failure locally.
 
-## 1. Confirm the request
+The [`feature/dashboard-ui` gateway at `84bf396`](https://github.com/naseerkhan861/harson-pg/commit/84bf396a3755711d9256af3d7135f2f272a10d9c) uses prefix rules. With the same restricted gateway settings, it blocked these mock requests too. Both branches can launch the iframe directly to YiBai or through Harson, depending on `YIBAI_FRAME_PUBLIC_ORIGIN`. To explain the working deployment, compare its actual successful **Request URL**, method, and effective gateway settings. The working browser path was not observed here.
 
-On your failing build, open DevTools → **Network**, filter for `trim` and select the failed request from **确认裁切**. If necessary, reproduce it once with a test video. Check **Request Method**, **Request URL** (host and full path) and **Status Code** under **Headers**. The proposed rule applies when the request is `POST https://ai.harson-base.com/app/viral-video/trim`. Ignore query parameters when comparing paths.
+The console also shows an inline event handler blocked by CSP and a `gtm.js` timeout. The history XHRs were sent and received HTTP 404, so those messages do not explain the history failure. The routing fix does not require changing CSP.
 
-On the gateway host you can also check the existing status log:
+## 1. Confirm the live request details before deploying
+
+- **History:** In DevTools → **Network**, filter for `viralVideoRecords` and reopen **视频创作 → 爆款视频复刻**. This only loads history. Verify **POST** and `https://ai.harson-base.com/app/proxy/viralVideoRecords`. Expect the detail call when opening an existing row after the fix.
+- **Storyboard:** The patch uses **`POST /app/viral-video/beginViralVideoStoryboard`**. The prefix is inferred from the neighboring trim and final video requests. Confirm the exact **Request URL** and **Request Method** at the top of Safari's saved **Headers** view, or use the gateway finish log for the existing 404 (Nov 12, 06:18:48 UTC / 14:18:48 China time):
+
+  ```bash
+  docker compose --profile gateway logs --since '2026-11-12T06:15:00Z' gateway \
+    | grep -F 'beginViralVideoStoryboard' | tail -n 20
+  ```
+
+  The expected line is `[gateway] POST /app/viral-video/beginViralVideoStoryboard -> 404`. If the recorded path differs, use the recorded exact path in the policy, log and fixture before deploying. The history fix can be applied independently while confirming the storyboard path. Share only method, path and status. The attached headers include a session cookie.
+
+## 2. Apply the combined patch
+
+Use a clean `temp-main` checkout containing `b92554c`. Download `Harson_Viral_Video_Storyboard_and_Generation_404.patch` alongside this guide. From the repo root, replace `/path/to` with the patch's download directory:
 
 ```bash
-docker compose --profile gateway logs --since 5m gateway | grep -F '/viral-video/trim'
-```
-
-Look for `[gateway] POST /app/viral-video/trim -> 404`. This identifies the method and path seen by the gateway; the finish status alone does not identify whether YiBai was called.
-
-## 2. Apply the exact rule
-
-If the method and path match, apply `Harson_Viral_Video_Trim_404.patch` from your `temp-main` checkout:
-
-```bash
-git apply --check /path/to/Harson_Viral_Video_Trim_404.patch
-git apply /path/to/Harson_Viral_Video_Trim_404.patch
+git merge-base --is-ancestor b92554c HEAD
+git apply --check /path/to/Harson_Viral_Video_Storyboard_and_Generation_404.patch
+git apply /path/to/Harson_Viral_Video_Storyboard_and_Generation_404.patch
 git diff --check
-node --test tests/gateway-route-policy.test.cjs
+node --test tests/*.test.cjs
+node scripts/test-gateway-fixture.js
 ```
 
-The production change adds this entry to `REPLICATOR_EXCEPTIONS` in `src/gateway/routePolicy.js`:
+If the ancestor check fails, sync to the current `temp-main` first. If `git apply --check` fails, compare the route table and apply only the missing changes by hand.
+
+### Manual changes
+
+In `src/gateway/routePolicy.js`, add the history rule before `viralVideoTaskDetail` and the storyboard rule between trim and final video. These objects go inside `REPLICATOR_EXCEPTIONS`:
 
 ```js
 {
   method: "POST",
-  path: "/app/viral-video/trim",
+  path: "/app/proxy/viralVideoRecords",
   module: "video-generator",
-  reason: "confirm the selected video trim for the viral video replicator"
-}
+  reason: "list the viral video replicator's landing page history"
+},
+{
+  method: "POST",
+  path: "/app/viral-video/beginViralVideoStoryboard",
+  module: "video-generator",
+  reason: "start storyboard generation from the confirmed video trim"
+},
 ```
 
-The patch also updates the rule count and checks the method, exact path and module. Keep `YIBAI_GATEWAY_EXTRA_PATHS` unchanged. The narrow rule preserves the gateway session and CSRF checks. If your capture shows a different method or path, review that exact request before changing the rule.
+The patch exports constants for both paths and uses them in `handleProxyResponse` in `src/gateway/server.js`. It logs upstream errors for `viralVideoRecords` and the upstream status for the storyboard submission. The existing final video status log covers `beginViralVideoGeneration`. Those lines report status codes without request or response data.
 
-## 3. Deploy and verify
+The patch updates the expected number of exact replicator rules from five to seven and updates the loopback fixture to check a returned history row, existing detail, trim, and both generation calls. For a history-only change, add just the first object and adjust the count to six. Keep these rules specific to the observed method, path and `video-generator` session; adding prefixes such as `/app` or `/app/proxy` would also admit unrelated requests.
 
-Sync the patched checkout to the server, then rebuild the service that handles `ai.harson-base.com`:
+## 3. Rebuild the gateway and check the running code
+
+Commit the changes and update the deployment checkout through your normal release process. From the deployment checkout:
 
 ```bash
 docker compose --profile gateway up -d --build --no-deps --force-recreate gateway
 docker compose --profile gateway ps gateway
-docker compose --profile gateway exec -T gateway \
-  node -e 'const {isAllowedReplicatorRequest: allow} = require("/app/src/gateway/routePolicy.js"); const ok = allow({method:"POST", path:"/app/viral-video/trim", harsonGatewaySession:{moduleName:"video-generator"}}); console.log(ok ? "trim route installed" : "trim route missing"); if (!ok) process.exitCode = 1;'
+
+docker compose --profile gateway exec -T gateway node - <<'NODE'
+const { isAllowedReplicatorRequest: allow } = require("/app/src/gateway/routePolicy.js");
+for (const path of [
+  "/app/proxy/viralVideoRecords",
+  "/app/proxy/viralVideoTaskDetail",
+  "/app/viral-video/trim",
+  "/app/viral-video/beginViralVideoStoryboard",
+  "/app/viral-video/beginViralVideoGeneration"
+]) {
+  const ok = allow({
+    method: "POST",
+    path,
+    harsonGatewaySession: { moduleName: "video-generator" }
+  });
+  console.log((ok ? "OK     " : "MISSING") + "  POST " + path);
+  if (!ok) process.exitCode = 1;
+}
+NODE
 ```
 
-Open a fresh workspace session and repeat the same valid trim. Confirm that the trim request succeeds and the workflow advances to **生成故事板**.
+After applying both rules, all five lines should show `OK`. This reads the running container's route policy and submits no requests. If the final video rule is missing, the container has older or different code than `b92554c`. Rebuilding only the main app can leave the gateway on the old image. Reopen the workspace after restarting the gateway to establish a fresh iframe session.
 
-| Result after deployment | Next check |
+## 4. Verify in this order
+
+1. **History first.** Open **爆款视频复刻** with an account that has a known previous task. Confirm `viralVideoRecords` succeeds and the right panel shows history. Select a row and check that `viralVideoTaskDetail` succeeds and the task loads. Neither action submits a job.
+2. **Trim and storyboard.** Use an existing trimmed test clip if possible. Otherwise confirm the trim and wait for **裁切结果**. If you intend to spend the displayed credits, click **生成故事板** once. Check for a successful acknowledgement and wait for the storyboard text in **③ 生成故事板**.
+3. **Final video.** From a completed storyboard, click **生成视频** once if you intend to spend the displayed credits. Check `beginViralVideoGeneration` for a successful acknowledgement, then check progress and **④ 完成**. If a submission times out or its outcome is unclear, check **历史记录** and the balance before retrying.
+
+### If a 404 remains
+
+```bash
+docker compose --profile gateway logs --since 5m gateway \
+  | grep -E 'viralVideoRecords|viralVideoTaskDetail|beginViralVideo(Storyboard|Generation)'
+```
+
+The upstream status lines below apply to the history list, storyboard and final video calls. The task detail route has a finish log only.
+
+| Result | What to check |
 | --- | --- |
-| Container reports `trim route missing` | Verify which server checkout was used to build `gateway`. |
-| Browser gets 404 and gateway has no matching log entry | Check the request host and the reverse proxy target for that host. |
-| The rule is installed and gateway still logs 404 | Determine whether YiBai returned the 404. In `handleProxyResponse()`, an optional log guarded by the exact method, path and `video-generator` session can record `proxyRes.statusCode`. If it logs 404, check the upstream origin, provider route version and uploaded video/task validity with YiBai. |
-| Browser gets 302 or 403 | Check the gateway session or the request origin. These are separate from the missing route rule. |
+| No matching gateway request | Compare the actual Request URL host with the public gateway origin and the reverse proxy's target container. |
+| Gateway finish line `-> 404` without the corresponding `upstream status=404` line | Confirm the active gateway revision and compare the exact method and path. Reopen **视频创作 → 爆款视频复刻** to launch in a `video-generator` session. |
+| Corresponding `upstream status=404` | YiBai responded with 404. Compare the provider target, response and task/account context with the working deployment. The gateway has forwarded this request. |
+| HTTP 302 to the expired page or HTTP 403 | Check the iframe session and request origin. Reopen the workspace before submitting a job. |
+| HTTP success but a job fails in the UI | Check the provider's response and task detail. A successful HTTP response does not guarantee a successful job. |
 
-**Validation:** 75 repository tests, all 111 existing gateway fixture checks, and the targeted trim probes passed locally. The probes also verified that a wrong method, path suffix, unrelated module, missing session, and cross-site POST are rejected before the upstream. The patch has not been deployed.
+## Local verification
+
+| Gateway build, same loopback provider | History list | Confirm trim | Submit storyboard | Submit final video |
+| --- | --- | --- | --- | --- |
+| `feature/dashboard-ui` with restricted prefixes | 404 at gateway | 404 at gateway | 404 at gateway | 404 at gateway |
+| `temp-main` at `b92554c` | 404 at gateway | Forwarded | 404 at gateway | Forwarded |
+| `temp-main` with combined patch | Forwarded; fixture returned a row | Forwarded | Forwarded | Forwarded |
+
+The patched gateway forwarded the existing task detail call. The submission checks preserved the original JSON and provider cookie while filtering out the Harson session cookie. The history and storyboard checks confirmed that wrong methods, paths, modules, missing sessions and cross-site requests were still rejected. Mock provider 404s remained distinguishable from local rejections.
+
+**74 repository tests and 124 gateway fixture checks passed.** The patch applied cleanly to `b92554c`. The tests used the candidate storyboard URL and a loopback provider. Confirm the production URL before deployment. No live paid requests were submitted.
