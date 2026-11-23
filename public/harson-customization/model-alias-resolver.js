@@ -216,6 +216,23 @@
           (key === "全能图片2.1" || key === "全能图片 2.1")) {
         return "CLImage-5.3";
       }
+      if (context.surface === "image-model-label" && key === "seedream 5.5") {
+        return "CLImage-3.4";
+      }
+      return null;
+    }
+
+    // Full option labels only, scoped to clothing/e-commerce version fields.
+    function resolveVersionDropdownLabel(sourceText, context) {
+      if (context?.surface !== "version-dropdown" ||
+          (context.module !== "clothing" && context.module !== "e-commerce")) {
+        return null;
+      }
+      const key = normalize(sourceText);
+      if (key === "image-2版") return "CLImage4.0";
+      if (key === "全能图片2.1版" || key === "全能图片 2.1版") {
+        return "CLImage5.3";
+      }
       return null;
     }
 
@@ -309,6 +326,9 @@
         return scoped;
       }
 
+      const versionLabel = resolveVersionDropdownLabel(key, context);
+      if (versionLabel !== null) return versionLabel;
+
       const viralVideoLabel = resolveViralVideoGenerationModelLabel(key, context);
       if (viralVideoLabel !== null) return viralVideoLabel;
 
@@ -339,22 +359,6 @@
         return resolveVideoMetadata(sourceText);
       }
 
-      /*
-        AI 服装 / AI 电商 版本 dropdown (proposed_changes.md §3, 15 Oct):
-        the provider renders the option label "image-2版" there. Renamed
-        contextually ONLY — never in the global exact map, so "image-2"
-        keeps its own CLImage-4.0 mapping everywhere else.
-      */
-      if (
-        context &&
-        context.surface === "version-dropdown" &&
-        (context.module === "clothing" ||
-          context.module === "e-commerce") &&
-        key === "image-2版"
-      ) {
-        return "CLImage4.0";
-      }
-
       if (context && context.allowQualified === true) {
         return resolveQualified(sourceText);
       }
@@ -372,6 +376,7 @@
     return {
       resolveDisplayName,
       resolveScopedImageLabel,
+      resolveVersionDropdownLabel,
       resolveViralVideoGenerationModelLabel,
       normalize,
       mappingInfo

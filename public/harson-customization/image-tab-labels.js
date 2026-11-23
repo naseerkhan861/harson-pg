@@ -97,8 +97,8 @@
   */
   /*
     AI 服装 / AI 电商 版本 dropdown classifier (proposed_changes.md §4):
-    returns a version-dropdown context only for the provider's select
-    popup option reading exactly "image-2版", or for the selected-value
+    returns a version-dropdown context only for an approved provider select
+    popup option, or for the selected-value
     span inside a 版本-titled IcbsSelect. Everything else stays null.
   */
   function versionDropdownContextFor(node) {
@@ -112,9 +112,9 @@
     if (node.matches(
       ".IcbsSelect-header-popup .IcbsSelect-header-popup-option-label"
     )) {
-      return resolver.normalize(node.textContent) === "image-2版"
-        ? { module: moduleName, surface: "version-dropdown" }
-        : null;
+      const context = { module: moduleName, surface: "version-dropdown" };
+      return resolver.resolveVersionDropdownLabel?.(node.textContent, context)
+        ? context : null;
     }
 
     // The selected value remains inside the select's own 版本 row.
@@ -252,6 +252,7 @@
     */
     const scopedWholeLabel = context === viralVideoContext ||
       context?.surface === "midjourney-model-label" ||
+      Boolean(resolver.resolveVersionDropdownLabel?.(node.textContent, context)) ||
       Boolean(resolver.resolveScopedImageLabel?.(node.textContent, context));
     if (!scopedWholeLabel && (!aggregateSelector || !node.matches(aggregateSelector))) {
       return false;

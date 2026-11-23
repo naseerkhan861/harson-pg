@@ -670,7 +670,7 @@ async function main() {
         configAsset.body
           .toString()
           .includes(
-            "all-pages-16-viral-video-priority"
+            "all-pages-17-clothing-omni21-seedream55"
           )
     );
 
