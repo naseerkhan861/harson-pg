@@ -10,7 +10,8 @@ const assert = require("node:assert/strict");
 
 const {
   removeGatewayCookie,
-  rewriteProviderSetCookie
+  rewriteProviderSetCookie,
+  stripProviderAddressHeaders
 } = require("../src/gateway/proxyHeaders.js");
 
 test("removes only the gateway session cookie", () => {
@@ -67,4 +68,31 @@ test("handles null and undefined without throwing", () => {
   assert.equal(rewriteProviderSetCookie(null, "https://yibaiaigc.com"), null);
   assert.equal(rewriteProviderSetCookie(undefined, "https://yibaiaigc.com"), undefined);
   assert.equal(removeGatewayCookie(undefined, "x"), "");
+});
+
+test("provider boundary drops client address assertions and keeps authentication/body headers", () => {
+  const headers = new Map(Object.entries({
+    "X-Forwarded-For": "203.0.113.15",
+    "x-forwarded-host": "ai.harson-base.com",
+    "x-forwarded-proto": "https",
+    Forwarded: "for=203.0.113.15",
+    "X-Real-IP": "203.0.113.15",
+    "CF-Connecting-IP": "203.0.113.15",
+    Authorization: "Bearer fixture",
+    "Access-Token-Api": "fixture-api-token",
+    Cookie: "provider_sid=fixture",
+    "Content-Type": "application/json",
+    Range: "bytes=0-99"
+  }));
+  stripProviderAddressHeaders({
+    getHeaderNames: () => [...headers.keys()],
+    removeHeader: name => headers.delete(name)
+  });
+  assert.deepEqual(Object.fromEntries(headers), {
+    Authorization: "Bearer fixture",
+    "Access-Token-Api": "fixture-api-token",
+    Cookie: "provider_sid=fixture",
+    "Content-Type": "application/json",
+    Range: "bytes=0-99"
+  });
 });

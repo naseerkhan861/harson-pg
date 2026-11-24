@@ -54,7 +54,8 @@ const {
 } = require("./routePolicy");
 const {
   removeGatewayCookie,
-  rewriteProviderSetCookie
+  rewriteProviderSetCookie,
+  stripProviderAddressHeaders
 } = require("./proxyHeaders");
 
 const PORT = Number(
@@ -1165,13 +1166,23 @@ function handleProxyError(
   }
 }
 
+function handleProviderProxyRequest(proxyReq, req) {
+  stripProviderAddressHeaders(proxyReq);
+  const providerCookies = removeGatewayCookie(
+    req.headers.cookie,
+    SESSION_COOKIE_NAME
+  );
+  if (providerCookies) proxyReq.setHeader("cookie", providerCookies);
+  else proxyReq.removeHeader("cookie");
+}
+
 app.use(
   "/",
   createProxyMiddleware({
     target: UPSTREAM_ORIGIN,
     changeOrigin: true,
     secure: true,
-    xfwd: true,
+    xfwd: false,
     ws: true,
     // Note: cookieDomainRewrite is intentionally absent — with
     // selfHandleResponse it never runs; copyResponseHeaders performs the
@@ -1183,17 +1194,8 @@ app.use(
         reaches YiBai; provider login cookies pass through untouched
         (suggest_changes.md §3B). The request body is never parsed.
       */
-      proxyReq: (proxyReq, req) => {
-        const providerCookies = removeGatewayCookie(
-          req.headers.cookie,
-          SESSION_COOKIE_NAME
-        );
-        if (providerCookies) {
-          proxyReq.setHeader("cookie", providerCookies);
-        } else {
-          proxyReq.removeHeader("cookie");
-        }
-      },
+      proxyReq: handleProviderProxyRequest,
+      proxyReqWs: handleProviderProxyRequest,
       proxyRes:
         handleProxyResponse,
       error: handleProxyError

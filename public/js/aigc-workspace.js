@@ -27,6 +27,9 @@ const TOKEN_BALANCE_POLL_INTERVAL_MS =
 const BACKGROUND_TOKEN_WAIT_MS =
   5000;
 
+const MAX_AUTO_LOGIN_RECOVERY_ATTEMPTS = 1;
+let automaticLoginRecoveryAttempts = 0;
+
 const ALL_TOOLS = Object.freeze([
    {
     name: "CLVideo-3.0" ,
@@ -1711,12 +1714,28 @@ async function readJsonResponse(
 }
 
 async function requestSession({
-  refresh = false
+  refresh = false,
+  automatic = false
 } = {}) {
   if (
     state.loading
   ) {
     return;
+  }
+
+  if (automatic) {
+    if (automaticLoginRecoveryAttempts >= MAX_AUTO_LOGIN_RECOVERY_ATTEMPTS) {
+      // Stop both the old provider document and late messages from it.
+      state.currentFrameOrigin = null;
+      if (elements.frame) elements.frame.src = "about:blank";
+      showError("登录状态连续失效，已停止自动重试。请联系管理员检查连接配置，或手动点击刷新重试。");
+      return;
+    }
+    automaticLoginRecoveryAttempts += 1;
+  } else {
+    // Reset only for an explicit workspace action, never on iframe load
+    // or MEMBER_INFO: an invalid provider session emits those too.
+    automaticLoginRecoveryAttempts = 0;
   }
 
   cancelBackgroundTokenSync({
@@ -2412,6 +2431,8 @@ function handleIframeMessage(
     ) {
       requestSession({
         refresh:
+          true,
+        automatic:
           true
       });
     }

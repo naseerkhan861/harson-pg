@@ -52,4 +52,29 @@ function rewriteProviderSetCookie(value, upstreamOrigin) {
   return Array.isArray(value) ? value.map(rewriteOne) : rewriteOne(value);
 }
 
-module.exports = { removeGatewayCookie, rewriteProviderSetCookie };
+/*
+  Backend token login reaches YiBai from the Harson server itself.
+  Use that same network identity for subsequent provider requests.
+  Remove incoming client-address assertions on the OUTGOING request only;
+  retain req.headers/req.ip for Harson's own access logs and rate limits.
+  xfwd:false alone does not remove headers already supplied by Nginx.
+*/
+function stripProviderAddressHeaders(proxyReq) {
+  const addressHeaders = new Set([
+    "forwarded", "x-real-ip", "x-client-ip", "client-ip",
+    "true-client-ip", "cf-connecting-ip", "fastly-client-ip",
+    "x-cluster-client-ip", "x-originating-ip"
+  ]);
+  for (const name of proxyReq.getHeaderNames()) {
+    const normalized = String(name).toLowerCase();
+    if (normalized.startsWith("x-forwarded-") || addressHeaders.has(normalized)) {
+      proxyReq.removeHeader(name);
+    }
+  }
+}
+
+module.exports = {
+  removeGatewayCookie,
+  rewriteProviderSetCookie,
+  stripProviderAddressHeaders
+};

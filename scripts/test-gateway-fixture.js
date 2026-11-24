@@ -134,6 +134,32 @@ function startFixture() {
   const app = express();
 
   const seenTokens = [];
+  let loginAddress;
+  const effectiveAddress = req =>
+    String(req.headers["x-forwarded-for"] || "").split(",")[0].trim() ||
+    req.headers["x-real-ip"] || req.socket.remoteAddress;
+
+  // Local reproduction of an IP-bound provider session: the actual
+  // backend client logs in directly, then the browser uses the gateway.
+  app.post("/api/member/loginByToken", (_req, res) => {
+    loginAddress = effectiveAddress(_req);
+    res.json({ success: true, code: 200, result: { token: "FIXTURE-IP-TOKEN" } });
+  });
+  app.get("/api/__fixture/ip-bound-session", (req, res) => {
+    if (req.headers.authorization !== "Bearer FIXTURE-IP-TOKEN") {
+      return res.status(401).json({ message: "fixture token missing" });
+    }
+    if (effectiveAddress(req) !== loginAddress) {
+      return res.status(401).json({ message: "网络地址发生变化，请重新登录" });
+    }
+    return res.json({
+      ok: true,
+      cookie: req.headers.cookie,
+      forwardedFor: req.headers["x-forwarded-for"] || null,
+      forwarded: req.headers.forwarded || null,
+      realIp: req.headers["x-real-ip"] || null
+    });
+  });
 
   // Loopback mock only: verifies multipart bytes and provider cookies
   // survive the real gateway. This is NOT a production upload route.
@@ -910,6 +936,41 @@ async function main() {
     const videoSession = await withSession(
       "video-generator",
       "/aigc/video-generator?embed=2"
+    );
+
+    const client = require("../src/services/yibaiAigcClient");
+    const savedHost = process.env.YIBAI_AIGC_HOST;
+    const savedMock = process.env.YIBAI_AIGC_MOCK;
+    let ipLogin;
+    try {
+      process.env.YIBAI_AIGC_HOST = FIXTURE_ORIGIN;
+      process.env.YIBAI_AIGC_MOCK = "false";
+      ipLogin = await client.loginByToken("FIXTURE-IP-TOKEN");
+    } finally {
+      if (savedHost === undefined) delete process.env.YIBAI_AIGC_HOST;
+      else process.env.YIBAI_AIGC_HOST = savedHost;
+      if (savedMock === undefined) delete process.env.YIBAI_AIGC_MOCK;
+      else process.env.YIBAI_AIGC_MOCK = savedMock;
+    }
+    check("actual backend token client reaches the loopback provider", ipLogin?.code === 200);
+    const bound = await request(GATEWAY_ORIGIN + "/api/__fixture/ip-bound-session", {
+      headers: {
+        Cookie: `harson_aigc_gateway=${videoSession.sessionId}; provider_sid=fixture`,
+        Authorization: "Bearer FIXTURE-IP-TOKEN",
+        "X-Forwarded-For": "203.0.113.15",
+        "X-Real-IP": "203.0.113.15",
+        Forwarded: "for=203.0.113.15;proto=https",
+        "X-Forwarded-Host": "ai.harson-base.com",
+        "X-Forwarded-Proto": "https"
+      }
+    });
+    const boundBody = JSON.parse(bound.body.toString());
+    check(
+      "backend login and gateway requests share provider IP context",
+      bound.status === 200 && boundBody.ok === true &&
+        boundBody.cookie === "provider_sid=fixture" &&
+        boundBody.forwardedFor === null && boundBody.forwarded === null && boundBody.realIp === null,
+      `HTTP ${bound.status}; ${boundBody.message || "fixture response"}`
     );
 
     const detailRes = await request(
